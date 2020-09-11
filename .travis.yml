@@ -1,0 +1,17 @@
+language: node_js
+
+node_js:
+  - node # Current stable
+
+install:
+  - npm install nightwatch
+
+before_script:
+  - node --version
+  - npm --version
+
+jobs:
+  include:
+    - stage: "Nightwatch UI Testing"
+    - name: "QA2"
+      script: npm test --env-var "process.env.BROWSERSTACK_USER=$BROWSERSTACK_USERNAME" 
