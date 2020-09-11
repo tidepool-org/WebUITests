@@ -14,4 +14,4 @@ jobs:
   include:
     - stage: "Nightwatch UI Testing"
     - name: "QA2"
-      script: npm test --env-var "process.env.BROWSERSTACK_USER=$BROWSERSTACK_USERNAME" --env-var "process.env.BROWSERSTACK_KEY=$BROWSERSTACK_KEY" --env-var "process.env.DSA_USERNAME=$DSA_USERNAME" --env-var "process.env.DSA_PASSWORD=$DSA_PASSWORD"  
+      script: npm test --env-var "process.env.BROWSERSTACK_USER=$BROWSERSTACK_USER" --env-var "process.env.BROWSERSTACK_KEY=$BROWSERSTACK_KEY" --env-var "process.env.DSA_USERNAME=$DSA_USERNAME" --env-var "process.env.DSA_PASSWORD=$DSA_PASSWORD"  
