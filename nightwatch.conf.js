@@ -21,22 +21,26 @@ module.exports = {
             'desiredCapabilities' : {
               'browserName' : 'chrome'
             }
-          },
+          }
+          /*
+          When we're ready to use multi-browser testing we can uncomment these 
+          - add names to the test script in both the nightwatch.conf.js and travis.yml
+
           'qa2_firefox': {
             'desiredCapabilities': {
               'browserName': 'firefox'
             }
           },
-          'dev_chrome': {
+          'qa2_safari': {
             "desiredCapabilities": {
               'browserName': 'safari'
             }
           },
-          'int_chrome': {
+          'qa2_ie': {
             'desiredCapabilities': {
               'browserName': "internet explorer"
             }
-          }
+          } */
         },
         'globals': {
           'dsaUsername': process.env.DSA_USERNAME,
