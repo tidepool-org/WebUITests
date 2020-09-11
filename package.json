@@ -1,0 +1,22 @@
+{
+  "name": "nightwatchtests",
+  "version": "1.0.0",
+  "description": "Tidepool UI Testing with nightwatch and browserstack",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tidepool-org/nightwatchtests.git"
+  },
+  "author": "Ginny Yadav",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/tidepool-org/nightwatchtests/issues"
+  },
+  "homepage": "https://github.com/tidepool-org/nightwatchtests#readme",
+  "dependencies": {
+    "nightwatch": "^1.4.2"
+  }
+}
