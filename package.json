@@ -20,6 +20,7 @@
     "nightwatch": "^1.4.2"
   },
   "devDependencies": {
-    "dotenv": "^8.2.0"
+    "dotenv": "^8.2.0",
+    "eslint": "^7.9.0"
   }
 }
