@@ -1,3 +1,4 @@
 node_modules
 tests_output
 .env
+.eslintrc.js
