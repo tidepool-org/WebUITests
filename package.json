@@ -4,7 +4,10 @@
   "description": "Tidepool UI Testing with nightwatch and browserstack",
   "main": "index.js",
   "scripts": {
-    "test": "nightwatch --env qa2_chrome"
+    "test": "nightwatch --env qa2_chrome,qa1_chrome,prd_chrome",
+    "testqa2": "nightwatch --env qa2_chrome",
+    "testqa1": "nightwatch --env qa1_chrome",
+    "testprd": "nightwatch --env prd_chrome"
   },
   "repository": {
     "type": "git",

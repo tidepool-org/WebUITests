@@ -20,10 +20,24 @@ module.exports = {
 
   test_settings: {
     qa2_chrome: {
+      launch_url: 'https://qa2.development.tidepool.org',
+      desiredCapabilities: {
+        browserName: 'chrome'
+      }
+    },
+    qa1_chrome: {
+      launch_url: 'https://qa1.development.tidepool.org',
+      desiredCapabilities: {
+        browserName: 'chrome'
+      }
+    },
+    prd_chrome: {
+      launch_url: 'https://app.tidepool.org',
       desiredCapabilities: {
         browserName: 'chrome'
       }
     }
+  },
     /*
     When we're ready to use multi-browser testing we can uncomment these
     - add names to the test script in both the nightwatch.conf.js and travis.yml
@@ -43,9 +57,8 @@ module.exports = {
         'browserName': "internet explorer"
       }
     } */
-  },
   globals: {
     dsaUsername: process.env.DSA_USERNAME,
-    dsaPassword: process.env.DSA_PASSWORD
+    dsaPassword: process.env.DSA_PASSWORD,
   }
 };

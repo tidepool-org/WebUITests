@@ -1,7 +1,9 @@
 'use strict';
 
 module.exports = {
-  url: 'https://qa2.development.tidepool.org',
+  url: function() {
+    return this.api.launch_url
+  },
   elements: {
     usernameInput: '#username',
     passwordInput: '#password',
