@@ -22,10 +22,10 @@ The tests here use page objects. This means that frequently used UI elements and
       DSA_USERNAME_TANDEM=<username for valid non-clinician account using tandem data>
       DSA_PASSWORD_TANDEM=<password for valid non-clinician account using tandem data>
     
-- run `npm test` to test all setup environments (qa1, qa2, prd) on all browsers (currently only chrome on windows 10 for now)
-- run `npm run testqa1` to test qa1 on all browsers (currently only chrome on windows 10 for now)
-- run `npm run testqa2` to test qa1 on all browsers (currently only chrome on windows 10 for now)
-- run `npm run testprd` to test qa1 on all browsers (currently only chrome on windows 10 for now)
+* run `npm test` to test all setup environments (qa1, qa2, prd) on all browsers (currently only chrome on windows 10 for now)
+  * run `npm run testqa1` to test qa1 on all browsers (currently only chrome on windows 10 for now)
+  * run `npm run testqa2` to test qa2 on all browsers (currently only chrome on windows 10 for now)
+  * run `npm run testprd` to test prd on all browsers (currently only chrome on windows 10 for now)
 
 ## Testing Locally (without Browserstack)
 The nightwatch tests can be run without using the browserstack service. You will, however, need to install selenium and the appropriate web driver dependencies for the browsers you wish to test as well as update the `nightwatch.conf.js` to use these dependencies instead of browserstack. There's really no reason to do this.
