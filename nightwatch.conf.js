@@ -22,19 +22,31 @@ module.exports = {
     qa2_chrome: {
       launch_url: 'https://qa2.development.tidepool.org',
       desiredCapabilities: {
-        browserName: 'chrome'
+        os : "Windows",
+        osVersion : "10",
+        browserName: 'chrome',
+        browserVersion: 'latest',
+        resolution: '1366x768'
       }
     },
     qa1_chrome: {
       launch_url: 'https://qa1.development.tidepool.org',
       desiredCapabilities: {
-        browserName: 'chrome'
+        os : "Windows",
+        osVersion : "10",
+        browserName: 'chrome',
+        browserVersion: 'latest',
+        resolution: '1366x768'
       }
     },
     prd_chrome: {
       launch_url: 'https://app.tidepool.org',
       desiredCapabilities: {
-        browserName: 'chrome'
+        os : "Windows",
+        osVersion : "10",
+        browserName: 'chrome',
+        browserVersion: 'latest',
+        resolution: '1366x768'
       }
     }
   },
