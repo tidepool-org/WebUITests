@@ -35,11 +35,15 @@ module.exports = {
       commands: [{
         elementsPresent() {
           return this
-            .assert.visible('@usernameInput', 'username input is visible')
-            .assert.visible('@passwordInput', 'password input is visible')
-            .assert.visible('@rememberChk', 'remember me checkbox is visible')
-            .assert.visible('@forgotPasswordLink', 'forgot password link visible and references correct link')
-            .assert.visible('@loginBtn', 'login button is visible');
+            .assert.visible('@forgotPasswordLink', 'forgot password link visible and references correct link');
+        },
+        loginDsa(username, password) {
+          return this
+            .setValue('@usernameInput', username)
+            .setValue('@passwordInput', password)
+            .click('@rememberChk')
+            .click('@loginBtn')
+            .api.assert.urlContains('data', 'successful login');
         }
       }]
     },
@@ -67,27 +71,11 @@ module.exports = {
     }
   },
   commands: [{
-    loginDsa(username, password) {
-      return this
-        .setValue('@usernameInput', username)
-        .setValue('@passwordInput', password)
-        .click('@rememberChk')
-        .click('@loginBtn')
-        .assert.urlContains('data', 'successful login');
-    },
     loadPage() {
       return this
         .navigate()
         .maximizeWindow()
         .waitForElementVisible('#app', 5000, 'page loaded');
-    },
-    accessHelpWidget() {
-      return this.api
-        .frame('launcher')
-        .click('button[aria-label="Help"]')
-        .frame(null)
-        .frame('webWidget')
-        .waitForElementVisible('input[type="search"]', 5000, 'help widget expanded');
     }
   }]
 };
