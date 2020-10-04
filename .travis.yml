@@ -14,8 +14,8 @@ jobs:
   include:
     - stage: "Nightwatch UI Testing"
     - name: "QA2"
-      script:  nightwatch --env qa2_chrome --env-var "process.env.BROWSERSTACK_USER=$BROWSERSTACK_USER" --env-var "process.env.BROWSERSTACK_KEY=$BROWSERSTACK_KEY" --env-var "process.env.DSA_USERNAME=$DSA_USERNAME" --env-var "process.env.DSA_PASSWORD=$DSA_PASSWORD"
+      script:  nightwatch --env qa2_chrome --env-var "process.env.BROWSERSTACK_USER=$BROWSERSTACK_USER" --env-var "process.env.BROWSERSTACK_KEY=$BROWSERSTACK_KEY" --env-var "process.env.DSA_USERNAME_TANDEM=$DSA_USERNAME_TANDEM" --env-var "process.env.DSA_PASSWORD_TANDEM=$DSA_PASSWORD_TANDEM"
     - name: "QA1"
-      script:  nightwatch --env qa1_chrome --env-var "process.env.BROWSERSTACK_USER=$BROWSERSTACK_USER" --env-var "process.env.BROWSERSTACK_KEY=$BROWSERSTACK_KEY" --env-var "process.env.DSA_USERNAME=$DSA_USERNAME" --env-var "process.env.DSA_PASSWORD=$DSA_PASSWORD"
+      script:  nightwatch --env qa1_chrome --env-var "process.env.BROWSERSTACK_USER=$BROWSERSTACK_USER" --env-var "process.env.BROWSERSTACK_KEY=$BROWSERSTACK_KEY" --env-var "process.env.DSA_USERNAME_TANDEM=$DSA_USERNAME_TANDEM" --env-var "process.env.DSA_PASSWORD_TANDEM=$DSA_PASSWORD_TANDEM"
     - name: "PRD"
-      script:  nightwatch --env prd_chrome --env-var "process.env.BROWSERSTACK_USER=$BROWSERSTACK_USER" --env-var "process.env.BROWSERSTACK_KEY=$BROWSERSTACK_KEY" --env-var "process.env.DSA_USERNAME=$DSA_USERNAME" --env-var "process.env.DSA_PASSWORD=$DSA_PASSWORD"   
+      script:  nightwatch --env prd_chrome --env-var "process.env.BROWSERSTACK_USER=$BROWSERSTACK_USER" --env-var "process.env.BROWSERSTACK_KEY=$BROWSERSTACK_KEY" --env-var "process.env.DSA_USERNAME_TANDEM=$DSA_USERNAME_TANDEM" --env-var "process.env.DSA_PASSWORD_TANDEM=$DSA_PASSWORD_TANDEM"   
