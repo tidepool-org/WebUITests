@@ -4,7 +4,6 @@ module.exports = {
   url: function useEnvironmentUrl() {
     return this.api.launch_url;
   },
-  // Mapping out elements on login page
   sections: {
     navigation: {
       selector: '#app',

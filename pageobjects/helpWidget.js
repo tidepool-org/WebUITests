@@ -4,8 +4,6 @@ module.exports = {
   url: function useEnvironmentUrl() {
     return this.api.launch_url;
   },
-  /* Help widget commands located here. The help widget iframe elements cannot be mapped with the
-  current page objects api from nightwatch. */
   commands: [{
     accessHelpWidget() {
       return this.api
