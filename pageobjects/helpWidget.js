@@ -4,35 +4,41 @@ module.exports = {
   url: function useEnvironmentUrl() {
     return this.api.launch_url;
   },
+  elements: {
+    helpButton: 'button[aria-label="Help"]',
+    searchBar: 'input[type="search"]',
+    supportArticleLink: 'a[href^="https://support.tidepool.org"]',
+    contactUsBtn: {
+      selector: '//button[text()="Contact us"]',
+      locateStrategy: 'xpath'
+    },
+    nameInput: 'input[name="name"]',
+    emailInput: 'input[name="email"]',
+    descriptionTextbox: 'textarea[name="description"]',
+    contactFormSubmitBtn: 'button[type="submit"]',
+    widgetTitle: 'h1[data-testid="widget-title"]'
+  },
   commands: [{
     accessHelpWidget() {
-      return this.api
-        .frame('launcher')
-        .click('button[aria-label="Help"]')
-        .frame(null)
-        .frame('webWidget')
-        .waitForElementVisible('input[type="search"]', 5000, 'help widget expanded');
+      this.api.frame('launcher');
+      this.click('@helpButton');
+      this.api.frame(null)
+        .frame('webWidget');
+      return this.waitForElementVisible('@searchBar', this.api.globals.elementTimeout, 'help widget expanded');
     },
-    helpWidgetSearch(searchTerm, browser) {
-      return this.api
-        .setValue('input[type="search"]', searchTerm)
-        .keys(browser.Keys.ENTER)
-        .assert.visible('a[href^="https://support.tidepool.org"]', 'support articles showing');
+    searchArticles(searchTerm, browser) {
+      this.setValue('@searchBar', searchTerm);
+      this.api.keys(browser.Keys.ENTER);
+      return this.assert.visible('@supportArticleLink', 'support articles showing');
     },
-    helpWidgetContactUsBtn() {
-      return this.api
-        .useXpath()
-        .click('//button[text()="Contact us"]')
-        .useCss()
-        .waitForElementVisible('input[name="name"]', 5000, '"contact us" form displayed');
-    },
-    helpWidgetContactUsFormFill() {
-      return this.api
-        .setValue('input[name="name"]', 'Automated UI Testing')
-        .setValue('input[name="email"]', 'webuiautomation@tidepool.org')
-        .setValue('textarea[name="description"]', 'Automated UI Testing via Nightwatch')
-        .click('button[type="submit"]')
-        .assert.containsText('h1[data-testid="widget-title"]', 'Message sent', 'message to support sent successfully');
+    contactSupport() {
+      this.click('@contactUsBtn');
+      this.waitForElementVisible('@nameInput', this.api.globals.elementTimeout, '"contact us" form displayed')
+        .setValue('@nameInput', 'Automated UI Testing')
+        .setValue('@emailInput', 'webuiautomation@tidepool.org')
+        .setValue('@descriptionTextbox', 'Automated UI Testing via Nightwatch')
+        .click('@contactFormSubmitBtn');
+      return this.assert.containsText('@widgetTitle', 'Message sent', 'message to support sent successfully');
     }
   }]
 };
