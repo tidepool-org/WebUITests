@@ -10,11 +10,10 @@ module.exports = {
   'User Searches for "Login" help'(browser) {
     const helpWidget = browser.page.helpWidget();
     helpWidget
-      .helpWidgetSearch('login', browser);
+      .searchArticles('login', browser);
   },
   'User Contacts Support'(browser) {
     const helpWidget = browser.page.helpWidget();
-    helpWidget.helpWidgetContactUsBtn();
-    helpWidget.helpWidgetContactUsFormFill();
+    helpWidget.contactSupport();
   }
 };

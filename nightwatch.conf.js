@@ -1,10 +1,10 @@
 'use strict';
 
 var dayjs = require('dayjs');
-require('dotenv').config();
 module.exports = {
   src_folders: ['tests'],
   page_objects_path: ['pageobjects'],
+  globals_path: 'global.js',
 
   webdriver: {
     start_process: false,
@@ -51,7 +51,7 @@ module.exports = {
         build: 'PRODUCTION_CHROME ' + dayjs().format()
       }
     }
-  },
+  }
   /*
     When we're ready to use multi-browser testing we can uncomment these
     - add names to the test script in both the nightwatch.conf.js and travis.yml
@@ -71,8 +71,4 @@ module.exports = {
         'browserName': "internet explorer"
       }
     } */
-  globals: {
-    dsaUsernameTandem: process.env.DSA_USERNAME_TANDEM,
-    dsaPasswordTandem: process.env.DSA_PASSWORD_TANDEM
-  }
 };

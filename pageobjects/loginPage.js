@@ -74,7 +74,7 @@ module.exports = {
       return this
         .navigate()
         .maximizeWindow()
-        .waitForElementVisible('#app', 5000, 'page loaded');
+        .waitForElementVisible('#app', this.api.globals.elementTimeout, 'page loaded');
     }
   }]
 };
