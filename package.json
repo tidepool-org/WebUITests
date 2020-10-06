@@ -4,7 +4,10 @@
   "description": "Tidepool UI Testing with nightwatch and browserstack",
   "main": "index.js",
   "scripts": {
-    "test": "nightwatch --env qa2_chrome"
+    "test": "nightwatch --env qa2_chrome,qa1_chrome,prd_chrome",
+    "testqa2": "nightwatch --env qa2_chrome",
+    "testqa1": "nightwatch --env qa1_chrome",
+    "testprd": "nightwatch --env prd_chrome"
   },
   "repository": {
     "type": "git",
@@ -17,13 +20,14 @@
   },
   "homepage": "https://github.com/tidepool-org/nightwatchtests#readme",
   "dependencies": {
-    "eslint-config-airbnb": "^18.2.0",
-    "nightwatch": "^1.4.2"
+    "dayjs": "1.9.1",
+    "eslint-config-airbnb": "18.2.0",
+    "nightwatch": "1.4.2"
   },
   "devDependencies": {
-    "dotenv": "^8.2.0",
-    "eslint": "^7.2.0",
-    "eslint-config-airbnb-base": "^14.2.0",
-    "eslint-plugin-import": "^2.21.2"
+    "dotenv": "8.2.0",
+    "eslint": "7.10.0",
+    "eslint-config-airbnb-base": "14.2.0",
+    "eslint-plugin-import": "2.22.1"
   }
 }
