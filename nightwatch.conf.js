@@ -16,7 +16,8 @@ module.exports = {
     'browserstack.user': process.env.BROWSERSTACK_USER,
     'browserstack.key': process.env.BROWSERSTACK_KEY,
     'browserstack.console': 'verbose',
-    'browserstack.debug': 'true'
+    'browserstack.debug': 'true',
+    'browserstack.networkLogs': 'true'
   },
 
   test_settings: {
