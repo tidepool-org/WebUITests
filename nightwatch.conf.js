@@ -14,7 +14,9 @@ module.exports = {
 
   common_capabilities: {
     'browserstack.user': process.env.BROWSERSTACK_USER,
-    'browserstack.key': process.env.BROWSERSTACK_KEY
+    'browserstack.key': process.env.BROWSERSTACK_KEY,
+    'browserstack.console': 'verbose',
+    'browserstack.debug': 'true'
   },
 
   test_settings: {
