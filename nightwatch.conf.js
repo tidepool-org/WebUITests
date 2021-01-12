@@ -14,10 +14,7 @@ module.exports = {
 
   common_capabilities: {
     'browserstack.user': process.env.BROWSERSTACK_USER,
-    'browserstack.key': process.env.BROWSERSTACK_KEY,
-    'browserstack.console': 'verbose',
-    'browserstack.debug': 'true',
-    'browserstack.networkLogs': 'true'
+    'browserstack.key': process.env.BROWSERSTACK_KEY
   },
 
   test_settings: {
@@ -30,7 +27,8 @@ module.exports = {
         browserVersion: 'latest',
         resolution: '1366x768',
         build: 'QA2_CHROME ' + dayjs().format(),
-        'browserstack.networkLogs': 'true'
+        'browserstack.networkLogs': 'true',
+        'browserstack.debug': 'true',
       }
     },
     qa1_chrome: {
@@ -41,7 +39,9 @@ module.exports = {
         browserName: 'chrome',
         browserVersion: 'latest',
         resolution: '1366x768',
-        build: 'QA1_CHROME ' + dayjs().format()
+        build: 'QA1_CHROME ' + dayjs().format(),
+        'browserstack.networkLogs': 'true',
+        'browserstack.debug': 'true',
       }
     },
     prd_chrome: {
@@ -52,7 +52,9 @@ module.exports = {
         browserName: 'chrome',
         browserVersion: 'latest',
         resolution: '1366x768',
-        build: 'PRODUCTION_CHROME ' + dayjs().format()
+        build: 'PRODUCTION_CHROME ' + dayjs().format(),
+        'browserstack.networkLogs': 'true',
+        'browserstack.debug': 'true',
       }
     }
   }
