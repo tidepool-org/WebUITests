@@ -30,7 +30,7 @@ module.exports = {
         browserVersion: 'latest',
         resolution: '1366x768',
         build: 'QA2_CHROME ' + dayjs().format(),
-        networkLogs: 'true'
+        'browserstack.networkLogs': 'true'
       }
     },
     qa1_chrome: {
