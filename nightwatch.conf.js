@@ -29,7 +29,8 @@ module.exports = {
         browserName: 'chrome',
         browserVersion: 'latest',
         resolution: '1366x768',
-        build: 'QA2_CHROME ' + dayjs().format()
+        build: 'QA2_CHROME ' + dayjs().format(),
+        networkLogs: 'true'
       }
     },
     qa1_chrome: {
