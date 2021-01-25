@@ -1,15 +1,18 @@
-'use strict';
-
 module.exports = {
   env: {
+    browser: true,
     commonjs: true,
-    node: true
+    es2021: true,
+    node: true,
   },
-  extends: 'airbnb-base/legacy',
+  extends: [
+    'airbnb-base',
+  ],
   parserOptions: {
-    ecmaVersion: 12
+    ecmaVersion: 12,
   },
   rules: {
-    'linebreak-style': ['error', 'windows']
-  }
+    'object-shorthand': 'off',
+    'prefer-destructuring': 'off',
+  },
 };

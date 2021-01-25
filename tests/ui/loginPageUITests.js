@@ -1,5 +1,3 @@
-'use strict';
-
 module.exports = {
   'UI Elements Present'(browser) {
     const loginPage = browser.page.loginPage();
@@ -10,5 +8,5 @@ module.exports = {
     pageNav.elementsPresent();
     loginForm.elementsPresent();
     footer.elementsPresent();
-  }
+  },
 };

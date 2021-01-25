@@ -1,6 +1,5 @@
-'use strict';
-
 require('dotenv').config();
+
 module.exports = {
   abortOnAssertionFailure: true,
   abortOnElementLocateError: true,
@@ -14,5 +13,5 @@ module.exports = {
   dsaUsernameTandem: process.env.DSA_USERNAME_TANDEM,
   dsaPasswordTandem: process.env.DSA_PASSWORD_TANDEM,
   elementTimeout: 5000,
-  reporter: function reporterFunc(results, cb) { cb(results); }
+  reporter: function reporterFunc(results, cb) { cb(results); },
 };
