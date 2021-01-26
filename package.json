@@ -21,6 +21,7 @@
   "homepage": "https://github.com/tidepool-org/nightwatchtests#readme",
   "dependencies": {
     "dayjs": "1.9.1",
+    "dotenv": "8.2.0",
     "eslint-config-airbnb": "18.2.0",
   },
   "devDependencies": {
