@@ -1,6 +1,6 @@
 module.exports = {
   'UI Elements Present'(browser) {
-    const loginPage = browser.page.loginPage();
+    const loginPage = browser.page.LoginPage();
     const pageNav = loginPage.section.navigation;
     const loginForm = loginPage.section.loginForm;
     const footer = loginPage.section.footer;
