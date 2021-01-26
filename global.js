@@ -12,6 +12,8 @@ module.exports = {
   persist_globals: true,
   dsaUsernameTandem: process.env.DSA_USERNAME_TANDEM,
   dsaPasswordTandem: process.env.DSA_PASSWORD_TANDEM,
+  gmailPassword: process.env.GMAIL_PASSWORD,
+  gmailUsername: process.env.GMAIL_USERNAME,
   elementTimeout: 10000,
   reporter: function reporterFunc(results, cb) { cb(results); },
 };
