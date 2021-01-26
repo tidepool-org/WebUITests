@@ -1,20 +1,19 @@
-'use strict';
+const dayjs = require('dayjs');
 
-var dayjs = require('dayjs');
 module.exports = {
-  src_folders: ['tests'],
-  page_objects_path: ['pageobjects'],
+  src_folders: './tests',
+  page_objects_path: './pageobjects',
   globals_path: 'global.js',
 
   webdriver: {
     start_process: false,
     host: 'hub-cloud.browserstack.com',
-    port: 80
+    port: 80,
   },
 
   common_capabilities: {
     'browserstack.user': process.env.BROWSERSTACK_USER,
-    'browserstack.key': process.env.BROWSERSTACK_KEY
+    'browserstack.key': process.env.BROWSERSTACK_KEY,
   },
 
   test_settings: {
@@ -26,10 +25,10 @@ module.exports = {
         browserName: 'chrome',
         browserVersion: 'latest',
         resolution: '1366x768',
-        build: 'QA2_CHROME ' + dayjs().format(),
+        build: `QA2_CHROME ${dayjs().format()}`,
         'browserstack.networkLogs': 'true',
         'browserstack.debug': 'true',
-      }
+      },
     },
     qa1_chrome: {
       launch_url: 'https://qa1.development.tidepool.org',
@@ -39,10 +38,10 @@ module.exports = {
         browserName: 'chrome',
         browserVersion: 'latest',
         resolution: '1366x768',
-        build: 'QA1_CHROME ' + dayjs().format(),
+        build: `QA1_CHROME ${dayjs().format()}`,
         'browserstack.networkLogs': 'true',
         'browserstack.debug': 'true',
-      }
+      },
     },
     prd_chrome: {
       launch_url: 'https://app.tidepool.org',
@@ -52,12 +51,12 @@ module.exports = {
         browserName: 'chrome',
         browserVersion: 'latest',
         resolution: '1366x768',
-        build: 'PRODUCTION_CHROME ' + dayjs().format(),
+        build: `PRODUCTION_CHROME ${dayjs().format()}`,
         'browserstack.networkLogs': 'true',
         'browserstack.debug': 'true',
-      }
-    }
-  }
+      },
+    },
+  },
   /*
     When we're ready to use multi-browser testing we can uncomment these
     - add names to the test script in both the nightwatch.conf.js and travis.yml
