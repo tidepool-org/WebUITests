@@ -1,6 +1,5 @@
-'use strict';
-
 require('dotenv').config();
+
 module.exports = {
   abortOnAssertionFailure: true,
   abortOnElementLocateError: true,
@@ -13,6 +12,8 @@ module.exports = {
   persist_globals: true,
   dsaUsernameTandem: process.env.DSA_USERNAME_TANDEM,
   dsaPasswordTandem: process.env.DSA_PASSWORD_TANDEM,
-  elementTimeout: 5000,
-  reporter: function reporterFunc(results, cb) { cb(results); }
+  gmailPassword: process.env.GMAIL_PASSWORD,
+  gmailUsername: process.env.GMAIL_USERNAME,
+  elementTimeout: 10000,
+  reporter: function reporterFunc(results, cb) { cb(results); },
 };

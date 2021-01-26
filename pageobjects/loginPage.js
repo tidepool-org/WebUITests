@@ -1,5 +1,3 @@
-'use strict';
-
 module.exports = {
   url: function useEnvironmentUrl() {
     return this.api.launch_url;
@@ -9,15 +7,15 @@ module.exports = {
       selector: '#app',
       elements: {
         signupLink: 'a[href="/signup"]',
-        logo: 'img[alt="Tidepool"]'
+        logo: 'img[alt="Tidepool"]',
       },
       commands: [{
         elementsPresent() {
           return this
             .assert.visible('@signupLink', 'signup link visible and references correct link')
             .assert.visible('@logo', 'Tidepool logo is visible');
-        }
-      }]
+        },
+      }],
     },
     loginForm: {
       selector: '#app',
@@ -28,8 +26,8 @@ module.exports = {
         forgotPasswordLink: 'a[href="/request-password-reset"]',
         loginBtn: {
           selector: '//button[text()="Login"]',
-          locateStrategy: 'xpath'
-        }
+          locateStrategy: 'xpath',
+        },
       },
       commands: [{
         elementsPresent() {
@@ -43,8 +41,8 @@ module.exports = {
             .click('@rememberChk')
             .click('@loginBtn')
             .api.assert.urlContains('data', 'successful login');
-        }
-      }]
+        },
+      }],
     },
     footer: {
       selector: '#app',
@@ -54,7 +52,7 @@ module.exports = {
         mobileLink: 'a[href="http://tidepool.org/products/tidepool-mobile/"]',
         supportLink: 'a[href="http://support.tidepool.org/"]',
         termsLink: 'a[href="http://tidepool.org/legal/"]',
-        jdrfLink: 'a[href="http://jdrf.org/"]'
+        jdrfLink: 'a[href="http://jdrf.org/"]',
       },
       commands: [{
         elementsPresent() {
@@ -65,9 +63,9 @@ module.exports = {
             .assert.visible('@supportLink', 'support link ivisible and references correct link')
             .assert.visible('@termsLink', 'terms link visible and references correct link')
             .assert.visible('@jdrfLink', 'JDRF link visible and references correct link');
-        }
-      }]
-    }
+        },
+      }],
+    },
   },
   commands: [{
     loadPage() {
@@ -75,6 +73,6 @@ module.exports = {
         .navigate()
         .maximizeWindow()
         .waitForElementVisible('#app', this.api.globals.elementTimeout, 'page loaded');
-    }
-  }]
+    },
+  }],
 };
