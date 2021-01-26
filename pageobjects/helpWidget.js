@@ -18,7 +18,7 @@ module.exports = {
   },
   commands: [{
     accessHelpWidget() {
-      this.api.frame('launcher');
+      this.api.frame(1);
       this.waitForElementVisible('@helpButton', this.api.globals.elementTimeout, 'helpWidget loaded');
       this.click('@helpButton');
       this.api.frame(null)
