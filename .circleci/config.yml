@@ -11,7 +11,11 @@ jobs:
       - checkout
       - node/install
       - run: node --version
-      - run: npm install nightwatch
+      - run: npm install
+      - save_cache:
+          paths:
+            - ./node_modules
+          key: dependency-cache-{{ checksum "package.json" }}
       - run: nightwatch --env qa2_chrome
       - run: nightwatch --env qa1_chrome
       - run: nightwatch --env prd_chrome
