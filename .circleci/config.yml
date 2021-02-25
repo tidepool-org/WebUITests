@@ -1,0 +1,19 @@
+version: '2.1'
+orbs:
+  node: circleci/node@4.2.0
+jobs:
+  run_ui_tests:
+    working_directory: ~/tidepool-org/webuitests
+    macos:
+      xcode: '10.1.0'
+    steps:
+      - checkout
+      - node/install
+      - run: node --version
+      - run: nightwatch --env qa2_chrome
+      - run: nightwatch --env qa1_chrome
+      - run: nightwatch --env prd_chrome
+workflows:
+  test_my_app:
+    jobs:
+      - run_ui_tests
