@@ -22,7 +22,8 @@ The tests here use page objects. This means that frequently used UI elements and
       DSA_USERNAME_TANDEM=<username for valid non-clinician account using tandem data>
       DSA_PASSWORD_TANDEM=<password for valid non-clinician account using tandem data>
     
-* run `npm test` to test all setup environments (qa1, qa2, prd) on all browsers (currently only chrome on windows 10 for now)
+* run `npm testParallel` to test all setup environments (qa1, qa2, prd) on all browsers (currently only chrome on windows 10 for now) for tests that are eligible to be run in parallel (tests that don't change user state or access tidepool emails)
+  * run `npm run test<env>Seq` to test tests that cannot be run in parallel on all browsers (currently only chrome on windows 10 for now) for a given environment (qa1, qa2, or prd). This is typically only used for CI.
   * run `npm run testqa1` to test qa1 on all browsers (currently only chrome on windows 10 for now)
   * run `npm run testqa2` to test qa2 on all browsers (currently only chrome on windows 10 for now)
   * run `npm run testprd` to test prd on all browsers (currently only chrome on windows 10 for now)
