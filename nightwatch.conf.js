@@ -5,10 +5,10 @@ module.exports = {
   page_objects_path: './pageobjects',
   globals_path: 'global.js',
 
-  webdriver: {
+  selenium: {
     start_process: false,
     host: 'hub-cloud.browserstack.com',
-    port: 80,
+    port: 443,
   },
 
   common_capabilities: {
@@ -25,7 +25,7 @@ module.exports = {
         browserName: 'chrome',
         browserVersion: 'latest',
         resolution: '1366x768',
-        build: `QA2_CHROME ${dayjs().format()}`,
+        build: `QA2_CHROME ${dayjs().format('YYYY-MM-DD h:mm:ss A')}`,
         'browserstack.networkLogs': 'true',
         'browserstack.debug': 'true',
       },
@@ -38,7 +38,7 @@ module.exports = {
         browserName: 'chrome',
         browserVersion: 'latest',
         resolution: '1366x768',
-        build: `QA1_CHROME ${dayjs().format()}`,
+        build: `QA1_CHROME ${dayjs().format('YYYY-MM-DD h:mm:ss A')}`,
         'browserstack.networkLogs': 'true',
         'browserstack.debug': 'true',
       },
@@ -51,7 +51,7 @@ module.exports = {
         browserName: 'chrome',
         browserVersion: 'latest',
         resolution: '1366x768',
-        build: `PRODUCTION_CHROME ${dayjs().format()}`,
+        build: `PRODUCTION_CHROME ${dayjs().format('YYYY-MM-DD h:mm:ss A')}`,
         'browserstack.networkLogs': 'true',
         'browserstack.debug': 'true',
       },
