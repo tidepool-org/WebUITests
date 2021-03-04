@@ -1,6 +1,7 @@
 const { dsaUsernameTandem, dsaPasswordTandem } = require('../../global');
 
 module.exports = {
+  '@tags': ['sequential'],
   'User Submits Password Reset Form'(browser) {
     const loginPage = browser.page.loginPage();
     const loginForm = loginPage.section.loginForm;

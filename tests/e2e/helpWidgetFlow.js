@@ -1,4 +1,5 @@
 module.exports = {
+  '@tags': ['parallel'],
   'User Accesses Help Widget'(browser) {
     const loginPage = browser.page.loginPage();
     const helpWidget = browser.page.helpWidget();

@@ -4,10 +4,18 @@
   "description": "Tidepool UI Testing with nightwatch and browserstack",
   "main": "index.js",
   "scripts": {
-    "test": "nightwatch --env qa2_chrome,qa1_chrome,prd_chrome",
-    "testqa2": "nightwatch --env qa2_chrome",
-    "testqa1": "nightwatch --env qa1_chrome",
-    "testprd": "nightwatch --env prd_chrome"
+    "testParallel": "nightwatch --tag parallel --env qa2_chrome,qa1_chrome,prd_chrome",
+    "testqa2Seq": "nightwatch --tag sequential --env qa2_chrome",
+    "testqa1Seq": "nightwatch --tag sequential --env qa1_chrome",
+    "testprdSeq": "nightwatch --tag sequential --env prd_chrome",
+    "testqa2All": "nightwatch --env qa2_chrome",
+    "testqa1All": "nightwatch --env qa1_chrome",
+    "testprdAll": "nightwatch --env prd_chrome"
+  },
+  "scriptsComments": {
+    "testParallel": "Executes tests that are able to run in parallel on all environments",
+    "testXSeq": "Executes tests that must be run sequentially, and not in conjuction with other environments",
+    "testXAll": "Executes ALL tests on 1 environment"
   },
   "repository": {
     "type": "git",
