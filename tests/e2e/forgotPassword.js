@@ -18,6 +18,8 @@ module.exports = {
     const forgotPasswordPage = browser.page.forgotPasswordPage();
     const gmail = forgotPasswordPage.section.gmail;
     gmail.accessGmail();
+    gmail.submitValidOTP();
+    gmail.accessResetEmail();
   },
   'User Resets Password'(browser) {
     const forgotPasswordPage = browser.page.forgotPasswordPage();
