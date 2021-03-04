@@ -25,6 +25,7 @@ module.exports = {
     const forgotPasswordPage = browser.page.forgotPasswordPage();
     const newPasswordForm = forgotPasswordPage.section.newPasswordForm;
     newPasswordForm.switchTab();
+    newPasswordForm.loadPage();
     newPasswordForm
       .assert.containsText('@changePasswordTitle', 'Change your password', 'Successful Navigation to Change Password Form')
       .setValue('@emailInput', dsaUsernameTandem)

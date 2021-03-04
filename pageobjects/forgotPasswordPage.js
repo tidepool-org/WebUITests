@@ -48,9 +48,6 @@ module.exports = {
             .click('@passwordNextButton')
             .waitForElementPresent('@otpInput')
             .setValue('@otpInput', getToken())
-            .click('@otpNextButton')
-            .waitForElementPresent('#guser', this.api.globals.elementTimeout)
-            .click('@passwordResetEmail')
             .click('@otpNextButton');
         },
         submitValidOTP() {
@@ -86,6 +83,9 @@ module.exports = {
             const handle = result.value[1];
             this.switchWindow(handle);
           });
+        },
+        loadPage() {
+          return this.waitForElementVisible('@changePasswordTitle', this.api.globals.elementTimeout);
         },
       }],
     },
