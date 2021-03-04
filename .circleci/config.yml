@@ -3,7 +3,7 @@ orbs:
   node: circleci/node@4.2.0
 
 jobs:
-  run_ui_tests:
+  test:
     working_directory: ~/tidepool-org/webuitests
     macos:
       xcode: '10.1.0'
@@ -16,9 +16,30 @@ jobs:
           paths:
             - ./node_modules
           key: dependency-cache-{{ checksum "package.json" }}
-      - run: npm test
+      - run: 
+         name: Run Parallel Tests on All Environments
+         command: npm run testParallel
+      - run: 
+          name: Run qa1 Tests
+          command: npm run testqa1Seq
+      - run: 
+          name: Run qa2 Tests
+          command: npm run testqa2Seq
+      - run: 
+          name: Run prd Tests
+          command: npm run testprdSeq
 
 workflows:
-  run_web_ui_tests:
+  commit-workflow:
     jobs:
-      - run_ui_tests
+      - test
+  scheduled-workflow:
+    triggers:
+      - schedule:
+          filters:
+            branches:
+              only:
+                - master
+          cron: "0 8 * * *"
+    jobs:
+      - test

@@ -1,6 +1,7 @@
 const { dsaUsernameTandem, dsaPasswordTandem } = require('../../global');
 
 module.exports = {
+  '@tags': ['sequential'],
   'User Submits Password Reset Form'(browser) {
     const loginPage = browser.page.loginPage();
     const loginForm = loginPage.section.loginForm;
@@ -18,11 +19,14 @@ module.exports = {
     const forgotPasswordPage = browser.page.forgotPasswordPage();
     const gmail = forgotPasswordPage.section.gmail;
     gmail.accessGmail();
+    gmail.submitValidOTP();
+    gmail.accessResetEmail();
   },
   'User Resets Password'(browser) {
     const forgotPasswordPage = browser.page.forgotPasswordPage();
     const newPasswordForm = forgotPasswordPage.section.newPasswordForm;
     newPasswordForm.switchTab();
+    newPasswordForm.loadPage();
     newPasswordForm
       .assert.containsText('@changePasswordTitle', 'Change your password', 'Successful Navigation to Change Password Form')
       .setValue('@emailInput', dsaUsernameTandem)

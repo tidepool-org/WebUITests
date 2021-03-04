@@ -1,4 +1,5 @@
 module.exports = {
+  '@tags': ['parallel'],
   'UI Elements Present'(browser) {
     const loginPage = browser.page.loginPage();
     const pageNav = loginPage.section.navigation;

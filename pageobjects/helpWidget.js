@@ -17,6 +17,9 @@ module.exports = {
     widgetTitle: 'h1[data-testid="widget-title"]',
   },
   commands: [{
+    loadWidget() {
+      this.waitForElementVisible('#launcher', this.api.globals.elementTimeout);
+    },
     accessHelpWidget() {
       this.api.frame(1);
       this.waitForElementVisible('@helpButton', this.api.globals.elementTimeout, 'helpWidget loaded');

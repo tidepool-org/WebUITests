@@ -48,9 +48,20 @@ module.exports = {
             .click('@passwordNextButton')
             .waitForElementPresent('@otpInput')
             .setValue('@otpInput', getToken())
-            .click('@otpNextButton')
-            .waitForElementPresent('#guser', this.api.globals.elementTimeout)
-            .click('@passwordResetEmail')
+            .click('@otpNextButton');
+        },
+        submitValidOTP() {
+          this.waitForElementVisible('#guser', this.api.globals.elementTimeout, false, (result) => {
+            if (result.state !== 'success') {
+              this.clearValue('@otpInput')
+                .setValue('@otpInput', getToken())
+                .click('@otpNextButton');
+            }
+            return this;
+          });
+        },
+        accessResetEmail() {
+          return this.click('@passwordResetEmail')
             .waitForElementPresent('@emailResetPassButton')
             .click('@emailResetPassButton');
         },
@@ -72,6 +83,9 @@ module.exports = {
             const handle = result.value[1];
             this.switchWindow(handle);
           });
+        },
+        loadPage() {
+          return this.waitForElementVisible('@changePasswordTitle', this.api.globals.elementTimeout);
         },
       }],
     },
