@@ -14,6 +14,6 @@ module.exports = {
   dsaPasswordTandem: process.env.DSA_PASSWORD_TANDEM,
   gmailPassword: process.env.GMAIL_PASSWORD,
   gmailUsername: process.env.GMAIL_USERNAME,
-  elementTimeout: 10000,
+  elementTimeout: 15000,
   reporter: function reporterFunc(results, cb) { cb(results); },
 };
