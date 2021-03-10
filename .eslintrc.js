@@ -14,5 +14,6 @@ module.exports = {
   rules: {
     'object-shorthand': 'off',
     'prefer-destructuring': 'off',
+    'no-unused-expressions': 'off',
   },
 };
