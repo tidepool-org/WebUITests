@@ -28,6 +28,9 @@ jobs:
       - run: 
           name: Run prd Tests
           command: npm run testprdSeq
+      - run: 
+          name: Run int Tests
+          command: npm run testintSeq
 
 workflows:
   commit-workflow:
