@@ -56,6 +56,32 @@ module.exports = {
         'browserstack.debug': 'true',
       },
     },
+    dev1_chrome: {
+      launch_url: 'https://dev1.dev.tidepool.org',
+      desiredCapabilities: {
+        os: 'Windows',
+        osVersion: '10',
+        browserName: 'chrome',
+        browserVersion: 'latest',
+        resolution: '1366x768',
+        build: `DEV1_CHROME ${dayjs().format('YYYY-MM-DD h:mm:ss A')}`,
+        'browserstack.networkLogs': 'true',
+        'browserstack.debug': 'true',
+      },
+    },
+    int_chrome: {
+      launch_url: 'https://int-app.tidepool.org',
+      desiredCapabilities: {
+        os: 'Windows',
+        osVersion: '10',
+        browserName: 'chrome',
+        browserVersion: 'latest',
+        resolution: '1366x768',
+        build: `INT_CHROME ${dayjs().format('YYYY-MM-DD h:mm:ss A')}`,
+        'browserstack.networkLogs': 'true',
+        'browserstack.debug': 'true',
+      },
+    },
   },
   /*
     When we're ready to use multi-browser testing we can uncomment these
