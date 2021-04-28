@@ -10,11 +10,6 @@ module.exports = {
         logo: 'img[alt="Tidepool"]',
       },
       commands: [{
-        elementsPresent() {
-          return this
-            .assert.visible('@signupLink', 'signup link visible and references correct link')
-            .assert.visible('@logo', 'Tidepool logo is visible');
-        },
       }],
     },
     loginForm: {
@@ -30,17 +25,13 @@ module.exports = {
         },
       },
       commands: [{
-        elementsPresent() {
-          return this
-            .assert.visible('@forgotPasswordLink', 'forgot password link visible and references correct link');
-        },
         loginDsa(username, password) {
           return this
             .setValue('@usernameInput', username)
             .setValue('@passwordInput', password)
             .click('@rememberChk')
             .click('@loginBtn')
-            .api.assert.urlContains('data', 'successful login');
+            .api.expect.url().to.contain('data');
         },
       }],
     },
@@ -55,15 +46,6 @@ module.exports = {
         jdrfLink: 'a[href="http://jdrf.org/"]',
       },
       commands: [{
-        elementsPresent() {
-          return this
-            .assert.visible('@twitterLogo', 'Twitter logo visible and references correct link')
-            .assert.visible('@facebookLogo', 'facebook logo visible and references correct link')
-            .assert.visible('@mobileLink', 'mobile link visible and references correct link')
-            .assert.visible('@supportLink', 'support link ivisible and references correct link')
-            .assert.visible('@termsLink', 'terms link visible and references correct link')
-            .assert.visible('@jdrfLink', 'JDRF link visible and references correct link');
-        },
       }],
     },
   },
