@@ -7,12 +7,14 @@ module.exports = {
   },
   extends: [
     'airbnb-base',
-    'chai-friendly/recommended',
+    'plugin:chai-friendly/recommended',
   ],
   parserOptions: {
     ecmaVersion: 12,
   },
   rules: {
     'prefer-destructuring': 'off',
+    'chai-friendly/no-unused-expressions': 'off',
+    'object-shorthand': ['error', 'properties'],
   },
 };
