@@ -12,7 +12,7 @@ module.exports = {
           locateStrategy: 'xpath',
         },
         modalDismiss: {
-          selector: '//span[@aria-label="close dialog"]',
+          selector: '//button[@aria-label="close dialog"]',
           locateStrategy: 'xpath',
         },
         daysOptions: {
