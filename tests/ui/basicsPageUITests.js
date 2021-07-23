@@ -79,7 +79,7 @@ module.exports = {
     bolusDashboard.expect.element('@underride').to.be.visible;
     bolusDashboard.expect.element('@mostRecentDay').to.be.visible;
     bolusDashboard.expect.element('@bolusEntry').to.be.visible;
-    bolusDashboard.expect.element('@bolusEntry').to.have.css('fill').which.equals('rgb(121, 208, 242)');
+    bolusDashboard.expect.element('@bolusEntry').to.have.css('fill').which.equals('rgb(124, 208, 242)');
   },
   'verify infusion site changes dashboard elements present'(browser) {
     const basics = browser.page.basicsPage();
