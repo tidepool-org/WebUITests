@@ -24,13 +24,13 @@ module.exports = {
       this.api.frame(1);
       this.waitForElementVisible('@helpButton', this.api.globals.elementTimeout, 'helpWidget loaded');
       this.click('@helpButton');
-      this.api.frame(null)
-        .frame('webWidget');
+      this.api.frameParent()
+        .frame(2);
       return this.waitForElementVisible('@searchBar', this.api.globals.elementTimeout, 'help widget expanded');
     },
-    searchArticles(searchTerm, browser) {
-      this.setValue('@searchBar', searchTerm);
-      this.api.keys(browser.Keys.ENTER);
+    searchArticles(searchTerm) {
+      this.setValue('@searchBar', searchTerm)
+        .setValue('@searchBar', '\ue007');
       return this.assert.visible('@supportArticleLink', 'support articles showing');
     },
     contactSupport() {
