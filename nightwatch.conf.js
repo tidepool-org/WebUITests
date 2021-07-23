@@ -6,22 +6,22 @@ module.exports = {
   globals_path: 'global.js',
 
   test_settings: {
-    default: {
-      launch_url: 'https://app.tidepool.org',
-    },
-
     webdriver: {
       keep_alive: true,
       timeout_options: {
         timeout: 60000,
-        retry_sttempts: 3,
+        retry_attempts: 3,
       },
     },
-
+    test_workers: {
+      enabled: true,
+      workers: 'auto',
+    },
     browserstack: {
       selenium: {
         host: 'hub-cloud.browserstack.com',
         port: 443,
+        start_process: false,
       },
 
       desiredCapabilities: {
@@ -33,7 +33,11 @@ module.exports = {
       },
     },
 
-    'browserstack.qa2chrome': {
+    default: {
+      launch_url: 'https://app.tidepool.org',
+    },
+
+    qa2chrome: {
       extends: 'browserstack',
       desiredCapabilities: {
         browserName: 'chrome',
@@ -46,7 +50,7 @@ module.exports = {
       },
     },
 
-    'browserstack.qa1chrome': {
+    qa1chrome: {
       extends: 'browserstack',
       desiredCapabilities: {
         browserName: 'chrome',
@@ -59,7 +63,7 @@ module.exports = {
       },
     },
 
-    'browserstack.intchrome': {
+    intchrome: {
       extends: 'browserstack',
       desiredCapabilities: {
         browserName: 'chrome',
@@ -73,7 +77,7 @@ module.exports = {
       },
     },
 
-    'browserstack.prdchrome': {
+    prdchrome: {
       extends: 'browserstack',
       desiredCapabilities: {
         browserName: 'chrome',
@@ -86,7 +90,7 @@ module.exports = {
       },
     },
 
-    'browserstack.dev1chrome': {
+    dev1chrome: {
       extends: 'browserstack',
       desiredCapabilities: {
         browserName: 'chrome',
