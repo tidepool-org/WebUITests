@@ -15,7 +15,7 @@ module.exports = {
     const patientData = common.section.patientData;
     bgDashboard.waitForElementVisible('@title', browser.globals.elementTimeout);
     bgDashboard.getLocationInView('@bottomOfDashboard');
-    bgDashboard.moveToElement('@mostRecentDay', 10, 10);
+    bgDashboard.moveToElement('@mostRecentDay', 0, 0);
     bgDashboard.waitForElementVisible('@dayHover', browser.globals.elementTimeout);
     bgDashboard.getText('@dayHover', ((result) => {
       const day = result.value;
@@ -33,7 +33,7 @@ module.exports = {
     const patientData = common.section.patientData;
     bolusDashboard.waitForElementVisible('@title', browser.globals.elementTimeout);
     bolusDashboard.getLocationInView('@bottomOfDashboard');
-    bolusDashboard.moveToElement('@mostRecentDay', 10, 10);
+    bolusDashboard.moveToElement('@mostRecentDay', 0, 0);
     bolusDashboard.waitForElementVisible('@dayHover', browser.globals.elementTimeout);
     bolusDashboard.getText('@dayHover', ((result) => {
       const day = result.value;
@@ -50,12 +50,12 @@ module.exports = {
     const common = browser.page.commonElementsPage();
     const patientData = common.section.patientData;
     infusionSiteDashboard.waitForElementVisible('@title', browser.globals.elementTimeout);
-    infusionSiteDashboard.getLocationInView('@bottomOfDashboard');
     infusionSiteDashboard.click('@settingsToggle');
     infusionSiteDashboard.click('@fillCannulaOption');
+    infusionSiteDashboard.getLocationInView('@bottomOfDashboard');
     infusionSiteDashboard.expect.element('@filledCannulaDay').to.be.visible;
     infusionSiteDashboard.expect.element('@filledTubingDay').to.not.be.present;
-    infusionSiteDashboard.moveToElement('@filledCannulaDay', 10, 10);
+    infusionSiteDashboard.moveToElement('@filledCannulaDay', 0, 0);
     infusionSiteDashboard.getText('@dayHover', ((result) => {
       const day = result.value;
       infusionSiteDashboard.click('@dayHover');
@@ -69,7 +69,7 @@ module.exports = {
     infusionSiteDashboard.click('@fillTubingOption');
     infusionSiteDashboard.expect.element('@filledTubingDay').to.be.visible;
     infusionSiteDashboard.expect.element('@filledCannulaDay').to.not.be.present;
-    infusionSiteDashboard.moveToElement('@filledTubingDay', 10, 10);
+    infusionSiteDashboard.moveToElement('@filledTubingDay', 0, 0);
     infusionSiteDashboard.getText('@dayHover', ((result) => {
       const day = result.value;
       infusionSiteDashboard.click('@dayHover');
@@ -86,7 +86,7 @@ module.exports = {
     const patientData = common.section.patientData;
     basalsDashboard.waitForElementVisible('@title', browser.globals.elementTimeout);
     basalsDashboard.getLocationInView('@bottomOfDashboard');
-    basalsDashboard.moveToElement('@mostRecentDay', 10, 10);
+    basalsDashboard.moveToElement('@mostRecentDay', 0, 0);
     basalsDashboard.waitForElementVisible('@dayHover', browser.globals.elementTimeout);
     basalsDashboard.getText('@dayHover', ((result) => {
       const day = result.value;
@@ -104,18 +104,18 @@ module.exports = {
     sidebar.getLocationInView('@copyAsText');
     sidebar.toggleBGM();
     sidebar.expect.element('@readingsInRangeTitle').text.to.contain('Avg. Daily Readings In Range');
-    sidebar.moveToElement('@readingsVeryAboveRangeBar', 10, 10);
+    sidebar.moveToElement('@readingsVeryAboveRangeBar', 0, 0);
     sidebar.expect.element('@readingsInRangeTitle').text.to.contain('Readings Above Range');
-    sidebar.moveToElement('@readingsAboveRangeBar', 10, 10);
+    sidebar.moveToElement('@readingsAboveRangeBar', 0, 0);
     sidebar.expect.element('@readingsInRangeTitle').text.to.contain('Readings Above Range');
-    sidebar.moveToElement('@readingsInRangeBar', 10, 10);
+    sidebar.moveToElement('@readingsInRangeBar', 0, 0);
     sidebar.expect.element('@readingsInRangeTitle').text.to.contain('Readings In Range');
-    sidebar.moveToElement('@readingsBelowRangeBar', 10, 10);
+    sidebar.moveToElement('@readingsBelowRangeBar', 0, 0);
     sidebar.expect.element('@readingsInRangeTitle').text.to.contain('Readings Below Range');
-    sidebar.moveToElement('@readingsVeryBelowRangeBar', 10, 10);
+    sidebar.moveToElement('@readingsVeryBelowRangeBar', 0, 0);
     sidebar.expect.element('@readingsInRangeTitle').text.to.contain('Readings Below Range');
-    sidebar.moveToElement('@readingsInRangeTitle', 10, 10);
-    sidebar.moveToElement('@readingsInRangeTooltip', 10, 10);
+    sidebar.moveToElement('@readingsInRangeTitle', 0, 0);
+    sidebar.moveToElement('@readingsInRangeTooltip', 0, 0);
     sidebar.expect.element('@readingsInRangeTooltipMessage').text.to.contain('Readings In Range');
   },
   'Other BGM tooltip functionality'(browser) {
@@ -123,11 +123,11 @@ module.exports = {
     const sidebar = basics.section.sidebar;
     sidebar.waitForElementVisible('@bgmCgmToggle', browser.globals.elementTimeout);
     sidebar.toggleBGM();
-    sidebar.moveToElement('@averageGlucoseTooltip', 10, 10);
+    sidebar.moveToElement('@averageGlucoseTooltip', 0, 0);
     sidebar.expect.element('@averageGlucoseTooltipMessage').text.to.contain('Avg. Glucose (BGM)');
-    sidebar.moveToElement('@averageCarbsTooltip', 10, 10);
+    sidebar.moveToElement('@averageCarbsTooltip', 0, 0);
     sidebar.expect.element('@averageCarbsTooltipMessage').text.to.contain('Avg. Daily Carbs');
-    sidebar.moveToElement('@cvTooltip', 10, 10);
+    sidebar.moveToElement('@cvTooltip', 0, 0);
     sidebar.expect.element('@cvTooltipMessage').text.to.contain('CV (Coefficient of Variation)');
   },
   'Time in range functionality'(browser) {
@@ -137,18 +137,18 @@ module.exports = {
     sidebar.getLocationInView('@copyAsText');
     sidebar.toggleCGM();
     sidebar.expect.element('@timeInRangeTitle').text.to.contain('Avg. Daily Time In Range');
-    sidebar.moveToElement('@timeVeryAboveRangeBar', 10, 10);
+    sidebar.moveToElement('@timeVeryAboveRangeBar', 0, 0);
     sidebar.expect.element('@timeInRangeTitle').text.to.contain('Time Above Range');
-    sidebar.moveToElement('@timeAboveRangeBar', 10, 10);
+    sidebar.moveToElement('@timeAboveRangeBar', 0, 0);
     sidebar.expect.element('@timeInRangeTitle').text.to.contain('Time Above Range');
-    sidebar.moveToElement('@timeInRangeBar', 10, 10);
+    sidebar.moveToElement('@timeInRangeBar', 0, 0);
     sidebar.expect.element('@timeInRangeTitle').text.to.contain('Time In Range');
-    sidebar.moveToElement('@timeBelowRangeBar', 10, 10);
+    sidebar.moveToElement('@timeBelowRangeBar', 0, 0);
     sidebar.expect.element('@timeInRangeTitle').text.to.contain('Time Below Range');
-    sidebar.moveToElement('@timeVeryBelowRangeBar', 10, 10);
+    sidebar.moveToElement('@timeVeryBelowRangeBar', 0, 0);
     sidebar.expect.element('@timeInRangeTitle').text.to.contain('Time Below Range');
-    sidebar.moveToElement('@timeInRangeTitle', 10, 10);
-    sidebar.moveToElement('@timeInRangeTooltip', 10, 10);
+    sidebar.moveToElement('@timeInRangeTitle', 0, 0);
+    sidebar.moveToElement('@timeInRangeTooltip', 0, 0);
     sidebar.expect.element('@timeInRangeTooltipMessage').text.to.contain('Time In Range');
   },
   'Other CGM tooltip functionality'(browser) {
@@ -156,15 +156,15 @@ module.exports = {
     const sidebar = basics.section.sidebar;
     sidebar.waitForElementVisible('@bgmCgmToggle', browser.globals.elementTimeout);
     sidebar.toggleCGM();
-    sidebar.moveToElement('@averageGlucoseTooltip', 10, 10);
+    sidebar.moveToElement('@averageGlucoseTooltip', 0, 0);
     sidebar.expect.element('@averageGlucoseTooltipMessage').text.to.contain('Avg. Glucose (CGM)');
-    sidebar.moveToElement('@sensorUsageTooltip', 10, 10);
+    sidebar.moveToElement('@sensorUsageTooltip', 0, 0);
     sidebar.expect.element('@sensorUsageTooltipMessage').text.to.contain('Sensor Usage');
-    sidebar.moveToElement('@averageCarbsTooltip', 10, 10);
+    sidebar.moveToElement('@averageCarbsTooltip', 0, 0);
     sidebar.expect.element('@averageCarbsTooltipMessage').text.to.contain('Avg. Daily Carbs');
-    sidebar.moveToElement('@gmiTooltip', 10, 10);
+    sidebar.moveToElement('@gmiTooltip', 0, 0);
     sidebar.expect.element('@gmiTooltipMessage').text.to.contain('GMI (Glucose Management Indicator)');
-    sidebar.moveToElement('@cvTooltip', 10, 10);
+    sidebar.moveToElement('@cvTooltip', 0, 0);
     sidebar.expect.element('@cvTooltipMessage').text.to.contain('CV (Coefficient of Variation)');
   },
   'Avg daily insulin functionality'(browser) {
@@ -173,14 +173,14 @@ module.exports = {
     sidebar.waitForElementVisible('@copyAsText', browser.globals.elementTimeout);
     sidebar.getLocationInView('@filterDevices');
     sidebar.expect.element('@totalInsulinTitle').text.to.contain('Avg. Daily Insulin Ratio');
-    sidebar.moveToElement('@basalInsulinBar', 10, 10);
+    sidebar.moveToElement('@basalInsulinBar', 0, 0);
     sidebar.expect.element('@totalInsulinTitle').text.to.contain('Basal Insulin');
-    sidebar.moveToElement('@bolusInsulinBar', 10, 10);
+    sidebar.moveToElement('@bolusInsulinBar', 0, 0);
     sidebar.expect.element('@totalInsulinTitle').text.to.contain('Bolus Insulin');
-    sidebar.moveToElement('@totalInsulinTitle', 10, 10);
-    sidebar.moveToElement('@totalInsulinTooltip', 10, 10);
+    sidebar.moveToElement('@totalInsulinTitle', 0, 0);
+    sidebar.moveToElement('@totalInsulinTooltip', 0, 0);
     sidebar.expect.element('@totalInsulinTooltipMessage').text.to.contain('Total Insulin');
-    sidebar.moveToElement('@averageDailyDoseTooltip', 10, 10);
+    sidebar.moveToElement('@averageDailyDoseTooltip', 0, 0);
     sidebar.expect.element('@averageDailyDoseTooltipMessage').text.to.contain('Avg. Daily Insulin');
   },
   'Filter devices functionality'(browser) {
