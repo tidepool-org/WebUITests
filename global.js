@@ -1,4 +1,6 @@
+/* eslint-disable no-console */
 require('dotenv').config();
+const request = require('request');
 
 module.exports = {
   abortOnAssertionFailure: true,
@@ -16,4 +18,28 @@ module.exports = {
   gmailUsername: process.env.GMAIL_USERNAME,
   elementTimeout: 15000,
   reporter: function reporterFunc(results, cb) { cb(results); },
+
+  afterEach(browser, done) {
+    browser.getLog('browser', (logEntriesArray) => {
+      if (logEntriesArray.length) {
+        console.log(`Log Length: ${logEntriesArray}`);
+        logEntriesArray.forEach((log) => {
+          console.log(
+            `[${log.level}] ${log.timestamp} ${log.message}`,
+          );
+        });
+      }
+    });
+    if (browser.currentTest.results.failed > 0 || browser.currentTest.results.errors > 0) {
+      request({
+        uri: `https://${process.env.BROWSERSTACK_USER}:${process.env.BROWSERSTACK_KEY}@api.browserstack.com/automate/sessions/${browser.sessionId}.json`,
+        method: 'PUT',
+        form: {
+          status: 'failed',
+          reason: `Failure: ${browser.currentTest.results.stackTrace}`,
+        },
+      });
+    }
+    done();
+  },
 };

@@ -4,17 +4,17 @@
   "description": "Tidepool UI Testing with nightwatch and browserstack",
   "main": "index.js",
   "scripts": {
-    "testParallel": "nightwatch --tag parallel --env qa2_chrome,qa1_chrome,prd_chrome,int_chrome",
-    "testqa2Seq": "nightwatch --tag sequential --env qa2_chrome",
-    "testqa1Seq": "nightwatch --tag sequential --env qa1_chrome",
-    "testprdSeq": "nightwatch --tag sequential --env prd_chrome",
-    "testintSeq": "nightwatch --tag sequential --env int_chrome",
-    "testdev1Seq": "nightwatch --tag sequential --env dev1_chrome",
-    "testqa2All": "nightwatch --env qa2_chrome",
-    "testqa1All": "nightwatch --env qa1_chrome",
-    "testprdAll": "nightwatch --env prd_chrome",
-    "testintAll": "nightwatch --env int_chrome",
-    "testdev1All": "nightwatch --env dev1_chrome"
+    "testParallel": "nightwatch --tag parallel --env qa2chrome,qa1chrome,prdchrome,intchrome",
+    "testqa2Seq": "nightwatch --tag sequential --env qa2chrome",
+    "testqa1Seq": "nightwatch --tag sequential --env qa1chrome",
+    "testprdSeq": "nightwatch --tag sequential --env prdchrome",
+    "testintSeq": "nightwatch --tag sequential --env intchrome",
+    "testdev1Seq": "nightwatch --tag sequential --env dev1chrome",
+    "testqa2All": "nightwatch --env qa2chrome",
+    "testqa1All": "nightwatch --env qa1chrome",
+    "testprdAll": "nightwatch --env prdchrome",
+    "testintAll": "nightwatch --env intchrome",
+    "testdev1All": "nightwatch --env dev1chrome"
   },
   "scriptsComments": {
     "testParallel": "Executes tests that are able to run in parallel on all environments",
@@ -32,16 +32,17 @@
   },
   "homepage": "https://github.com/tidepool-org/nightwatchtests#readme",
   "dependencies": {
-    "dayjs": "1.9.1",
-    "dotenv": "8.2.0",
-    "eslint-config-airbnb": "18.2.0",
-    "nightwatch": "1.4.2",
-    "otplib": "12.0.1"
+    "dayjs": "1.10.6",
+    "dotenv": "10.0.0",
+    "eslint-config-airbnb": "18.2.1",
+    "nightwatch": "1.7.7",
+    "otplib": "12.0.1",
+    "request": "^2.88.2"
   },
   "devDependencies": {
-    "eslint": "7.18.0",
+    "eslint": "7.31.0",
     "eslint-config-airbnb-base": "14.2.1",
-    "eslint-plugin-chai-friendly": "^0.6.0",
-    "eslint-plugin-import": "2.22.1"
+    "eslint-plugin-chai-friendly": "0.7.1",
+    "eslint-plugin-import": "2.23.4"
   }
 }
