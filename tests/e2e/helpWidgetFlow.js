@@ -1,4 +1,5 @@
 module.exports = {
+  '@disabled': true, // Skipping for now until we decide how to best handle tests involving iframes
   '@tags': ['parallel'],
   'User Accesses Help Widget'(browser) {
     const loginPage = browser.page.loginPage();
