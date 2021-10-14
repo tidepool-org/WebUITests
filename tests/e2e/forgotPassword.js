@@ -1,6 +1,7 @@
 const { dsaUsernameTandem, dsaPasswordTandem } = require('../../global');
 
 module.exports = {
+  '@disabled': true, // Skipping for now until we decide how to best handle test email access
   '@tags': ['sequential'],
   'User Submits Password Reset Form'(browser) {
     const loginPage = browser.page.loginPage();
@@ -36,5 +37,4 @@ module.exports = {
       .click('@saveButton')
       .assert.containsText('@changePasswordTitle', 'Success!', 'Successsfully Changed Password');
   },
-
 };
