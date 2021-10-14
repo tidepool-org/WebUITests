@@ -19,18 +19,18 @@ jobs:
       - run:
          name: Run Parallel Tests on All Environments
          command: npm run testParallel
-      - run:
-          name: Run qa1 Tests
-          command: npm run testqa1Seq
-      - run:
-          name: Run qa2 Tests
-          command: npm run testqa2Seq
-      - run:
-          name: Run prd Tests
-          command: npm run testprdSeq
-      - run:
-          name: Run int Tests
-          command: npm run testintSeq
+      # - run:
+      #     name: Run qa1 Tests
+      #     command: npm run testqa1Seq
+      # - run:
+      #     name: Run qa2 Tests
+      #     command: npm run testqa2Seq
+      # - run:
+      #     name: Run prd Tests
+      #     command: npm run testprdSeq
+      # - run:
+      #     name: Run int Tests
+      #     command: npm run testintSeq
 
 workflows:
   commit-workflow:
