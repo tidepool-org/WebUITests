@@ -6,7 +6,7 @@ jobs:
   test:
     working_directory: ~/tidepool-org/webuitests
     macos:
-      xcode: '10.1.0'
+      xcode: '13.0.0'
     steps:
       - checkout
       - node/install
@@ -16,19 +16,19 @@ jobs:
           paths:
             - ./node_modules
           key: dependency-cache-{{ checksum "package.json" }}
-      - run: 
+      - run:
          name: Run Parallel Tests on All Environments
          command: npm run testParallel
-      - run: 
+      - run:
           name: Run qa1 Tests
           command: npm run testqa1Seq
-      - run: 
+      - run:
           name: Run qa2 Tests
           command: npm run testqa2Seq
-      - run: 
+      - run:
           name: Run prd Tests
           command: npm run testprdSeq
-      - run: 
+      - run:
           name: Run int Tests
           command: npm run testintSeq
 
