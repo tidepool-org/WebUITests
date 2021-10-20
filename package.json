@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "testParallel": "nightwatch --tag parallel --env qa2chrome,qa1chrome,prdchrome,intchrome",
+    "testLocal": "node utilities/local.runner.js --tag parallel --env localChrome",
     "testqa2Seq": "nightwatch --tag sequential --env qa2chrome",
     "testqa1Seq": "nightwatch --tag sequential --env qa1chrome",
     "testprdSeq": "nightwatch --tag sequential --env prdchrome",
@@ -32,6 +33,7 @@
   },
   "homepage": "https://github.com/tidepool-org/nightwatchtests#readme",
   "dependencies": {
+    "browserstack-local": "1.4.8",
     "dayjs": "1.10.6",
     "dotenv": "10.0.0",
     "eslint-config-airbnb": "18.2.1",

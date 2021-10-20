@@ -3,3 +3,4 @@ tests_output
 .env
 .DS_Store
 .vscode
+local.log
