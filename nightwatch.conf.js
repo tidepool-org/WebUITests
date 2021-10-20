@@ -37,12 +37,26 @@ module.exports = {
       launch_url: 'https://app.tidepool.org',
     },
 
+    localChrome: {
+      launch_url: 'http://localhost:3000',
+      extends: 'browserstack',
+      desiredCapabilities: {
+        'browserstack.local': 'true',
+        browserName: 'chrome',
+        browserVersion: 'latest',
+        os: 'Windows',
+        osVersion: '10',
+        resolution: '1366x768',
+        build: `LOCAL_CHROME ${process.env.BROWSERSTACK_IDENTIFIER}`,
+      },
+    },
+
     qa2chrome: {
+      launch_url: 'https://qa2.development.tidepool.org',
       extends: 'browserstack',
       desiredCapabilities: {
         browserName: 'chrome',
         browserVersion: 'latest',
-        launch_url: 'https://qa2.development.tidepool.org',
         os: 'Windows',
         osVersion: '10',
         resolution: '1366x768',
@@ -51,11 +65,11 @@ module.exports = {
     },
 
     qa1chrome: {
+      launch_url: 'https://qa1.development.tidepool.org',
       extends: 'browserstack',
       desiredCapabilities: {
         browserName: 'chrome',
         browserVersion: 'latest',
-        launch_url: 'https://qa1.development.tidepool.org',
         os: 'Windows',
         osVersion: '10',
         resolution: '1366x768',
@@ -64,11 +78,11 @@ module.exports = {
     },
 
     intchrome: {
+      launch_url: 'https://int-app.tidepool.org',
       extends: 'browserstack',
       desiredCapabilities: {
         browserName: 'chrome',
         browserVersion: 'latest',
-        launch_url: 'https://int-app.tidepool.org',
         os: 'Windows',
         osVersion: '10',
         resolution: '1366x768',
@@ -78,11 +92,11 @@ module.exports = {
     },
 
     prdchrome: {
+      launch_url: 'https://app.tidepool.org',
       extends: 'browserstack',
       desiredCapabilities: {
         browserName: 'chrome',
         browserVersion: 'latest',
-        launch_url: 'https://app.tidepool.org',
         os: 'Windows',
         osVersion: '10',
         resolution: '1366x768',
@@ -91,11 +105,11 @@ module.exports = {
     },
 
     dev1chrome: {
+      launch_url: 'https://dev1.dev.tidepool.org',
       extends: 'browserstack',
       desiredCapabilities: {
         browserName: 'chrome',
         browserVersion: 'latest',
-        launch_url: 'https://dev1.dev.tidepool.org',
         os: 'Windows',
         osVersion: '10',
         resolution: '1366x768',
