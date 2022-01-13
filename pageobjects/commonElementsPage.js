@@ -11,14 +11,20 @@ module.exports = {
         patientProfile: 'a[href$="profile"]',
         patientView: 'a[href$="data"]',
         patientShare: 'a[href$="share"]',
-        patientUpload: 'a[title="Upload data"',
-        careTeam: 'a[href="/patients"]',
-        loginDropdown: '.Navbar-logged',
-        accountSettings: {
-          selector: '//div[text()="Account Settings"]',
+        patientUpload: 'a[title="Upload data"]',
+        loginDropdown: '#navigation-menu-trigger',
+        privateWorkspace: {
+          selector: '//span[@aria-label="Private Workspace"]/ancestor::button',
           locateStrategy: 'xpath',
         },
-        logout: 'a[title="Logout"]',
+        accountSettings: {
+          selector: '//span[@aria-label="Account Settings"]/ancestor::button',
+          locateStrategy: 'xpath',
+        },
+        logout: {
+          selector: '//span[@aria-label="Logout"]/ancestor::button',
+          locateStrategy: 'xpath',
+        },
 
       },
       commands: [{
