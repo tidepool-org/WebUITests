@@ -31,7 +31,7 @@ module.exports = {
             .setValue('@passwordInput', password)
             .click('@rememberChk')
             .click('@loginBtn')
-            .api.expect.url().to.contain('data');
+            .waitForElementVisible('#tidelineMain', 10000);
         },
       }],
     },
