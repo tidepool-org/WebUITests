@@ -33,16 +33,12 @@ module.exports = {
       },
     },
 
-    default: {
-      launch_url: 'https://app.tidepool.org',
-    },
-
     qa2chrome: {
       extends: 'browserstack',
+      launch_url: 'https://qa2.development.tidepool.org',
       desiredCapabilities: {
         browserName: 'chrome',
         browserVersion: 'latest',
-        launch_url: 'https://qa2.development.tidepool.org',
         os: 'Windows',
         osVersion: '10',
         resolution: '1366x768',
@@ -52,10 +48,10 @@ module.exports = {
 
     qa1chrome: {
       extends: 'browserstack',
+      launch_url: 'https://qa1.development.tidepool.org',
       desiredCapabilities: {
         browserName: 'chrome',
         browserVersion: 'latest',
-        launch_url: 'https://qa1.development.tidepool.org',
         os: 'Windows',
         osVersion: '10',
         resolution: '1366x768',
@@ -65,10 +61,10 @@ module.exports = {
 
     intchrome: {
       extends: 'browserstack',
+      launch_url: 'https://int-app.tidepool.org',
       desiredCapabilities: {
         browserName: 'chrome',
         browserVersion: 'latest',
-        launch_url: 'https://int-app.tidepool.org',
         os: 'Windows',
         osVersion: '10',
         resolution: '1366x768',
@@ -79,10 +75,10 @@ module.exports = {
 
     prdchrome: {
       extends: 'browserstack',
+      launch_url: 'https://app.tidepool.org',
       desiredCapabilities: {
         browserName: 'chrome',
         browserVersion: 'latest',
-        launch_url: 'https://app.tidepool.org',
         os: 'Windows',
         osVersion: '10',
         resolution: '1366x768',
@@ -92,10 +88,10 @@ module.exports = {
 
     dev1chrome: {
       extends: 'browserstack',
+      launch_url: 'https://dev1.dev.tidepool.org',
       desiredCapabilities: {
         browserName: 'chrome',
         browserVersion: 'latest',
-        launch_url: 'https://dev1.dev.tidepool.org',
         os: 'Windows',
         osVersion: '10',
         resolution: '1366x768',
