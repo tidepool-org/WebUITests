@@ -17,7 +17,6 @@ module.exports = {
     navBar.expect.element('@patientView').to.be.visible;
     navBar.expect.element('@patientShare').to.be.visible;
     navBar.expect.element('@patientUpload').to.be.visible;
-    navBar.expect.element('@careTeam').to.be.visible;
     navBar.expect.element('@loginDropdown').to.be.visible;
   },
   'verify common patient data elements present'(browser) {
