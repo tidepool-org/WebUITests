@@ -4,7 +4,7 @@
   "description": "Tidepool UI Testing with nightwatch and browserstack",
   "main": "index.js",
   "scripts": {
-    "testParallel": "nightwatch --tag parallel --env qa2chrome,qa1chrome,prdchrome,intchrome",
+    "testParallel": "nightwatch --tag parallel --env qa2chrome,qa1chrome,prdchrome",
     "testqa2Seq": "nightwatch --tag sequential --env qa2chrome",
     "testqa1Seq": "nightwatch --tag sequential --env qa1chrome",
     "testprdSeq": "nightwatch --tag sequential --env prdchrome",
