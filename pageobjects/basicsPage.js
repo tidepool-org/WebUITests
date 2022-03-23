@@ -194,7 +194,7 @@ module.exports = {
           locateStrategy: 'xpath',
         },
         bottomOfDashboard: {
-          selector: '//button[text()="Refresh"]',
+          selector: '//*[contains(@class,"refresh")]',
           locateStrategy: 'xpath',
         },
         basalEvents: {
