@@ -55,7 +55,7 @@ module.exports = {
       selector: '#app',
       elements: {
         refresh: {
-          selector: '//button[text()="Refresh"]',
+          selector: '//*[contains(@class,"refresh")]',
           locateStrategy: 'xpath',
         },
         twitter: '#twitter',
