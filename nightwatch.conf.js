@@ -28,7 +28,6 @@ module.exports = {
         local: 'false',
         userName: process.env.BROWSERSTACK_USER,
         accessKey: process.env.BROWSERSTACK_KEY,
-        'browserstack.networkLogs': 'true',
         'browserstack.debug': 'true',
       },
     },
@@ -43,6 +42,7 @@ module.exports = {
         osVersion: '10',
         resolution: '1366x768',
         build: `QA2_CHROME ${dayjs().format('YYYY-MM-DD h:mm:ss A')}`,
+        'browserstack.networkLogs': 'true',
       },
     },
 
@@ -56,6 +56,7 @@ module.exports = {
         osVersion: '10',
         resolution: '1366x768',
         build: `QA1_CHROME ${dayjs().format('YYYY-MM-DD h:mm:ss A')}`,
+        'browserstack.networkLogs': 'true',
       },
     },
 
@@ -83,6 +84,7 @@ module.exports = {
         osVersion: '10',
         resolution: '1366x768',
         build: `PRD_CHROME ${dayjs().format('YYYY-MM-DD h:mm:ss A')}`,
+        'browserstack.networkLogs': 'true',
       },
     },
 
