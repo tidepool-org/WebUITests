@@ -31,7 +31,7 @@ module.exports = {
             .setValue('@passwordInput', password)
             .click('@rememberChk')
             .click('@loginBtn')
-            .waitForElementVisible('#tidelineMain', 10000);
+            .waitForElementVisible('#tidelineMain', browser.globals.elementTimeout);
         },
       }],
     },
