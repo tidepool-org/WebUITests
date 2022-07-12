@@ -49,6 +49,13 @@ module.exports = {
         deviceSettings: 'a[class*=js-settings]',
       },
       commands: [{
+        /**
+         * @summary Navigates to one of the patient data views
+         * @param {string} view One of the available data views: basics, daily, bgLog, or trends
+         */
+        loadView(view) {
+          return this.click(`@${view}`);
+        },
       }],
     },
     footer: {
