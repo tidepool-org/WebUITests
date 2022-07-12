@@ -12,7 +12,7 @@ module.exports = {
           locateStrategy: 'xpath',
         },
         modalDismiss: {
-          selector: '//button[@aria-label="close dialog"]',
+          selector: '//*[@id="ChartDateRangePicker"]//button[@aria-label="close dialog"]',
           locateStrategy: 'xpath',
         },
         daysOptions: {
@@ -44,11 +44,11 @@ module.exports = {
           locateStrategy: 'xpath',
         },
         cancel: {
-          selector: '//div[text()="Cancel"]',
+          selector: '//*[@id="ChartDateRangePicker"]//*[text()="Cancel"]',
           locateStrategy: 'xpath',
         },
         apply: {
-          selector: '//div[text()="Apply"]',
+          selector: '//*[@id="ChartDateRangePicker"]//*[text()="Apply"]',
           locateStrategy: 'xpath',
         },
       },
