@@ -1,12 +1,15 @@
 module.exports = {
   '@tags': ['parallel'],
-  'Log In'(browser) {
+  'log in and navigate to basics page'(browser) {
     const loginPage = browser.page.loginPage();
+    const common = browser.page.commonElementsPage();
+    const patientData = common.section.patientData;
     const loginForm = loginPage.section.loginForm;
     const dsaUsername = browser.globals.dsaUsernameTandem;
     const dsaPassword = browser.globals.dsaPasswordTandem;
     loginPage.loadPage();
     loginForm.loginDsa(dsaUsername, dsaPassword);
+    patientData.loadView('basics');
   },
   'verify navbar elements present'(browser) {
     const common = browser.page.commonElementsPage();
