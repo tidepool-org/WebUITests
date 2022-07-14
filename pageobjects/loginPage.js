@@ -2,6 +2,9 @@ module.exports = {
   url: function useEnvironmentUrl() {
     return this.api.launch_url;
   },
+  elements: {
+    loginPage: '.login',
+  },
   sections: {
     navigation: {
       selector: '#app',
