@@ -4,6 +4,8 @@ module.exports = {
   src_folders: './tests',
   page_objects_path: './pageobjects',
   globals_path: 'global.js',
+  custom_commands_path: ['node_modules/nightwatch-vrt/commands'],
+  custom_assertions_path: ['node_modules/nightwatch-vrt/assertions'],
 
   test_settings: {
     webdriver: {
@@ -35,6 +37,7 @@ module.exports = {
     qa2chrome: {
       extends: 'browserstack',
       launch_url: 'https://qa2.development.tidepool.org',
+      environmentName: 'qa2chrome',
       desiredCapabilities: {
         browserName: 'chrome',
         browserVersion: 'latest',
@@ -49,6 +52,7 @@ module.exports = {
     qa1chrome: {
       extends: 'browserstack',
       launch_url: 'https://qa1.development.tidepool.org',
+      environmentName: 'qa1chrome',
       desiredCapabilities: {
         browserName: 'chrome',
         browserVersion: 'latest',
@@ -63,6 +67,7 @@ module.exports = {
     intchrome: {
       extends: 'browserstack',
       launch_url: 'https://int-app.tidepool.org',
+      environmentName: 'intchrome',
       desiredCapabilities: {
         browserName: 'chrome',
         browserVersion: 'latest',
@@ -77,6 +82,7 @@ module.exports = {
     prdchrome: {
       extends: 'browserstack',
       launch_url: 'https://app.tidepool.org',
+      environmentName: 'prdchrome',
       desiredCapabilities: {
         browserName: 'chrome',
         browserVersion: 'latest',
@@ -91,6 +97,7 @@ module.exports = {
     dev1chrome: {
       extends: 'browserstack',
       launch_url: 'https://dev1.dev.tidepool.org',
+      environmentName: 'dev1chrome',
       desiredCapabilities: {
         browserName: 'chrome',
         browserVersion: 'latest',

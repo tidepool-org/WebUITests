@@ -1,6 +1,7 @@
 /* eslint-disable no-console */
 require('dotenv').config();
 const request = require('request');
+const { generateScreenshotFilePath } = require('./utilities/utilities');
 
 module.exports = {
   abortOnAssertionFailure: true,
@@ -18,6 +19,19 @@ module.exports = {
   gmailUsername: process.env.GMAIL_USERNAME,
   elementTimeout: 15000,
   reporter: function reporterFunc(results, cb) { cb(results); },
+
+  visual_regression_settings: {
+    generate_screenshot_path: generateScreenshotFilePath,
+    latest_screenshots_path: 'vrt/latest',
+    latest_suffix: '',
+    baseline_screenshots_path: 'vrt/baseline',
+    baseline_suffix: '',
+    diff_screenshots_path: 'vrt/diff',
+    diff_suffix: '',
+    threshold: 0.0001,
+    prompt: false,
+    always_save_diff_screenshot: false,
+  },
 
   afterEach(browser, done) {
     browser.getLog('browser', (logEntriesArray) => {
