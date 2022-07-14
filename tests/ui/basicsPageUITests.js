@@ -8,6 +8,7 @@ module.exports = {
     const dsaUsername = browser.globals.dsaUsernameTandem;
     const dsaPassword = browser.globals.dsaPasswordTandem;
     loginPage.loadPage();
+    loginPage.assert.screenshotIdenticalToBaseline('@loginPage', 'login page');
     loginForm.loginDsa(dsaUsername, dsaPassword);
     patientData.loadView('basics');
   },
@@ -21,6 +22,7 @@ module.exports = {
     navBar.expect.element('@patientShare').to.be.visible;
     navBar.expect.element('@patientUpload').to.be.visible;
     navBar.expect.element('@loginDropdown').to.be.visible;
+    navBar.assert.screenshotIdenticalToBaseline('@navBarContainer', 'nav bar');
   },
   'verify common patient data elements present'(browser) {
     const common = browser.page.commonElementsPage();
@@ -35,6 +37,7 @@ module.exports = {
     patientData.expect.element('@dateRange').to.be.visible;
     patientData.expect.element('@print').to.be.visible;
     patientData.expect.element('@deviceSettings').to.be.visible;
+    patientData.assert.screenshotIdenticalToBaseline('@patientDataSubNav', 'patient data sub nav');
   },
   'verify date range selector elements present'(browser) {
     const basics = browser.page.basicsPage();
@@ -51,6 +54,7 @@ module.exports = {
     dateRangeSelector.expect.element('@dateRangeEnd').to.be.visible;
     dateRangeSelector.expect.element('@cancel').to.be.visible;
     dateRangeSelector.expect.element('@apply').to.be.visible;
+    dateRangeSelector.assert.screenshotIdenticalToBaseline('@chartDateRangeModal', 'chart date range modal');
     dateRangeSelector.click('@modalDismiss');
   },
   'verify bg dashboard elements present'(browser) {
@@ -66,6 +70,7 @@ module.exports = {
     bgDashboard.expect.element('@mostRecentDay').to.be.visible;
     bgDashboard.expect.element('@bgReading').to.be.visible;
     bgDashboard.expect.element('@bgReading').to.have.css('fill').which.equals('rgb(100, 128, 251)');
+    bgDashboard.assert.screenshotIdenticalToBaseline('@bgCalendar', 'bg dashboard');
   },
   'verify bolus dashboard elements present'(browser) {
     const basics = browser.page.basicsPage();
@@ -84,6 +89,7 @@ module.exports = {
     /* bolus color is still different (old) on qa environment qa1
     bolusDashboard.expect.element('@bolusEntry')
       .to.have.css('fill').which.equals('rgb(124, 208, 242)'); */
+    bolusDashboard.assert.screenshotIdenticalToBaseline('@bolusesCalendar', 'boluses dashboard');
   },
   'verify infusion site changes dashboard elements present'(browser) {
     const basics = browser.page.basicsPage();
@@ -92,6 +98,7 @@ module.exports = {
     infusionSiteDashboard.getLocationInView('@bottomOfDashboard');
     infusionSiteDashboard.expect.element('@settingsToggle').to.be.visible;
     infusionSiteDashboard.expect.element('@siteChangeDay').to.be.visible;
+    infusionSiteDashboard.assert.screenshotIdenticalToBaseline('@siteChangesCalendar', 'infusion site changes dashboard');
   },
   'verify basals dashboard elements present'(browser) {
     const basics = browser.page.basicsPage();
@@ -102,6 +109,7 @@ module.exports = {
     basalsDashboard.expect.element('@tempBasals').to.be.visible;
     basalsDashboard.expect.element('@suspends').to.be.visible;
     basalsDashboard.expect.element('@mostRecentDay').to.be.visible;
+    basalsDashboard.assert.screenshotIdenticalToBaseline('@basalsCalendar', 'basals dashboard');
   },
   'verify footer elements present'(browser) {
     const common = browser.page.commonElementsPage();
@@ -133,6 +141,14 @@ module.exports = {
     sidebar.expect.element('@gmi').to.not.be.present;
     sidebar.expect.element('@cv').to.be.visible;
     sidebar.expect.element('@filterDevices').to.be.visible;
+    sidebar.assert.screenshotIdenticalToBaseline('@readingsInRange', 'readings in range');
+    sidebar.assert.screenshotIdenticalToBaseline('@averageGlucose', 'average glucose');
+    sidebar.assert.screenshotIdenticalToBaseline('@totalInsulin', 'total insulin');
+    sidebar.assert.screenshotIdenticalToBaseline('@averageDailyDose', 'average daily dose');
+    sidebar.assert.screenshotIdenticalToBaseline('@units', 'units');
+    sidebar.assert.screenshotIdenticalToBaseline('@averageCarbs', 'average carbs');
+    sidebar.assert.screenshotIdenticalToBaseline('@cv', 'cv');
+    sidebar.assert.screenshotIdenticalToBaseline('@filterDevices', 'filter devices');
   },
   'verify sidebar and CGM agg stat elements present'(browser) {
     const basics = browser.page.basicsPage();
@@ -154,5 +170,7 @@ module.exports = {
     sidebar.expect.element('@gmi').to.be.visible;
     sidebar.expect.element('@cv').to.be.visible;
     sidebar.expect.element('@filterDevices').to.be.visible;
+    sidebar.assert.screenshotIdenticalToBaseline('@timeInRange', 'time in range');
+    sidebar.assert.screenshotIdenticalToBaseline('@gmi', 'gmi');
   },
 };
