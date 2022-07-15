@@ -3,3 +3,5 @@ tests_output
 .env
 .DS_Store
 .vscode
+vrt/diff
+vrt/latest

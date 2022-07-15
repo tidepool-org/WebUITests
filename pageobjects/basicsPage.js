@@ -7,6 +7,7 @@ module.exports = {
       selector: '#app',
       elements: {
         customDateIcon: 'span[aria-label="Choose custom date range"]',
+        chartDateRangeModal: '#ChartDateRangePicker',
         modalTitle: {
           selector: '//h3[text()="Chart Date Range"]',
           locateStrategy: 'xpath',
@@ -62,6 +63,7 @@ module.exports = {
           selector: '//h3[text()="BG readings"]',
           locateStrategy: 'xpath',
         },
+        bgCalendar: '.Calendar-container-fingersticks',
         bottomOfDashboard: {
           selector: '//h3[text()="Bolusing"]',
           locateStrategy: 'xpath',
@@ -109,6 +111,7 @@ module.exports = {
           selector: '//h3[text()="Bolusing"]',
           locateStrategy: 'xpath',
         },
+        bolusesCalendar: '.Calendar-container-boluses',
         bottomOfDashboard: {
           selector: '//h3[text()="Infusion site changes"]',
           locateStrategy: 'xpath',
@@ -164,6 +167,7 @@ module.exports = {
           selector: '//h3[text()="Infusion site changes"]',
           locateStrategy: 'xpath',
         },
+        siteChangesCalendar: '.Calendar-container-siteChanges',
         bottomOfDashboard: {
           selector: '//h3[text()="Basals"]',
           locateStrategy: 'xpath',
@@ -193,6 +197,7 @@ module.exports = {
           selector: '//h3[text()="Basals"]',
           locateStrategy: 'xpath',
         },
+        basalsCalendar: '.Calendar-container-basals',
         bottomOfDashboard: {
           selector: '//*[contains(@class,"refresh")]',
           locateStrategy: 'xpath',
