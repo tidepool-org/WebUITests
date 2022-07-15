@@ -16,6 +16,7 @@ module.exports = {
     navBar.expect.element('@privateWorkspace').to.be.visible;
     navBar.expect.element('@accountSettings').to.be.visible;
     navBar.expect.element('@logout').to.be.visible;
+    navBar.assert.screenshotIdenticalToBaseline('@loginDropdownMenu', 'login dropdown menu');
     navBar.click('@privateWorkspace');
   },
   'verify private workspace elements present'(browser) {
@@ -28,5 +29,7 @@ module.exports = {
     privateWorkspace.expect.element('@patientView').to.be.visible;
     privateWorkspace.expect.element('@patientShare').to.be.visible;
     privateWorkspace.expect.element('@patientUpload').to.be.visible;
+    privateWorkspace.assert.screenshotIdenticalToBaseline('@navBar', 'nav bar');
+    privateWorkspace.assert.screenshotIdenticalToBaseline('@patientsSection', 'private workspace patients');
   },
 };

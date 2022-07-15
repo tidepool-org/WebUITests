@@ -6,6 +6,7 @@ module.exports = {
     navBar: {
       selector: '.Navbar',
       elements: {
+        navBarContainer: '.App-navbar',
         logo: 'a[href="/"]',
         patientCard: '.patientcard',
         patientProfile: 'a[href$="profile"]',
@@ -13,6 +14,7 @@ module.exports = {
         patientShare: 'a[href$="share"]',
         patientUpload: 'a[title="Upload data"]',
         loginDropdown: '#navigation-menu-trigger',
+        loginDropdownMenu: '#navigationMenu',
         privateWorkspace: {
           selector: '//span[@aria-label="Private Workspace"]/ancestor::button',
           locateStrategy: 'xpath',
@@ -36,6 +38,7 @@ module.exports = {
         banner: 'div[class*="Banner-message"]',
         bannerAction: 'div[class*="Banner-action"]',
         bannerDismiss: 'div[class*="Banner-close"]',
+        patientDataSubNav: '.patient-data-subnav',
         basics: 'a[class*="js-basics"]',
         daily: 'a[class*="js-daily"]',
         bgLog: 'a[class*="js-bgLog"]',
@@ -61,6 +64,7 @@ module.exports = {
     footer: {
       selector: '#app',
       elements: {
+        footerContainer: '.footer',
         refresh: {
           selector: '//*[contains(@class,"refresh")]',
           locateStrategy: 'xpath',
