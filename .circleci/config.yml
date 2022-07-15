@@ -20,6 +20,10 @@ jobs:
       - run:
          name: Run Parallel Tests on All Environments
          command: npm run testParallel
+      - store_artifacts:
+          path: ./vrt/diff
+      - store_artifacts:
+          path: ./vrt/latest
       # - run:
       #     name: Run qa1 Tests
       #     command: npm run testqa1Seq
