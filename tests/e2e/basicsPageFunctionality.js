@@ -14,13 +14,13 @@ module.exports = {
     const common = browser.page.commonElementsPage();
     const patientData = common.section.patientData;
     bgDashboard.waitForElementVisible('@title', browser.globals.elementTimeout);
-    bgDashboard.getLocationInView('@bottomOfDashboard');
+    bgDashboard.moveToElement('@bottomOfDashboard', 0, 0);
     bgDashboard.moveToElement('@mostRecentDay', 0, 0);
     bgDashboard.waitForElementVisible('@dayHover', browser.globals.elementTimeout);
     bgDashboard.getText('@dayHover', ((result) => {
       const day = result.value;
       bgDashboard.click('@dayHover');
-      patientData.getLocationInView('@date');
+      patientData.moveToElement('@date', 0, 0);
       patientData.expect.element('@date').text.to.contain(day);
     }));
     patientData.click('@basics');
@@ -32,13 +32,13 @@ module.exports = {
     const common = browser.page.commonElementsPage();
     const patientData = common.section.patientData;
     bolusDashboard.waitForElementVisible('@title', browser.globals.elementTimeout);
-    bolusDashboard.getLocationInView('@bottomOfDashboard');
+    bolusDashboard.moveToElement('@bottomOfDashboard', 0, 0);
     bolusDashboard.moveToElement('@mostRecentDay', 0, 0);
     bolusDashboard.waitForElementVisible('@dayHover', browser.globals.elementTimeout);
     bolusDashboard.getText('@dayHover', ((result) => {
       const day = result.value;
       bolusDashboard.click('@dayHover');
-      patientData.getLocationInView('@date');
+      patientData.moveToElement('@date', 0, 0);
       patientData.expect.element('@date').text.to.contain(day);
     }));
     patientData.click('@basics');
@@ -52,19 +52,19 @@ module.exports = {
     infusionSiteDashboard.waitForElementVisible('@title', browser.globals.elementTimeout);
     infusionSiteDashboard.click('@settingsToggle');
     infusionSiteDashboard.click('@fillCannulaOption');
-    infusionSiteDashboard.getLocationInView('@bottomOfDashboard');
+    infusionSiteDashboard.moveToElement('@bottomOfDashboard', 0, 0);
     infusionSiteDashboard.expect.element('@filledCannulaDay').to.be.visible;
     infusionSiteDashboard.expect.element('@filledTubingDay').to.not.be.present;
     infusionSiteDashboard.moveToElement('@filledCannulaDay', 0, 0);
     infusionSiteDashboard.getText('@dayHover', ((result) => {
       const day = result.value;
       infusionSiteDashboard.click('@dayHover');
-      patientData.getLocationInView('@date');
+      patientData.moveToElement('@date', 0, 0);
       patientData.expect.element('@date').text.to.contain(day);
     }));
     patientData.click('@basics');
     infusionSiteDashboard.waitForElementVisible('@title', browser.globals.elementTimeout);
-    infusionSiteDashboard.getLocationInView('@bottomOfDashboard');
+    infusionSiteDashboard.moveToElement('@bottomOfDashboard', 0, 0);
     infusionSiteDashboard.click('@settingsToggle');
     infusionSiteDashboard.click('@fillTubingOption');
     infusionSiteDashboard.expect.element('@filledTubingDay').to.be.visible;
@@ -73,7 +73,7 @@ module.exports = {
     infusionSiteDashboard.getText('@dayHover', ((result) => {
       const day = result.value;
       infusionSiteDashboard.click('@dayHover');
-      patientData.getLocationInView('@date');
+      patientData.moveToElement('@date', 0, 0);
       patientData.expect.element('@date').text.to.contain(day);
     }));
     patientData.click('@basics');
@@ -85,13 +85,13 @@ module.exports = {
     const common = browser.page.commonElementsPage();
     const patientData = common.section.patientData;
     basalsDashboard.waitForElementVisible('@title', browser.globals.elementTimeout);
-    basalsDashboard.getLocationInView('@bottomOfDashboard');
+    basalsDashboard.moveToElement('@bottomOfDashboard', 0, 0);
     basalsDashboard.moveToElement('@mostRecentDay', 0, 0);
     basalsDashboard.waitForElementVisible('@dayHover', browser.globals.elementTimeout);
     basalsDashboard.getText('@dayHover', ((result) => {
       const day = result.value;
       basalsDashboard.click('@dayHover');
-      patientData.getLocationInView('@date');
+      patientData.moveToElement('@date', 0, 0);
       patientData.expect.element('@date').text.to.contain(day);
     }));
     patientData.click('@basics');
@@ -101,7 +101,7 @@ module.exports = {
     const basics = browser.page.basicsPage();
     const sidebar = basics.section.sidebar;
     sidebar.waitForElementVisible('@copyAsText', browser.globals.elementTimeout);
-    sidebar.getLocationInView('@copyAsText');
+    sidebar.moveToElement('@copyAsText', 0, 0);
     sidebar.toggleBGM();
     sidebar.expect.element('@readingsInRangeTitle').text.to.contain('Avg. Daily Readings In Range');
     sidebar.moveToElement('@readingsVeryAboveRangeBar', 0, 0);
@@ -134,7 +134,7 @@ module.exports = {
     const basics = browser.page.basicsPage();
     const sidebar = basics.section.sidebar;
     sidebar.waitForElementVisible('@copyAsText', browser.globals.elementTimeout);
-    sidebar.getLocationInView('@copyAsText');
+    sidebar.moveToElement('@copyAsText', 0, 0);
     sidebar.toggleCGM();
     sidebar.expect.element('@timeInRangeTitle').text.to.contain('Avg. Daily Time In Range');
     sidebar.moveToElement('@timeVeryAboveRangeBar', 0, 0);
@@ -171,7 +171,7 @@ module.exports = {
     const basics = browser.page.basicsPage();
     const sidebar = basics.section.sidebar;
     sidebar.waitForElementVisible('@copyAsText', browser.globals.elementTimeout);
-    sidebar.getLocationInView('@filterDevices');
+    sidebar.moveToElement('@filterDevices', 0, 0);
     sidebar.expect.element('@totalInsulinTitle').text.to.contain('Avg. Daily Insulin Ratio');
     sidebar.moveToElement('@basalInsulinBar', 0, 0);
     sidebar.expect.element('@totalInsulinTitle').text.to.contain('Basal Insulin');
@@ -188,9 +188,9 @@ module.exports = {
     const sidebar = basics.section.sidebar;
     const bolusDashboard = basics.section.bolusDashboard;
     sidebar.waitForElementVisible('@filterDevices', browser.globals.elementTimeout);
-    sidebar.getLocationInView('@filterDevices');
+    sidebar.moveToElement('@filterDevices', 0, 0);
     sidebar.click('@filterDevices');
-    sidebar.getLocationInView('@deviceCheckbox');
+    sidebar.moveToElement('@deviceCheckbox', 0, 0);
     sidebar.click('@deviceCheckbox');
     bolusDashboard.expect.element('@bolusEntry').to.not.be.present;
     sidebar.click('@deviceCheckbox');
