@@ -70,6 +70,7 @@ module.exports = {
     bgDashboard.expect.element('@mostRecentDay').to.be.visible;
     bgDashboard.expect.element('@bgReading').to.be.visible;
     bgDashboard.expect.element('@bgReading').to.have.css('fill').which.equals('rgb(100, 128, 251)');
+    bgDashboard.resetHoverState();
     bgDashboard.assert.screenshotIdenticalToBaseline('@bgCalendar', 'bg dashboard');
   },
   'verify bolus dashboard elements present'(browser) {

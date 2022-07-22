@@ -105,6 +105,22 @@ module.exports = {
         },
       },
       commands: [{
+        resetHoverState() {
+          this.isPresent('@dayHover', (result) => {
+            if (result.value) {
+              this
+                .moveToElement('@mostRecentDay', 0, 0)
+                .perform(() => {
+                  const actions = this.api.actions({ async: true });
+
+                  return actions
+                    .move({
+                      duration: 1000,
+                    });
+                });
+            }
+          });
+        },
       }],
     },
     bolusDashboard: {
