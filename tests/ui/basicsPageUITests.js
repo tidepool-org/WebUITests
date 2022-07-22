@@ -163,8 +163,10 @@ module.exports = {
     sidebar.assert.screenshotIdenticalToBaseline('@timeInRange', 'time in range');
     sidebar.expect.element('@readingsInRange').to.not.be.present;
     sidebar.expect.element('@averageGlucose').to.be.visible;
+    sidebar.assert.screenshotIdenticalToBaseline('@averageGlucose', 'average glucose CGM');
     sidebar.moveToElement('@filterDevices', 0, 0);
     sidebar.expect.element('@sensorUsage').to.be.visible;
+    sidebar.assert.screenshotIdenticalToBaseline('@sensorUsage', 'sensor usage');
     sidebar.expect.element('@totalInsulin').to.be.visible;
     sidebar.expect.element('@averageDailyDose').to.be.visible;
     sidebar.expect.element('@weight').to.be.visible;
@@ -172,7 +174,9 @@ module.exports = {
     sidebar.expect.element('@averageCarbs').to.be.visible;
     infusionSiteDashboard.moveToElement('@title', 0, 0);
     sidebar.expect.element('@gmi').to.be.visible;
+    sidebar.assert.screenshotIdenticalToBaseline('@gmi', 'gmi');
     sidebar.expect.element('@cv').to.be.visible;
+    sidebar.assert.screenshotIdenticalToBaseline('@cv', 'cv CGM');
     sidebar.expect.element('@filterDevices').to.be.visible;
   },
 };
