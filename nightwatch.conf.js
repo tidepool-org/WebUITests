@@ -20,6 +20,7 @@ module.exports = {
       },
       screenshots: {
         enabled: true,
+        on_failure: false,
       },
       desiredCapabilities: {
         'bstack:options': {
