@@ -125,39 +125,42 @@ module.exports = {
   'verify sidebar and BGM agg stat elements present'(browser) {
     const basics = browser.page.basicsPage();
     const sidebar = basics.section.sidebar;
+    const infusionSiteDashboard = basics.section.infusionSiteChanges;
     sidebar.waitForElementVisible('@copyAsText', browser.globals.elementTimeout);
     sidebar.moveToElement('@copyAsText', 0, 0);
     sidebar.expect.element('@bgmCgmToggle').to.be.visible;
     sidebar.toggleBGM();
     sidebar.waitForElementVisible('@readingsInRange', browser.globals.elementTimeout);
+    sidebar.assert.screenshotIdenticalToBaseline('@readingsInRange', 'readings in range');
     sidebar.expect.element('@timeInRange').to.not.be.present;
     sidebar.expect.element('@averageGlucose').to.be.visible;
+    sidebar.assert.screenshotIdenticalToBaseline('@averageGlucose', 'average glucose BGM');
     sidebar.moveToElement('@filterDevices', 0, 0);
     sidebar.expect.element('@totalInsulin').to.be.visible;
+    sidebar.assert.screenshotIdenticalToBaseline('@totalInsulin', 'total insulin');
     sidebar.expect.element('@averageDailyDose').to.be.visible;
+    sidebar.assert.screenshotIdenticalToBaseline('@averageDailyDose', 'average daily dose');
     sidebar.expect.element('@weight').to.be.visible;
     sidebar.expect.element('@units').to.be.visible;
     sidebar.expect.element('@averageCarbs').to.be.visible;
+    sidebar.assert.screenshotIdenticalToBaseline('@averageCarbs', 'average carbs');
+    infusionSiteDashboard.moveToElement('@title', 0, 0);
     sidebar.expect.element('@gmi').to.not.be.present;
+    sidebar.assert.screenshotIdenticalToBaseline('@cv', 'cv BGM');
     sidebar.expect.element('@cv').to.be.visible;
     sidebar.expect.element('@filterDevices').to.be.visible;
-    sidebar.assert.screenshotIdenticalToBaseline('@readingsInRange', 'readings in range');
-    sidebar.assert.screenshotIdenticalToBaseline('@averageGlucose', 'average glucose');
-    sidebar.assert.screenshotIdenticalToBaseline('@totalInsulin', 'total insulin');
-    sidebar.assert.screenshotIdenticalToBaseline('@averageDailyDose', 'average daily dose');
-    sidebar.assert.screenshotIdenticalToBaseline('@units', 'units');
-    sidebar.assert.screenshotIdenticalToBaseline('@averageCarbs', 'average carbs');
-    sidebar.assert.screenshotIdenticalToBaseline('@cv', 'cv');
     sidebar.assert.screenshotIdenticalToBaseline('@filterDevices', 'filter devices');
   },
   'verify sidebar and CGM agg stat elements present'(browser) {
     const basics = browser.page.basicsPage();
     const sidebar = basics.section.sidebar;
+    const infusionSiteDashboard = basics.section.infusionSiteChanges;
     sidebar.waitForElementVisible('@copyAsText', browser.globals.elementTimeout);
     sidebar.moveToElement('@copyAsText', 0, 0);
     sidebar.expect.element('@bgmCgmToggle').to.be.visible;
     sidebar.toggleCGM();
     sidebar.waitForElementVisible('@timeInRange', browser.globals.elementTimeout);
+    sidebar.assert.screenshotIdenticalToBaseline('@timeInRange', 'time in range');
     sidebar.expect.element('@readingsInRange').to.not.be.present;
     sidebar.expect.element('@averageGlucose').to.be.visible;
     sidebar.moveToElement('@filterDevices', 0, 0);
@@ -167,10 +170,9 @@ module.exports = {
     sidebar.expect.element('@weight').to.be.visible;
     sidebar.expect.element('@units').to.be.visible;
     sidebar.expect.element('@averageCarbs').to.be.visible;
+    infusionSiteDashboard.moveToElement('@title', 0, 0);
     sidebar.expect.element('@gmi').to.be.visible;
     sidebar.expect.element('@cv').to.be.visible;
     sidebar.expect.element('@filterDevices').to.be.visible;
-    sidebar.assert.screenshotIdenticalToBaseline('@timeInRange', 'time in range');
-    sidebar.assert.screenshotIdenticalToBaseline('@gmi', 'gmi');
   },
 };
