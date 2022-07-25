@@ -61,7 +61,7 @@ module.exports = {
     const basics = browser.page.basicsPage();
     const bgDashboard = basics.section.bgDashboard;
     bgDashboard.waitForElementVisible('@title', browser.globals.elementTimeout);
-    bgDashboard.getLocationInView('@bottomOfDashboard');
+    bgDashboard.moveToElement('@bottomOfDashboard', 0, 0);
     bgDashboard.expect.element('@averagePerDay').to.be.visible;
     bgDashboard.expect.element('@meter').to.be.visible;
     bgDashboard.expect.element('@manual').to.be.visible;
@@ -70,13 +70,14 @@ module.exports = {
     bgDashboard.expect.element('@mostRecentDay').to.be.visible;
     bgDashboard.expect.element('@bgReading').to.be.visible;
     bgDashboard.expect.element('@bgReading').to.have.css('fill').which.equals('rgb(100, 128, 251)');
+    bgDashboard.resetHoverState();
     bgDashboard.assert.screenshotIdenticalToBaseline('@bgCalendar', 'bg dashboard');
   },
   'verify bolus dashboard elements present'(browser) {
     const basics = browser.page.basicsPage();
     const bolusDashboard = basics.section.bolusDashboard;
     bolusDashboard.waitForElementVisible('@title', browser.globals.elementTimeout);
-    bolusDashboard.getLocationInView('@bottomOfDashboard');
+    bolusDashboard.moveToElement('@bottomOfDashboard', 0, 0);
     bolusDashboard.expect.element('@averagePerDay').to.be.visible;
     bolusDashboard.expect.element('@calculator').to.be.visible;
     bolusDashboard.expect.element('@correction').to.be.visible;
@@ -95,7 +96,7 @@ module.exports = {
     const basics = browser.page.basicsPage();
     const infusionSiteDashboard = basics.section.infusionSiteChanges;
     infusionSiteDashboard.waitForElementVisible('@title', browser.globals.elementTimeout);
-    infusionSiteDashboard.getLocationInView('@bottomOfDashboard');
+    infusionSiteDashboard.moveToElement('@bottomOfDashboard', 0, 0);
     infusionSiteDashboard.expect.element('@settingsToggle').to.be.visible;
     infusionSiteDashboard.expect.element('@siteChangeDay').to.be.visible;
     infusionSiteDashboard.assert.screenshotIdenticalToBaseline('@siteChangesCalendar', 'infusion site changes dashboard');
@@ -104,7 +105,7 @@ module.exports = {
     const basics = browser.page.basicsPage();
     const basalsDashboard = basics.section.basalsDashboard;
     basalsDashboard.waitForElementVisible('@title', browser.globals.elementTimeout);
-    basalsDashboard.getLocationInView('@bottomOfDashboard');
+    basalsDashboard.moveToElement('@bottomOfDashboard', 0, 0);
     basalsDashboard.expect.element('@basalEvents').to.be.visible;
     basalsDashboard.expect.element('@tempBasals').to.be.visible;
     basalsDashboard.expect.element('@suspends').to.be.visible;
@@ -115,7 +116,7 @@ module.exports = {
     const common = browser.page.commonElementsPage();
     const footer = common.section.footer;
     footer.waitForElementVisible('@twitter', browser.globals.elementTimeout);
-    footer.getLocationInView('@twitter');
+    footer.moveToElement('@twitter', 0, 0);
     footer.expect.element('@refresh').to.be.visible;
     footer.expect.element('@facebook').to.be.visible;
     footer.expect.element('@support').to.be.visible;
@@ -125,52 +126,58 @@ module.exports = {
   'verify sidebar and BGM agg stat elements present'(browser) {
     const basics = browser.page.basicsPage();
     const sidebar = basics.section.sidebar;
+    const infusionSiteDashboard = basics.section.infusionSiteChanges;
     sidebar.waitForElementVisible('@copyAsText', browser.globals.elementTimeout);
-    sidebar.getLocationInView('@copyAsText');
+    sidebar.moveToElement('@copyAsText', 0, 0);
     sidebar.expect.element('@bgmCgmToggle').to.be.visible;
     sidebar.toggleBGM();
     sidebar.waitForElementVisible('@readingsInRange', browser.globals.elementTimeout);
+    sidebar.assert.screenshotIdenticalToBaseline('@readingsInRange', 'readings in range');
     sidebar.expect.element('@timeInRange').to.not.be.present;
     sidebar.expect.element('@averageGlucose').to.be.visible;
+    sidebar.assert.screenshotIdenticalToBaseline('@averageGlucose', 'average glucose BGM');
+    sidebar.moveToElement('@filterDevices', 0, 0);
     sidebar.expect.element('@totalInsulin').to.be.visible;
+    sidebar.assert.screenshotIdenticalToBaseline('@totalInsulin', 'total insulin');
     sidebar.expect.element('@averageDailyDose').to.be.visible;
+    sidebar.assert.screenshotIdenticalToBaseline('@averageDailyDose', 'average daily dose');
     sidebar.expect.element('@weight').to.be.visible;
     sidebar.expect.element('@units').to.be.visible;
-    sidebar.getLocationInView('@filterDevices');
     sidebar.expect.element('@averageCarbs').to.be.visible;
+    sidebar.assert.screenshotIdenticalToBaseline('@averageCarbs', 'average carbs');
+    infusionSiteDashboard.moveToElement('@title', 0, 0);
     sidebar.expect.element('@gmi').to.not.be.present;
+    sidebar.assert.screenshotIdenticalToBaseline('@cv', 'cv BGM');
     sidebar.expect.element('@cv').to.be.visible;
     sidebar.expect.element('@filterDevices').to.be.visible;
-    sidebar.assert.screenshotIdenticalToBaseline('@readingsInRange', 'readings in range');
-    sidebar.assert.screenshotIdenticalToBaseline('@averageGlucose', 'average glucose');
-    sidebar.assert.screenshotIdenticalToBaseline('@totalInsulin', 'total insulin');
-    sidebar.assert.screenshotIdenticalToBaseline('@averageDailyDose', 'average daily dose');
-    sidebar.assert.screenshotIdenticalToBaseline('@units', 'units');
-    sidebar.assert.screenshotIdenticalToBaseline('@averageCarbs', 'average carbs');
-    sidebar.assert.screenshotIdenticalToBaseline('@cv', 'cv');
     sidebar.assert.screenshotIdenticalToBaseline('@filterDevices', 'filter devices');
   },
   'verify sidebar and CGM agg stat elements present'(browser) {
     const basics = browser.page.basicsPage();
     const sidebar = basics.section.sidebar;
+    const infusionSiteDashboard = basics.section.infusionSiteChanges;
     sidebar.waitForElementVisible('@copyAsText', browser.globals.elementTimeout);
-    sidebar.getLocationInView('@copyAsText');
+    sidebar.moveToElement('@copyAsText', 0, 0);
     sidebar.expect.element('@bgmCgmToggle').to.be.visible;
     sidebar.toggleCGM();
     sidebar.waitForElementVisible('@timeInRange', browser.globals.elementTimeout);
+    sidebar.assert.screenshotIdenticalToBaseline('@timeInRange', 'time in range');
     sidebar.expect.element('@readingsInRange').to.not.be.present;
     sidebar.expect.element('@averageGlucose').to.be.visible;
+    sidebar.assert.screenshotIdenticalToBaseline('@averageGlucose', 'average glucose CGM');
+    sidebar.moveToElement('@filterDevices', 0, 0);
     sidebar.expect.element('@sensorUsage').to.be.visible;
+    sidebar.assert.screenshotIdenticalToBaseline('@sensorUsage', 'sensor usage');
     sidebar.expect.element('@totalInsulin').to.be.visible;
     sidebar.expect.element('@averageDailyDose').to.be.visible;
     sidebar.expect.element('@weight').to.be.visible;
     sidebar.expect.element('@units').to.be.visible;
-    sidebar.getLocationInView('@filterDevices');
     sidebar.expect.element('@averageCarbs').to.be.visible;
+    infusionSiteDashboard.moveToElement('@title', 0, 0);
     sidebar.expect.element('@gmi').to.be.visible;
-    sidebar.expect.element('@cv').to.be.visible;
-    sidebar.expect.element('@filterDevices').to.be.visible;
-    sidebar.assert.screenshotIdenticalToBaseline('@timeInRange', 'time in range');
     sidebar.assert.screenshotIdenticalToBaseline('@gmi', 'gmi');
+    sidebar.expect.element('@cv').to.be.visible;
+    sidebar.assert.screenshotIdenticalToBaseline('@cv', 'cv CGM');
+    sidebar.expect.element('@filterDevices').to.be.visible;
   },
 };
