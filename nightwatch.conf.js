@@ -1,36 +1,49 @@
+require('dotenv').config();
 const dayjs = require('dayjs');
 
 module.exports = {
-  src_folders: './tests',
-  page_objects_path: './pageobjects',
+  src_folders: ['tests'],
+  page_objects_path: ['pageobjects'],
   globals_path: 'global.js',
   custom_commands_path: ['node_modules/nightwatch-vrt/commands'],
   custom_assertions_path: ['node_modules/nightwatch-vrt/assertions'],
 
+  webdriver: {},
+
   test_settings: {
-    webdriver: {
-      keep_alive: true,
-      timeout_options: {
-        timeout: 60000,
-        retry_attempts: 3,
-      },
-    },
-    test_workers: {
-      enabled: true,
-      workers: 'auto',
-    },
+
     browserstack: {
       selenium: {
-        host: 'hub-cloud.browserstack.com',
+        host: 'hub.browserstack.com',
         port: 443,
         start_process: false,
       },
-
+      screenshots: {
+        enabled: true,
+        on_failure: false,
+      },
       desiredCapabilities: {
-        local: 'false',
-        userName: process.env.BROWSERSTACK_USER,
-        accessKey: process.env.BROWSERSTACK_KEY,
-        'browserstack.debug': 'true',
+        'bstack:options': {
+          userName: process.env.BROWSERSTACK_USER,
+          accessKey: process.env.BROWSERSTACK_KEY,
+        },
+      },
+
+      disable_error_log: true,
+      webdriver: {
+        timeout_options: {
+          timeout: 15000,
+          retry_attempts: 3,
+        },
+        keep_alive: true,
+        start_process: false,
+      },
+    },
+
+    'browserstack.local': {
+      extends: 'browserstack',
+      desiredCapabilities: {
+        'browserstack.local': true,
       },
     },
 
@@ -40,12 +53,16 @@ module.exports = {
       environmentName: 'qa2chrome',
       desiredCapabilities: {
         browserName: 'chrome',
-        browserVersion: 'latest',
-        os: 'Windows',
-        osVersion: '10',
-        resolution: '1366x768',
-        build: `QA2_CHROME ${dayjs().format('YYYY-MM-DD h:mm:ss A')}`,
-        'browserstack.networkLogs': 'true',
+        'goog:chromeOptions': {
+          w3c: true,
+        },
+        'bstack:options': {
+          os: 'Windows',
+          osVersion: '10',
+          resolution: '1366x768',
+          buildName: `QA2_CHROME ${dayjs().format('YYYY-MM-DD h:mm:ss A')}`,
+          local: 'false',
+        },
       },
     },
 
@@ -55,42 +72,16 @@ module.exports = {
       environmentName: 'qa1chrome',
       desiredCapabilities: {
         browserName: 'chrome',
-        browserVersion: 'latest',
-        os: 'Windows',
-        osVersion: '10',
-        resolution: '1366x768',
-        build: `QA1_CHROME ${dayjs().format('YYYY-MM-DD h:mm:ss A')}`,
-        'browserstack.networkLogs': 'true',
-      },
-    },
-
-    intchrome: {
-      extends: 'browserstack',
-      launch_url: 'https://int-app.tidepool.org',
-      environmentName: 'intchrome',
-      desiredCapabilities: {
-        browserName: 'chrome',
-        browserVersion: 'latest',
-        os: 'Windows',
-        osVersion: '10',
-        resolution: '1366x768',
-        build: `INT_CHROME ${dayjs().format('YYYY-MM-DD h:mm:ss A')}`,
-
-      },
-    },
-
-    prdchrome: {
-      extends: 'browserstack',
-      launch_url: 'https://app.tidepool.org',
-      environmentName: 'prdchrome',
-      desiredCapabilities: {
-        browserName: 'chrome',
-        browserVersion: 'latest',
-        os: 'Windows',
-        osVersion: '10',
-        resolution: '1366x768',
-        build: `PRD_CHROME ${dayjs().format('YYYY-MM-DD h:mm:ss A')}`,
-        'browserstack.networkLogs': 'true',
+        'goog:chromeOptions': {
+          w3c: true,
+        },
+        'bstack:options': {
+          os: 'Windows',
+          osVersion: '10',
+          resolution: '1366x768',
+          buildName: `QA1_CHROME ${dayjs().format('YYYY-MM-DD h:mm:ss A')}`,
+          local: 'false',
+        },
       },
     },
 
@@ -100,11 +91,54 @@ module.exports = {
       environmentName: 'dev1chrome',
       desiredCapabilities: {
         browserName: 'chrome',
-        browserVersion: 'latest',
-        os: 'Windows',
-        osVersion: '10',
-        resolution: '1366x768',
-        build: `DEV1_CHROME ${dayjs().format('YYYY-MM-DD h:mm:ss A')}`,
+        'goog:chromeOptions': {
+          w3c: true,
+        },
+        'bstack:options': {
+          os: 'Windows',
+          osVersion: '10',
+          resolution: '1366x768',
+          buildName: `DEV1_CHROME ${dayjs().format('YYYY-MM-DD h:mm:ss A')}`,
+          local: 'false',
+        },
+      },
+    },
+
+    intchrome: {
+      extends: 'browserstack',
+      launch_url: 'https://int-app.tidepool.org',
+      environmentName: 'intchrome',
+      desiredCapabilities: {
+        browserName: 'chrome',
+        'goog:chromeOptions': {
+          w3c: true,
+        },
+        'bstack:options': {
+          os: 'Windows',
+          osVersion: '10',
+          resolution: '1366x768',
+          buildName: `INT_CHROME ${dayjs().format('YYYY-MM-DD h:mm:ss A')}`,
+          local: 'false',
+        },
+      },
+    },
+
+    prdchrome: {
+      extends: 'browserstack',
+      launch_url: 'https://app.tidepool.org',
+      environmentName: 'prdchrome',
+      desiredCapabilities: {
+        browserName: 'chrome',
+        'goog:chromeOptions': {
+          w3c: true,
+        },
+        'bstack:options': {
+          os: 'Windows',
+          osVersion: '10',
+          resolution: '1366x768',
+          buildName: `PRD_CHROME ${dayjs().format('YYYY-MM-DD h:mm:ss A')}`,
+          local: 'false',
+        },
       },
     },
   },

@@ -63,7 +63,10 @@ module.exports = {
           selector: '//h3[text()="BG readings"]',
           locateStrategy: 'xpath',
         },
-        bgCalendar: '.Calendar-container-fingersticks',
+        bgCalendar: {
+          selector: '//h3[text()="BG readings"]/parent::*',
+          locateStrategy: 'xpath',
+        },
         bottomOfDashboard: {
           selector: '//h3[text()="Bolusing"]',
           locateStrategy: 'xpath',
@@ -102,6 +105,22 @@ module.exports = {
         },
       },
       commands: [{
+        resetHoverState() {
+          this.isPresent('@dayHover', (result) => {
+            if (result.value) {
+              this
+                .moveToElement('@mostRecentDay', 0, 0)
+                .perform(() => {
+                  const actions = this.api.actions({ async: true });
+
+                  return actions
+                    .move({
+                      duration: 1000,
+                    });
+                });
+            }
+          });
+        },
       }],
     },
     bolusDashboard: {
@@ -111,7 +130,10 @@ module.exports = {
           selector: '//h3[text()="Bolusing"]',
           locateStrategy: 'xpath',
         },
-        bolusesCalendar: '.Calendar-container-boluses',
+        bolusesCalendar: {
+          selector: '//h3[text()="Bolusing"]/parent::*[@class="DashboardSection"]',
+          locateStrategy: 'xpath',
+        },
         bottomOfDashboard: {
           selector: '//h3[text()="Infusion site changes"]',
           locateStrategy: 'xpath',
@@ -167,7 +189,10 @@ module.exports = {
           selector: '//h3[text()="Infusion site changes"]',
           locateStrategy: 'xpath',
         },
-        siteChangesCalendar: '.Calendar-container-siteChanges',
+        siteChangesCalendar: {
+          selector: '//h3[text()="Infusion site changes"]/parent::*',
+          locateStrategy: 'xpath',
+        },
         bottomOfDashboard: {
           selector: '//h3[text()="Basals"]',
           locateStrategy: 'xpath',
@@ -197,7 +222,10 @@ module.exports = {
           selector: '//h3[text()="Basals"]',
           locateStrategy: 'xpath',
         },
-        basalsCalendar: '.Calendar-container-basals',
+        basalsCalendar: {
+          selector: '//h3[text()="Basals"]/parent::*',
+          locateStrategy: 'xpath',
+        },
         bottomOfDashboard: {
           selector: '//*[contains(@class,"refresh")]',
           locateStrategy: 'xpath',
