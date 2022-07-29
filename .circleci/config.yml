@@ -41,11 +41,11 @@ jobs:
           - run:
               name: Get API token
               command: |
-                echo export token=$(curl -H "Content-Type: application/json" -X POST --data "{ \"client_id\": \"$CLIENT_ID\",\"client_secret\": \"$CLIENT_SECRET\" }" https://xray.cloud.xpand-it.com/api/v1/authenticate| tr -d '"') >> $BASH_ENV
+                echo export token=$(curl -H "Content-Type: application/json" -X POST --data "{ \"client_id\": \"$CLIENT_ID\",\"client_secret\": \"$CLIENT_SECRET\" }" https://xray.cloud.getxray.app/api/v1/authenticate| tr -d '"') >> $BASH_ENV
                 source $BASH_ENV
           - run: 
               name: Send Results to JIRA
-              command: 'curl -H "Content-Type: text/xml" -H "Authorization: Bearer $token" --data @tests_output/testresults.xml  "https://xray.cloud.xpand-it.com/api/v1/import/execution/junit?projectKey=WEB&testPlanKey=WEB-1746"'
+              command: 'curl -H "Content-Type: text/xml" -H "Authorization: Bearer $token" --data @tests_output/testresults.xml  "https://xray.cloud.getxray.app/api/v1/import/execution/junit?projectKey=WEB&testPlanKey=WEB-1746"'
 
 workflows:
   commit-workflow:
