@@ -36,7 +36,7 @@ jobs:
       - when:
           condition:
             and:
-              - equal: ["qa2chrome", << pipeline.parameters.testEnvironment >> ]
+              - equal: ["testqa2All", << pipeline.parameters.testEnvironment >> ]
           steps:
           - run:
               name: Get API token
