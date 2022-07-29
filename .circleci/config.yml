@@ -1,6 +1,6 @@
 version: 2.1
 orbs:
-  node: circleci/node@4.2.0
+  node: circleci/node@5.0.2
 parameters:
   testEnvironment:
       type: string
@@ -10,7 +10,7 @@ jobs:
   test:
     working_directory: ~/tidepool-org/webuitests
     macos:
-      xcode: '13.0.0'
+      xcode: '14.0.0'
     resource_class: large
     steps:
       - checkout
@@ -45,7 +45,7 @@ jobs:
                 source $BASH_ENV
           - run: 
               name: Send Results to JIRA
-              command: 'curl -H "Content-Type: text/xml" -H "Authorization: Bearer $token" --data @target/tests_output/testresults.xml  "https://xray.cloud.xpand-it.com/api/v1/import/execution/junit?projectKey=WEB&testPlanKey=WEB-1746"'
+              command: 'curl -H "Content-Type: text/xml" -H "Authorization: Bearer $token" --data @tests_output/testresults.xml  "https://xray.cloud.xpand-it.com/api/v1/import/execution/junit?projectKey=WEB&testPlanKey=WEB-1746"'
 
 workflows:
   commit-workflow:
