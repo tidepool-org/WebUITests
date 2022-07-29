@@ -5,6 +5,9 @@ parameters:
   testEnvironment:
       type: string
       default: "testParallel"
+  testPlanKey:
+      type: string
+      default: "WEB-1746"
 
 jobs:
   test:
@@ -31,12 +34,12 @@ jobs:
           path: ./vrt/diff
       - store_artifacts:
           path: ./vrt/latest
-      - store_test_results: # uploads the test metadata from the `target/surefire-reports` directory so that it can show up in the CircleCI dashboard.
+      - store_test_results:
           path: tests_output/testresults.xml
-      - when:
+      - unless:
           condition:
             and:
-              - equal: ["testqa2All", << pipeline.parameters.testEnvironment >> ]
+              - equal: ["testParallel", << pipeline.parameters.testEnvironment >> ]
           steps:
           - run:
               name: Get API token
@@ -45,8 +48,8 @@ jobs:
                 source $BASH_ENV
           - run: 
               name: Send Results to JIRA
-              command: 'curl -H "Content-Type: text/xml" -H "Authorization: Bearer $token" --data @tests_output/testresults.xml  "https://xray.cloud.getxray.app/api/v1/import/execution/junit?projectKey=WEB&testPlanKey=WEB-1746"'
-
+              command: 'curl -H "Content-Type: text/xml" -H "Authorization: Bearer $token" --data @tests_output/testresults.xml  "https://xray.cloud.getxray.app/api/v1/import/execution/junit?projectKey=WEB&testPlanKey=<< pipeline.parameters.testPlanKey >>"'
+          
 workflows:
   commit-workflow:
     jobs:
