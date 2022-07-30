@@ -30,6 +30,7 @@ jobs:
       - run:
           name: Consolidate Test Report
           command: npm run merge-reports
+          when: always
       - store_artifacts:
           path: ./vrt/diff
       - store_artifacts:
@@ -46,10 +47,11 @@ jobs:
               command: |
                 echo export token=$(curl -H "Content-Type: application/json" -X POST --data "{ \"client_id\": \"$CLIENT_ID\",\"client_secret\": \"$CLIENT_SECRET\" }" https://xray.cloud.getxray.app/api/v1/authenticate| tr -d '"') >> $BASH_ENV
                 source $BASH_ENV
+              when: always
           - run: 
               name: Send Results to JIRA
               command: 'curl -H "Content-Type: text/xml" -H "Authorization: Bearer $token" --data @tests_output/testresults.xml  "https://xray.cloud.getxray.app/api/v1/import/execution/junit?projectKey=WEB&testPlanKey=<< pipeline.parameters.testPlanKey >>"'
-          
+              when: always
 workflows:
   commit-workflow:
     jobs:
