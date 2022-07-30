@@ -1,12 +1,19 @@
 version: 2.1
 orbs:
-  node: circleci/node@4.2.0
+  node: circleci/node@5.0.2
+parameters:
+  testEnvironment:
+      type: string
+      default: "testParallel"
+  testPlanKey:
+      type: string
+      default: "WEB-1746"
 
 jobs:
   test:
     working_directory: ~/tidepool-org/webuitests
     macos:
-      xcode: '13.0.0'
+      xcode: '14.0.0'
     resource_class: large
     steps:
       - checkout
@@ -18,25 +25,31 @@ jobs:
             - ./node_modules
           key: dependency-cache-{{ checksum "package.json" }}
       - run:
-         name: Run Parallel Tests on All Environments
-         command: npm run testParallel
+         name: Run Parallel Tests on Chosen Environments
+         command: npm run << pipeline.parameters.testEnvironment >>
+      - run:
+          name: Consolidate Test Report
+          command: npm run merge-reports
       - store_artifacts:
           path: ./vrt/diff
       - store_artifacts:
           path: ./vrt/latest
-      # - run:
-      #     name: Run qa1 Tests
-      #     command: npm run testqa1Seq
-      # - run:
-      #     name: Run qa2 Tests
-      #     command: npm run testqa2Seq
-      # - run:
-      #     name: Run prd Tests
-      #     command: npm run testprdSeq
-      # - run:
-      #     name: Run int Tests
-      #     command: npm run testintSeq
-
+      - store_test_results:
+          path: tests_output/testresults.xml
+      - unless:
+          condition:
+            and:
+              - equal: ["testParallel", << pipeline.parameters.testEnvironment >> ]
+          steps:
+          - run:
+              name: Get API token
+              command: |
+                echo export token=$(curl -H "Content-Type: application/json" -X POST --data "{ \"client_id\": \"$CLIENT_ID\",\"client_secret\": \"$CLIENT_SECRET\" }" https://xray.cloud.getxray.app/api/v1/authenticate| tr -d '"') >> $BASH_ENV
+                source $BASH_ENV
+          - run: 
+              name: Send Results to JIRA
+              command: 'curl -H "Content-Type: text/xml" -H "Authorization: Bearer $token" --data @tests_output/testresults.xml  "https://xray.cloud.getxray.app/api/v1/import/execution/junit?projectKey=WEB&testPlanKey=<< pipeline.parameters.testPlanKey >>"'
+          
 workflows:
   commit-workflow:
     jobs:

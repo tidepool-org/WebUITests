@@ -4,17 +4,13 @@
   "description": "Tidepool UI Testing with nightwatch and browserstack",
   "main": "index.js",
   "scripts": {
+    "merge-reports": "jrm tests_output/testresults.xml \"tests_output/**/*.xml\"",
     "testParallel": "nightwatch --tag parallel --env qa2chrome,prdchrome",
-    "testqa2Seq": "nightwatch --tag sequential --env qa2chrome",
-    "testqa1Seq": "nightwatch --tag sequential --env qa1chrome",
-    "testprdSeq": "nightwatch --tag sequential --env prdchrome",
-    "testintSeq": "nightwatch --tag sequential --env intchrome",
-    "testdev1Seq": "nightwatch --tag sequential --env dev1chrome",
-    "testqa2All": "nightwatch --env qa2chrome",
-    "testqa1All": "nightwatch --env qa1chrome",
-    "testprdAll": "nightwatch --env prdchrome",
-    "testintAll": "nightwatch --env intchrome",
-    "testdev1All": "nightwatch --env dev1chrome"
+    "testqa2Chrome": "nightwatch --env qa2chrome",
+    "testqa1Chrome": "nightwatch --env qa1chrome",
+    "testprdChrome": "nightwatch --env prdchrome",
+    "testintChrome": "nightwatch --env intchrome",
+    "testdev1Chrome": "nightwatch --env dev1chrome"
   },
   "scriptsComments": {
     "testParallel": "Executes tests that are able to run in parallel on all environments",
@@ -44,6 +40,7 @@
     "eslint-config-airbnb-base": "14.2.1",
     "eslint-plugin-chai-friendly": "0.7.1",
     "eslint-plugin-import": "2.23.4",
+    "junit-report-merger": "3.0.6",
     "nightwatch": "2.2.3"
   }
 }
