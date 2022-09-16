@@ -27,9 +27,6 @@ module.exports = {
   'verify common patient data elements present'(browser) {
     const common = browser.page.commonElementsPage();
     const patientData = common.section.patientData;
-    patientData.waitForElementVisible('@banner', browser.globals.elementTimeout);
-    patientData.expect.element('@bannerAction').to.be.visible;
-    patientData.expect.element('@bannerDismiss').to.be.visible;
     patientData.expect.element('@basics').to.be.visible;
     patientData.expect.element('@daily').to.be.visible;
     patientData.expect.element('@bgLog').to.be.visible;
