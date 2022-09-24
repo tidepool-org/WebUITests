@@ -111,7 +111,7 @@ jobs:
                             "text": "This failure was due to an unreliable test. \n The test will need to be modified or removed.",
                             "emoji": true
                           },
-                            "value": "value-2"
+                            "value": "value-3"
                         }
                       ],
                       "action_id": "actionId-0"
