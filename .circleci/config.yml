@@ -1,6 +1,7 @@
 version: 2.1
 orbs:
   node: circleci/node@5.0.2
+  slack: circleci/slack@4.1
 parameters:
   testEnvironment:
       type: string
@@ -37,6 +38,103 @@ jobs:
           path: ./vrt/latest
       - store_test_results:
           path: tests_output/testresults.xml
+      - slack/notify:
+          event: fail
+          branch_pattern: main
+          mentions: '@Ginny'
+          custom: |
+            {
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": " The Tidepool Web UI tests have failed. :sad_tapani: \n\n *Please confirm resolution details:*"
+                  }
+                },
+                {
+                  "type": "divider"
+                },
+                {
+                  "type": "actions",
+                  "elements": [
+                    {
+                      "type": "checkboxes",
+                      "options": [
+                        {
+                          "text": {
+                            "type": "plain_text",
+                            "text": "Confirmed defect :x:",
+                            "emoji": true
+                          },
+                          "description": {
+                            "type": "plain_text",
+                            "text": "This failure has been vetted and confirmed a defect.",
+                            "emoji": true
+                          },
+                          "value": "value-0"
+                        },
+                        {
+                          "text": {
+                            "type": "plain_text",
+                            "text": "Expected change :white_check_mark:",
+                            "emoji": true
+                          },
+                          "description": {
+                            "type": "plain_text",
+                            "text": "This failure has been due to an expected product change. \n Corresponding tests need to be updated.",
+                            "emoji": true
+                          },
+                          "value": "value-1"
+                        },
+                        {
+                          "text": {
+                            "type": "plain_text",
+                            "text": "Development run :female-technologist:",
+                            "emoji": true
+                          },
+                          "description": {
+                            "type": "plain_text",
+                            "text": "This failure was produced during a development run of these tests. \n Pay no mind.",
+                            "emoji": true
+                          },
+                          "value": "value-2"
+                        },
+                        {
+                          "text": {
+                            "type": "plain_text",
+                            "text": "Unreliable test :warning:",
+                            "emoji": true
+                          },
+                          "description": {
+                            "type": "plain_text",
+                            "text": "This failure was due to an unreliable test. \n The test will need to be modified or removed.",
+                            "emoji": true
+                          },
+                            "value": "value-2"
+                        }
+                      ],
+                      "action_id": "actionId-0"
+                    }
+                  ]
+                }
+              ]
+            }
+      - slack/notify:
+          event: pass
+          branch_pattern: main
+          custom: |
+            {
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                      "text": " The Tidepool Web UI tests have passed. :catjam:  \n\n"
+                  }
+                }
+              ]
+            }
       - unless:
           condition:
             and:
