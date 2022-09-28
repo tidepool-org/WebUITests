@@ -14,7 +14,10 @@ module.exports = {
         patientShare: 'a[href$="share"]',
         patientUpload: 'a[title="Upload data"]',
         loginDropdown: '#navigation-menu-trigger',
-        loginDropdownMenu: '#navigationMenu',
+        loginDropdownMenu: {
+          selector: '//span[@aria-label="Logout"]/ancestor::button/..',
+          locateStrategy: 'xpath',
+        },
         privateWorkspace: {
           selector: '//span[@aria-label="Private Workspace"]/ancestor::button',
           locateStrategy: 'xpath',
