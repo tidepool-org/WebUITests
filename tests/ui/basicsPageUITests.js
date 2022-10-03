@@ -1,3 +1,5 @@
+require('../../utilities/keepAliveSelenium');
+
 module.exports = {
   '@tags': ['parallel'],
   'log in and navigate to basics page'(browser) {
