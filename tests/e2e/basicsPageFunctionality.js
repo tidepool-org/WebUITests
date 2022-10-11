@@ -22,6 +22,7 @@ module.exports = {
     bgDashboard.getText('@dayHover', ((result) => {
       const day = result.value;
       bgDashboard.click('@dayHover');
+      patientData.waitForElementVisible('@dateRange', browser.globals.elementTimeout);
       patientData.moveToElement('@date', 0, 0);
       patientData.expect.element('@date').text.to.contain(day);
     }));
@@ -40,6 +41,7 @@ module.exports = {
     bolusDashboard.getText('@dayHover', ((result) => {
       const day = result.value;
       bolusDashboard.click('@dayHover');
+      patientData.waitForElementVisible('@dateRange', browser.globals.elementTimeout);
       patientData.moveToElement('@date', 0, 0);
       patientData.expect.element('@date').text.to.contain(day);
     }));
@@ -61,6 +63,7 @@ module.exports = {
     infusionSiteDashboard.getText('@dayHover', ((result) => {
       const day = result.value;
       infusionSiteDashboard.click('@dayHover');
+      patientData.waitForElementVisible('@dateRange', browser.globals.elementTimeout);
       patientData.moveToElement('@date', 0, 0);
       patientData.expect.element('@date').text.to.contain(day);
     }));
@@ -75,6 +78,8 @@ module.exports = {
     infusionSiteDashboard.getText('@dayHover', ((result) => {
       const day = result.value;
       infusionSiteDashboard.click('@dayHover');
+      infusionSiteDashboard.waitForElementNotPresent('@dayHover', browser.globals.elementTimeout);
+      patientData.waitForElementVisible('@dateRange', browser.globals.elementTimeout);
       patientData.moveToElement('@date', 0, 0);
       patientData.expect.element('@date').text.to.contain(day);
     }));
@@ -93,6 +98,7 @@ module.exports = {
     basalsDashboard.getText('@dayHover', ((result) => {
       const day = result.value;
       basalsDashboard.click('@dayHover');
+      patientData.waitForElementVisible('@dateRange', browser.globals.elementTimeout);
       patientData.moveToElement('@date', 0, 0);
       patientData.expect.element('@date').text.to.contain(day);
     }));
