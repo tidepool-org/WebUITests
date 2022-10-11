@@ -1,37 +1,38 @@
-/* eslint-disable */
-var http = require('http'),
-    https = require('https');
+/* eslint-disable func-names */
+/* eslint-disable no-param-reassign */
+/* eslint-disable no-prototype-builtins */
+const http = require('http');
+const https = require('https');
 
-//set the time (in seconds) for connection to be alive
-var keepAliveTimeout = 30*1000;
+// set the time (in seconds) for connection to be alive
+const keepAliveTimeout = 30000;
 
-if(http.globalAgent && http.globalAgent.hasOwnProperty('keepAlive')) {
-    http.globalAgent.keepAlive = true;
-    https.globalAgent.keepAlive = true;
-    http.globalAgent.keepAliveMsecs = keepAliveTimeout;
-    https.globalAgent.keepAliveMsecs = keepAliveTimeout;
+if (http.globalAgent && http.globalAgent.hasOwnProperty('keepAlive')) {
+  http.globalAgent.keepAlive = true;
+  https.globalAgent.keepAlive = true;
+  http.globalAgent.keepAliveMsecs = keepAliveTimeout;
+  https.globalAgent.keepAliveMsecs = keepAliveTimeout;
 } else {
-    var agent = new http.Agent({
-        keepAlive: true,
-        keepAliveMsecs: keepAliveTimeout
-    });
+  const agent = new http.Agent({
+    keepAlive: true,
+    keepAliveMsecs: keepAliveTimeout,
+  });
 
-    var secureAgent = new https.Agent({
-        keepAlive: true,
-        keepAliveMsecs: keepAliveTimeout
-    });
+  const secureAgent = new https.Agent({
+    keepAlive: true,
+    keepAliveMsecs: keepAliveTimeout,
+  });
 
-    var httpRequest = http.request;
-    var httpsRequest = https.request;
+  const httpRequest = http.request;
+  const httpsRequest = https.request;
 
-    http.request = function(options, callback){
-        if(options.protocol == "https:"){
-            options["agent"] = secureAgent;
-            return httpsRequest(options, callback);
-        }
-        else {
-            options["agent"] = agent;
-            return httpRequest(options, callback);
-        }
-    };
+  http.request = function (options, callback) {
+    if (options.protocol === 'https:') {
+      options.agent = secureAgent;
+      return httpsRequest(options, callback);
+    }
+
+    options.agent = agent;
+    return httpRequest(options, callback);
+  };
 }
