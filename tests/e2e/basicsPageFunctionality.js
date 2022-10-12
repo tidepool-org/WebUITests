@@ -12,18 +12,20 @@ module.exports = {
   },
   'BG readings dashboard functionality'(browser) {
     const basics = browser.page.basicsPage();
+    const daily = browser.page.dailyPage();
+    const dailyViewDay = daily.section.dailyViewDay;
     const bgDashboard = basics.section.bgDashboard;
     const common = browser.page.commonElementsPage();
     const patientData = common.section.patientData;
     bgDashboard.waitForElementVisible('@title', browser.globals.elementTimeout);
-    bgDashboard.moveToElement('@bottomOfDashboard', 0, 0);
+    bgDashboard.getLocationInView('@bottomOfDashboard');
     bgDashboard.moveToElement('@mostRecentDay', 0, 0);
     bgDashboard.waitForElementVisible('@dayHover', browser.globals.elementTimeout);
     bgDashboard.getText('@dayHover', ((result) => {
       const day = result.value;
       bgDashboard.click('@dayHover');
-      patientData.waitForElementVisible('@dateRange', browser.globals.elementTimeout);
-      patientData.moveToElement('@date', 0, 0);
+      dailyViewDay.waitForElementVisible('@bgChart', browser.globals.elementTimeout);
+      patientData.getLocationInView('@date');
       patientData.expect.element('@date').text.to.contain(day);
     }));
     patientData.click('@basics');
@@ -31,18 +33,20 @@ module.exports = {
   },
   'Bolus dashboard functionality'(browser) {
     const basics = browser.page.basicsPage();
+    const daily = browser.page.dailyPage();
+    const dailyViewDay = daily.section.dailyViewDay;
     const bolusDashboard = basics.section.bolusDashboard;
     const common = browser.page.commonElementsPage();
     const patientData = common.section.patientData;
     bolusDashboard.waitForElementVisible('@title', browser.globals.elementTimeout);
-    bolusDashboard.moveToElement('@bottomOfDashboard', 0, 0);
+    bolusDashboard.getLocationInView('@bottomOfDashboard');
     bolusDashboard.moveToElement('@mostRecentDay', 0, 0);
     bolusDashboard.waitForElementVisible('@dayHover', browser.globals.elementTimeout);
     bolusDashboard.getText('@dayHover', ((result) => {
       const day = result.value;
       bolusDashboard.click('@dayHover');
-      patientData.waitForElementVisible('@dateRange', browser.globals.elementTimeout);
-      patientData.moveToElement('@date', 0, 0);
+      dailyViewDay.waitForElementVisible('@bgChart', browser.globals.elementTimeout);
+      patientData.getLocationInView('@date');
       patientData.expect.element('@date').text.to.contain(day);
     }));
     patientData.click('@basics');
@@ -50,26 +54,28 @@ module.exports = {
   },
   'Infusion Site Changes dashboard functionality'(browser) {
     const basics = browser.page.basicsPage();
+    const daily = browser.page.dailyPage();
+    const dailyViewDay = daily.section.dailyViewDay;
     const infusionSiteDashboard = basics.section.infusionSiteChanges;
     const common = browser.page.commonElementsPage();
     const patientData = common.section.patientData;
     infusionSiteDashboard.waitForElementVisible('@title', browser.globals.elementTimeout);
     infusionSiteDashboard.click('@settingsToggle');
     infusionSiteDashboard.click('@fillCannulaOption');
-    infusionSiteDashboard.moveToElement('@bottomOfDashboard', 0, 0);
+    infusionSiteDashboard.getLocationInView('@bottomOfDashboard');
     infusionSiteDashboard.expect.element('@filledCannulaDay').to.be.visible;
     infusionSiteDashboard.expect.element('@filledTubingDay').to.not.be.present;
     infusionSiteDashboard.moveToElement('@filledCannulaDay', 0, 0);
     infusionSiteDashboard.getText('@dayHover', ((result) => {
       const day = result.value;
       infusionSiteDashboard.click('@dayHover');
-      patientData.waitForElementVisible('@dateRange', browser.globals.elementTimeout);
-      patientData.moveToElement('@date', 0, 0);
+      dailyViewDay.waitForElementVisible('@bgChart', browser.globals.elementTimeout);
+      patientData.getLocationInView('@date');
       patientData.expect.element('@date').text.to.contain(day);
     }));
     patientData.click('@basics');
     infusionSiteDashboard.waitForElementVisible('@title', browser.globals.elementTimeout);
-    infusionSiteDashboard.moveToElement('@bottomOfDashboard', 0, 0);
+    infusionSiteDashboard.getLocationInView('@bottomOfDashboard');
     infusionSiteDashboard.click('@settingsToggle');
     infusionSiteDashboard.click('@fillTubingOption');
     infusionSiteDashboard.expect.element('@filledTubingDay').to.be.visible;
@@ -78,9 +84,8 @@ module.exports = {
     infusionSiteDashboard.getText('@dayHover', ((result) => {
       const day = result.value;
       infusionSiteDashboard.click('@dayHover');
-      infusionSiteDashboard.waitForElementNotPresent('@dayHover', browser.globals.elementTimeout);
-      patientData.waitForElementVisible('@dateRange', browser.globals.elementTimeout);
-      patientData.moveToElement('@date', 0, 0);
+      dailyViewDay.waitForElementVisible('@bgChart', browser.globals.elementTimeout);
+      patientData.getLocationInView('@date');
       patientData.expect.element('@date').text.to.contain(day);
     }));
     patientData.click('@basics');
@@ -88,18 +93,20 @@ module.exports = {
   },
   'Basals dashboard functionality'(browser) {
     const basics = browser.page.basicsPage();
+    const daily = browser.page.dailyPage();
+    const dailyViewDay = daily.section.dailyViewDay;
     const basalsDashboard = basics.section.basalsDashboard;
     const common = browser.page.commonElementsPage();
     const patientData = common.section.patientData;
     basalsDashboard.waitForElementVisible('@title', browser.globals.elementTimeout);
-    basalsDashboard.moveToElement('@bottomOfDashboard', 0, 0);
+    basalsDashboard.getLocationInView('@bottomOfDashboard');
     basalsDashboard.moveToElement('@mostRecentDay', 0, 0);
     basalsDashboard.waitForElementVisible('@dayHover', browser.globals.elementTimeout);
     basalsDashboard.getText('@dayHover', ((result) => {
       const day = result.value;
       basalsDashboard.click('@dayHover');
-      patientData.waitForElementVisible('@dateRange', browser.globals.elementTimeout);
-      patientData.moveToElement('@date', 0, 0);
+      dailyViewDay.waitForElementVisible('@bgChart', browser.globals.elementTimeout);
+      patientData.getLocationInView('@date');
       patientData.expect.element('@date').text.to.contain(day);
     }));
     patientData.click('@basics');
