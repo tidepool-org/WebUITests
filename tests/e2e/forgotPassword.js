@@ -1,5 +1,7 @@
 const { dsaUsernameTandem, dsaPasswordTandem } = require('../../global');
 
+require('../../utilities/seleniumKeepAlive');
+
 module.exports = {
   '@disabled': true, // Skipping for now until we decide how to best handle test email access
   '@tags': ['sequential'],

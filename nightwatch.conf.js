@@ -35,7 +35,7 @@ module.exports = {
           timeout: 15000,
           retry_attempts: 3,
         },
-        keep_alive: true,
+        keep_alive: false,
         start_process: false,
       },
     },

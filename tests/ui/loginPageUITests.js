@@ -1,3 +1,5 @@
+require('../../utilities/seleniumKeepAlive');
+
 module.exports = {
   '@tags': ['parallel'],
   'Verify nav elements present'(browser) {
