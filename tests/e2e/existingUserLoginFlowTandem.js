@@ -1,3 +1,5 @@
+require('../../utilities/seleniumKeepAlive');
+
 module.exports = {
   '@tags': ['parallel'],
   'User Logs in with Existing Credentials'(browser) {

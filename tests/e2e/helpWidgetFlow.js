@@ -1,3 +1,5 @@
+require('../../utilities/seleniumKeepAlive');
+
 module.exports = {
   '@disabled': true, // Skipping for now until we decide how to best handle tests involving iframes
   '@tags': ['parallel'],
