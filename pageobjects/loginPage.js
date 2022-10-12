@@ -54,10 +54,9 @@ module.exports = {
   },
   commands: [{
     loadPage() {
-      return this
-        .navigate()
-        .maximizeWindow()
-        .waitForElementVisible('#app', this.api.globals.elementTimeout, 'page loaded');
+      this.navigate();
+      this.api.fullscreenWindow();
+      return this.waitForElementVisible('#app', this.api.globals.elementTimeout, 'page loaded');
     },
   }],
 };
