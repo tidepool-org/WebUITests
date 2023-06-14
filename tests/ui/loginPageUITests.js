@@ -1,32 +1,40 @@
-require('../../utilities/seleniumKeepAlive');
+require("../../utilities/seleniumKeepAlive");
 
 module.exports = {
-  '@tags': ['parallel'],
-  'Verify nav elements present'(browser) {
+  "@tags": ["parallel"],
+  "Verify nav elements present"(browser) {
     const loginPage = browser.page.loginPage();
-    const pageNav = loginPage.section.navigation;
     loginPage.loadPage();
-    pageNav.waitForElementVisible('@signupLink', browser.globals.elementTimeout);
-    pageNav.expect.element('@logo').to.be.visible;
+    loginPage.waitForElementVisible(
+      "@signupLink",
+      browser.globals.elementTimeout
+    );
+    loginPage.expect.element("@logo").to.be.visible;
   },
-  'Verify login Form elements present'(browser) {
+
+  "Verify Login Form elements present"(browser) {
     const loginPage = browser.page.loginPage();
-    const loginForm = loginPage.section.loginForm;
     loginPage.loadPage();
-    loginForm.waitForElementVisible('@usernameInput', browser.globals.elementTimeout);
-    loginForm.expect.element('@passwordInput').to.be.visible;
-    loginForm.expect.element('@rememberChk').to.be.visible;
-    loginForm.expect.element('@loginBtn').to.be.visible;
+    loginPage.waitForElementVisible(
+      "@usernameInput",
+      browser.globals.elementTimeout
+    );
+    loginPage.expect.element("@rememberChk").to.be.visible;
+    loginPage.expect.element("@nextBtn").to.be.visible;
   },
-  'Verify footer elements present'(browser) {
+
+  "Verify footer elements present"(browser) {
     const loginPage = browser.page.loginPage();
-    const footer = loginPage.section.footer;
     loginPage.loadPage();
-    footer.waitForElementVisible('@twitterLogo', browser.globals.elementTimeout);
-    footer.expect.element('@facebookLogo').to.be.visible;
-    footer.expect.element('@mobileLink').to.be.visible;
-    footer.expect.element('@supportLink').to.be.visible;
-    footer.expect.element('@termsLink').to.be.visible;
-    footer.expect.element('@jdrfLink').to.be.visible;
+    browser.fullscreenWindow();
+    loginPage.waitForElementVisible(
+      "@twitterLogo",
+      browser.globals.elementTimeout
+    );
+    loginPage.expect.element("@facebookLogo").to.be.visible;
+    loginPage.expect.element("@mobileLink").to.be.visible;
+    loginPage.expect.element("@supportLink").to.be.visible;
+    loginPage.expect.element("@termsLink").to.be.visible;
+    loginPage.expect.element("@jdrfLink").to.be.visible;
   },
 };
