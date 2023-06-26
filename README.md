@@ -24,9 +24,9 @@ The tests here use page objects. This means that frequently used UI elements and
     
 * run `npm testParallel` to test all setup environments (qa1, qa2, prd) on all browsers (currently only chrome on windows 10 for now) for tests that are eligible to be run in parallel (tests that don't change user state or access tidepool emails)
   * run `npm run test<env>Seq` to test tests that cannot be run in parallel on all browsers (currently only chrome on windows 10 for now) for a given environment (qa1, qa2, or prd). This is typically only used for CI.
-  * run `npm run testqa1` to test qa1 on all browsers (currently only chrome on windows 10 for now)
-  * run `npm run testqa2` to test qa2 on all browsers (currently only chrome on windows 10 for now)
-  * run `npm run testprd` to test prd on all browsers (currently only chrome on windows 10 for now)
+  * run `npm run testqa1Chrome` to test qa1 on all browsers (currently only chrome on windows 10 for now)
+  * run `npm run testqa2Chrome` to test qa2 on all browsers (currently only chrome on windows 10 for now)
+  * run `npm run testprdChrome` to test prd on all browsers (currently only chrome on windows 10 for now)
 
 ## Testing Locally (without Browserstack)
 The nightwatch tests can be run without using the browserstack service. You will, however, need to install selenium and the appropriate web driver dependencies for the browsers you wish to test as well as update the `nightwatch.conf.js` to use these dependencies instead of browserstack. There's really no reason to do this.
