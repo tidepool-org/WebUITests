@@ -69,7 +69,7 @@ module.exports = {
       // Add other commands/actions related to the login form here
       loadPage() {
         this.navigate();
-        browser.maximizeWindow();
+        browser.window.maximize();
         return this.waitForElementVisible(
           "#kc-page-title",
           this.api.globals.elementTimeout,
