@@ -6,7 +6,6 @@ module.exports = {
     const loginPage = browser.page.loginPage();
     const common = browser.page.commonElementsPage();
     const patientData = common.section.patientData;
-    //const loginForm = loginPage.section.loginForm;
     const dsaUsername = browser.globals.dsaUsernameTandem;
     const dsaPassword = browser.globals.dsaPasswordTandem;
     loginPage.loadPage();
@@ -118,7 +117,6 @@ module.exports = {
   },
   'verify footer elements present'(browser) {
     const common = browser.page.commonElementsPage();
-    browser.fullscreenWindow();
     const footer = common.section.footer;
     footer.waitForElementVisible('@twitter', browser.globals.elementTimeout);
     footer.moveToElement('@twitter', 0, 0);

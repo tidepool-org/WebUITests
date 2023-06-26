@@ -29,18 +29,18 @@
   "homepage": "https://github.com/tidepool-org/nightwatchtests#readme",
   "dependencies": {
     "dayjs": "1.11.8",
-    "dotenv": "16.1.4",
+    "dotenv": "16.3.1",
     "eslint-config-airbnb": "19.0.4",
     "nightwatch-vrt": "github:tidepool-org/nightwatch-vrt#master",
     "otplib": "12.0.1",
     "request": "^2.88.2"
   },
   "devDependencies": {
-    "eslint": "8.42.0",
+    "eslint": "8.43.0",
     "eslint-config-airbnb-base": "15.0.0",
     "eslint-plugin-chai-friendly": "0.7.2",
     "eslint-plugin-import": "2.27.5",
     "junit-report-merger": "6.0.2",
-    "nightwatch": "2.6.21"
+    "nightwatch": "3.0.1"
   }
 }

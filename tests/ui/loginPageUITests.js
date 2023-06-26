@@ -26,7 +26,6 @@ module.exports = {
   "Verify footer elements present"(browser) {
     const loginPage = browser.page.loginPage();
     loginPage.loadPage();
-    browser.fullscreenWindow();
     loginPage.waitForElementVisible(
       "@twitterLogo",
       browser.globals.elementTimeout

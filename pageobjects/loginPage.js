@@ -20,7 +20,7 @@ module.exports = {
       selector: "#rememberMe", //ID selector for the rememberMe checkbox field
     },
     nextBtn: {
-      selector: "#kc-login", //ID selector for the rememberMe checkbox field
+      selector: "#kc-login", //ID selector for the Next checkbox field
     },
     signupLink: {
       selector: '//a[contains(text(),"Sign up")]',
@@ -69,7 +69,7 @@ module.exports = {
       // Add other commands/actions related to the login form here
       loadPage() {
         this.navigate();
-        this.api.fullscreenWindow();
+        browser.maximizeWindow();
         return this.waitForElementVisible(
           "#kc-page-title",
           this.api.globals.elementTimeout,
