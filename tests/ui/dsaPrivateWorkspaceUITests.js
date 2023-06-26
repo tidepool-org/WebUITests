@@ -4,8 +4,6 @@ module.exports = {
   '@tags': ['parallel'],
   'Log In'(browser) {
     const loginPage = browser.page.loginPage();
-
-    browser.fullscreenWindow();
     loginPage.loadPage();
     const dsaUsername = browser.globals.dsaUsernameTandem;
     const dsaPassword = browser.globals.dsaPasswordTandem;

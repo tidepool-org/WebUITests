@@ -5,7 +5,6 @@ module.exports = {
   'User Logs in with Existing Credentials'(browser) {
     const loginPage = browser.page.loginPage();
     loginPage.loadPage();
-    //const loginForm = loginPage.section.loginForm;
     const dsaUsername = browser.globals.dsaUsernameTandem;
     const dsaPassword = browser.globals.dsaPasswordTandem;
     loginPage.waitForElementVisible('@usernameInput', browser.globals.elementTimeout);
