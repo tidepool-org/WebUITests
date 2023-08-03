@@ -6,12 +6,16 @@ module.exports = {
     const loginPage = browser.page.loginPage();
     const common = browser.page.commonElementsPage();
     const patientData = common.section.patientData;
-    const loginForm = loginPage.section.loginForm;
     const dsaUsername = browser.globals.dsaUsernameTandem;
     const dsaPassword = browser.globals.dsaPasswordTandem;
     loginPage.loadPage();
-    loginPage.assert.screenshotIdenticalToBaseline('@loginPage', 'login page');
-    loginForm.loginDsa(dsaUsername, dsaPassword);
+    loginPage.assert.screenshotIdenticalToBaseline('@landingPage', 'landing page');
+    loginPage.waitForElementVisible('@usernameInput', browser.globals.elementTimeout);
+    loginPage.enterUsername(dsaUsername);
+    loginPage.nextBtnClick();            //Navigate to the password page
+    loginPage.waitForElementVisible('@passwordInput', browser.globals.elementTimeout);
+    loginPage.enterPassword(dsaPassword);
+    loginPage.submitBtnClick();            //Navigate to the home page
     patientData.loadView('basics');
   },
   'verify navbar elements present'(browser) {

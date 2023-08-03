@@ -4,11 +4,15 @@ module.exports = {
   '@tags': ['parallel'],
   'Log In'(browser) {
     const loginPage = browser.page.loginPage();
-    const loginForm = loginPage.section.loginForm;
+    loginPage.loadPage();
     const dsaUsername = browser.globals.dsaUsernameTandem;
     const dsaPassword = browser.globals.dsaPasswordTandem;
-    loginPage.loadPage();
-    loginForm.loginDsa(dsaUsername, dsaPassword);
+    loginPage.waitForElementVisible('@usernameInput', browser.globals.elementTimeout);
+    loginPage.enterUsername(dsaUsername);
+    loginPage.nextBtnClick();            //Navigate to the password page
+    loginPage.waitForElementVisible('@passwordInput', browser.globals.elementTimeout);
+    loginPage.enterPassword(dsaPassword);
+    loginPage.submitBtnClick();            //Navigate to the password page
   },
   'verify login dropdown elements present'(browser) {
     const common = browser.page.commonElementsPage();
