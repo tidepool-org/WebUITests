@@ -7,7 +7,8 @@ module.exports = {
       selector: '#app',
       elements: {
         bgChart: '#poolBG',
-        allCharts: '#tidelinePools'
+        allCharts: '#tidelinePools',
+        chartsContainer: '#tidelineMain'
       },
       commands: [{
       }],
