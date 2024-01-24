@@ -14,7 +14,7 @@ jobs:
   test:
     working_directory: ~/tidepool-org/webuitests
     macos:
-      xcode: '14.0.0'
+      xcode: 14.0.0
     resource_class: large
     steps:
       - checkout
