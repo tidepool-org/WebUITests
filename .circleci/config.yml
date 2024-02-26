@@ -1,6 +1,7 @@
 version: 2.1
 orbs:
   node: circleci/node@5.0.2
+  browser-tools: circleci/browser-tools@1.4.8
   slack: circleci/slack@4.1
 parameters:
   testEnvironment:
@@ -13,11 +14,11 @@ parameters:
 jobs:
   test:
     working_directory: ~/tidepool-org/webuitests
-    macos:
-      xcode: '14.0.0'
-    resource_class: large
+    docker: 
+      - image: cimg/node:lts-browsers
     steps:
       - checkout
+      - browser-tools/install-browser-tools
       - node/install
       - run: node --version
       - run: npm install
