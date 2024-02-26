@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "merge-reports": "jrm tests_output/testresults.xml \"tests_output/**/*.xml\"",
-    "testParallel": "nightwatch --tag parallel --env qa2chrome,prdchrome,qa1chrome",
+    "testParallel": "nightwatch --tag parallel --env qa2chrome,prdchrome",
     "testqa2Chrome": "nightwatch --env qa2chrome",
     "testqa1Chrome": "nightwatch --env qa1chrome",
     "testprdChrome": "nightwatch --env prdchrome",
