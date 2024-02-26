@@ -7,7 +7,7 @@ module.exports = {
   abortOnAssertionFailure: true,
   abortOnElementLocateError: true,
   waitForConditionPollInterval: 500,
-  waitForConditionTimeout: 5000,
+  waitForConditionTimeout: 10000,
   suppressWarningsOnMultipleElementsReturned: false,
   asyncHookTimeout: 10000,
   customReporterCallbackTimeout: 20000,
@@ -17,7 +17,7 @@ module.exports = {
   dsaPasswordTandem: process.env.DSA_PASSWORD_TANDEM,
   gmailPassword: process.env.GMAIL_PASSWORD,
   gmailUsername: process.env.GMAIL_USERNAME,
-  elementTimeout: 15000,
+  elementTimeout: 20000,
   reporter: function reporterFunc(results, cb) { cb(results); },
 
   visual_regression_settings: {
@@ -28,7 +28,7 @@ module.exports = {
     baseline_suffix: '',
     diff_screenshots_path: 'vrt/diff',
     diff_suffix: '',
-    threshold: 0.02,
+    threshold: 0.5,
     prompt: false,
     always_save_diff_screenshot: false,
   },

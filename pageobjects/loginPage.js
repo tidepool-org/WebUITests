@@ -5,26 +5,26 @@ module.exports = {
 
   elements: {
     landingPage: {
-      selector: ".card-pf",
+      selector: '.card-pf',
     },
     usernameInput: {
-      selector: "#username", // ID selector for the username input field
+      selector: '#username', // ID selector for the username input field
     },
     passwordInput: {
-      selector: "#password", // ID selector for the password input field
+      selector: '#password', // ID selector for the password input field
     },
     submitBtn: {
       selector: 'input[name="login"]', // Name selector for the submit btn field
     },
     rememberChk: {
-      selector: "#rememberMe", //ID selector for the rememberMe checkbox field
+      selector: '#rememberMe', // ID selector for the rememberMe checkbox field
     },
     nextBtn: {
-      selector: "#kc-login", //ID selector for the Next checkbox field
+      selector: '#kc-login', // ID selector for the Next checkbox field
     },
     signupLink: {
       selector: '//a[contains(text(),"Sign up")]',
-      locateStrategy: "xpath",
+      locateStrategy: 'xpath',
     },
     logo: {
       selector: 'img[alt="Tidepool"]',
@@ -54,16 +54,16 @@ module.exports = {
   commands: [
     {
       enterUsername: function (username) {
-        return this.setValue("@usernameInput", username);
+        return this.setValue('@usernameInput', username);
       },
       enterPassword: function (password) {
-        return this.setValue("@passwordInput", password);
+        return this.setValue('@passwordInput', password);
       },
       nextBtnClick: function () {
-        return this.click("@nextBtn");
+        return this.click('@nextBtn');
       },
       submitBtnClick: function () {
-        return this.click("@submitBtn");
+        return this.click('@submitBtn');
       },
 
       // Add other commands/actions related to the login form here
@@ -71,9 +71,9 @@ module.exports = {
         this.navigate();
         browser.window.maximize();
         return this.waitForElementVisible(
-          "#kc-page-title",
+          '#kc-page-title',
           this.api.globals.elementTimeout,
-          "page loaded"
+          'page loaded',
         );
       },
     },

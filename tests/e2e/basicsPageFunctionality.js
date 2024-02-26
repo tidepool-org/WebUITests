@@ -28,6 +28,8 @@ module.exports = {
     bgDashboard.getText('@dayHover', ((result) => {
       const day = result.value;
       bgDashboard.click('@dayHover');
+      dailyViewDay.waitForElementVisible('@chartsContainer', browser.globals.elementTimeout);
+      dailyViewDay.waitForElementVisible('@allCharts', browser.globals.elementTimeout);
       dailyViewDay.waitForElementVisible('@bgChart', browser.globals.elementTimeout);
       patientData.getLocationInView('@date');
       patientData.expect.element('@date').text.to.contain(day);
@@ -49,6 +51,8 @@ module.exports = {
     bolusDashboard.getText('@dayHover', ((result) => {
       const day = result.value;
       bolusDashboard.click('@dayHover');
+      dailyViewDay.waitForElementVisible('@chartsContainer', browser.globals.elementTimeout);
+      dailyViewDay.waitForElementVisible('@allCharts', browser.globals.elementTimeout);
       dailyViewDay.waitForElementVisible('@bgChart', browser.globals.elementTimeout);
       patientData.getLocationInView('@date');
       patientData.expect.element('@date').text.to.contain(day);
@@ -73,6 +77,8 @@ module.exports = {
     infusionSiteDashboard.getText('@dayHover', ((result) => {
       const day = result.value;
       infusionSiteDashboard.click('@dayHover');
+      dailyViewDay.waitForElementVisible('@chartsContainer', browser.globals.elementTimeout);
+      dailyViewDay.waitForElementVisible('@allCharts', browser.globals.elementTimeout);
       dailyViewDay.waitForElementVisible('@bgChart', browser.globals.elementTimeout);
       patientData.getLocationInView('@date');
       patientData.expect.element('@date').text.to.contain(day);
@@ -88,6 +94,8 @@ module.exports = {
     infusionSiteDashboard.getText('@dayHover', ((result) => {
       const day = result.value;
       infusionSiteDashboard.click('@dayHover');
+      dailyViewDay.waitForElementVisible('@chartsContainer', browser.globals.elementTimeout);
+      dailyViewDay.waitForElementVisible('@allCharts', browser.globals.elementTimeout);
       dailyViewDay.waitForElementVisible('@bgChart', browser.globals.elementTimeout);
       patientData.getLocationInView('@date');
       patientData.expect.element('@date').text.to.contain(day);
@@ -109,6 +117,8 @@ module.exports = {
     basalsDashboard.getText('@dayHover', ((result) => {
       const day = result.value;
       basalsDashboard.click('@dayHover');
+      dailyViewDay.waitForElementVisible('@chartsContainer', browser.globals.elementTimeout);
+      dailyViewDay.waitForElementVisible('@allCharts', browser.globals.elementTimeout);
       dailyViewDay.waitForElementVisible('@bgChart', browser.globals.elementTimeout);
       patientData.getLocationInView('@date');
       patientData.expect.element('@date').text.to.contain(day);

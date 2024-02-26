@@ -32,7 +32,7 @@ module.exports = {
       disable_error_log: true,
       webdriver: {
         timeout_options: {
-          timeout: 15000,
+          timeout: 20000,
           retry_attempts: 3,
         },
         keep_alive: false,
