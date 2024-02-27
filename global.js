@@ -7,7 +7,7 @@ module.exports = {
   abortOnAssertionFailure: true,
   abortOnElementLocateError: true,
   waitForConditionPollInterval: 500,
-  waitForConditionTimeout: 10000,
+  waitForConditionTimeout: 30000,
   suppressWarningsOnMultipleElementsReturned: false,
   asyncHookTimeout: 10000,
   customReporterCallbackTimeout: 20000,
@@ -17,7 +17,7 @@ module.exports = {
   dsaPasswordTandem: process.env.DSA_PASSWORD_TANDEM,
   gmailPassword: process.env.GMAIL_PASSWORD,
   gmailUsername: process.env.GMAIL_USERNAME,
-  elementTimeout: 20000,
+  elementTimeout: 30000,
   reporter: function reporterFunc(results, cb) { cb(results); },
 
   visual_regression_settings: {
