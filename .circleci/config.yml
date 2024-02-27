@@ -33,9 +33,9 @@ jobs:
           command: npm run merge-reports
           when: always
       - store_artifacts:
-          path: ./vrt/diff
+          path: vrt/diff
       - store_artifacts:
-          path: ./vrt/latest
+          path: vrt/latest
       - store_test_results:
           path: tests_output/testresults.xml
       - slack/notify:
