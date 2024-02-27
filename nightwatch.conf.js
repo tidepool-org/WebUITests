@@ -11,12 +11,10 @@ module.exports = {
   webdriver: {},
 
   test_settings: {
-
     browserstack: {
       selenium: {
         host: 'hub.browserstack.com',
         port: 443,
-        start_process: false,
       },
       screenshots: {
         enabled: true,
@@ -35,7 +33,7 @@ module.exports = {
           timeout: 20000,
           retry_attempts: 3,
         },
-        keep_alive: false,
+        keep_alive: true,
         start_process: false,
       },
     },
