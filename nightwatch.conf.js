@@ -55,11 +55,13 @@ module.exports = {
         'browserstack.local': true,
       },
     },
+    /* The following test environments and their names are tightly couple with the jira automation.
+    changing these could result in broken a QMS */
 
     qa2chrome: {
       extends: 'browserstack',
       launch_url: 'https://qa2.development.tidepool.org',
-      environmentName: 'qa2chrome',
+      environmentName: 'qa2chrome', // an extra key o help vrt distinguish between environments
       desiredCapabilities: {
         browserName: 'chrome',
         'goog:chromeOptions': {
@@ -70,6 +72,25 @@ module.exports = {
           osVersion: '10',
           resolution: '1366x768',
           buildName: `QA2_CHROME ${dayjs().format('YYYY-MM-DD')} JIRA: ${process.env.TEST_EXECUTION_KEY}`,
+          local: 'false',
+        },
+      },
+    },
+
+    qa2edge: {
+      extends: 'browserstack',
+      launch_url: 'https://qa2.development.tidepool.org',
+      environmentName: 'qa2edge',
+      desiredCapabilities: {
+        browserName: 'edge',
+        'goog:chromeOptions': {
+          w3c: true,
+        },
+        'bstack:options': {
+          os: 'Windows',
+          osVersion: '10',
+          resolution: '1366x768',
+          buildName: `QA2_EDGE ${dayjs().format('YYYY-MM-DD')} JIRA: ${process.env.TEST_EXECUTION_KEY}`,
           local: 'false',
         },
       },
@@ -89,6 +110,25 @@ module.exports = {
           osVersion: '10',
           resolution: '1366x768',
           buildName: `QA1_CHROME ${dayjs().format('YYYY-MM-DD')} JIRA: ${process.env.TEST_EXECUTION_KEY}`,
+          local: 'false',
+        },
+      },
+    },
+
+    qa1edge: {
+      extends: 'browserstack',
+      launch_url: 'https://qa1.development.tidepool.org',
+      environmentName: 'qa1edge',
+      desiredCapabilities: {
+        browserName: 'edge',
+        'goog:chromeOptions': {
+          w3c: true,
+        },
+        'bstack:options': {
+          os: 'Windows',
+          osVersion: '10',
+          resolution: '1366x768',
+          buildName: `QA1_EDGE ${dayjs().format('YYYY-MM-DD')} JIRA: ${process.env.TEST_EXECUTION_KEY}`,
           local: 'false',
         },
       },
@@ -146,6 +186,25 @@ module.exports = {
           osVersion: '10',
           resolution: '1366x768',
           buildName: `PRD_CHROME ${dayjs().format('YYYY-MM-DD')} JIRA: ${process.env.TEST_EXECUTION_KEY}`,
+          local: 'false',
+        },
+      },
+    },
+
+    prdedge: {
+      extends: 'browserstack',
+      launch_url: 'https://app.tidepool.org',
+      environmentName: 'prdedge',
+      desiredCapabilities: {
+        browserName: 'edge',
+        'goog:chromeOptions': {
+          w3c: true,
+        },
+        'bstack:options': {
+          os: 'Windows',
+          osVersion: '10',
+          resolution: '1366x768',
+          buildName: `PRD_EDGE ${dayjs().format('YYYY-MM-DD')} JIRA: ${process.env.TEST_EXECUTION_KEY}`,
           local: 'false',
         },
       },
