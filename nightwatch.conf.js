@@ -11,15 +11,27 @@ module.exports = {
   webdriver: {},
 
   test_settings: {
+    default: {
+      disable_error_log: false,
+      launch_url: 'qa2.development.tidepool.org',
+
+      screenshots: {
+        enabled: true,
+        path: 'screens',
+        on_failure: true,
+      },
+
+      desiredCapabilities: {
+        browserName: 'chrome',
+      },
+    },
+
     browserstack: {
       selenium: {
         host: 'hub.browserstack.com',
         port: 443,
       },
-      screenshots: {
-        enabled: true,
-        on_failure: false,
-      },
+
       desiredCapabilities: {
         'bstack:options': {
           userName: process.env.BROWSERSTACK_USER,
