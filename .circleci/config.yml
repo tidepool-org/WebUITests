@@ -9,7 +9,7 @@ parameters:
       default: "testParallel"
   testExecKey:
       type: string
-
+      default: "none"
 jobs:
   test:
     working_directory: ~/tidepool-org/webuitests
