@@ -149,7 +149,7 @@ jobs:
               when: always
           - run: 
               name: Send Results to JIRA
-              command: 'curl -H "Content-Type: text/xml" -H "Authorization: Bearer $token" --data @tests_output/testresults.xml  "https://xray.cloud.getxray.app/api/v1/import/execution/junit?projectKey=WEB&testPlanKey=<< pipeline.parameters.testPlanKey >>"'
+              command: 'curl -H "Content-Type: text/xml" -H "Authorization: Bearer $token" --data @tests_output/testresults.xml  "https://xray.cloud.getxray.app/api/v1/import/execution/junit?testExecKey=<< pipeline.parameters.testExecKey >>"'
               when: always
 workflows:
   commit-workflow:
