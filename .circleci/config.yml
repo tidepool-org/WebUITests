@@ -7,9 +7,8 @@ parameters:
   testEnvironment:
       type: string
       default: "testParallel"
-  testPlanKey:
+  testExecKey:
       type: string
-      default: "WEB-1746"
 
 jobs:
   test:
