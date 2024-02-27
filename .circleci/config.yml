@@ -41,6 +41,8 @@ jobs:
           path: vrt/latest
       - store_artifacts:
           path: vrt/diff
+      - store_artifacts:
+          path: vrt/baseline/ui/**/*.png
       - store_test_results:
           path: tests_output/testresults.xml
       - slack/notify:
