@@ -15,7 +15,7 @@ module.exports = {
     loginPage.nextBtnClick();            //Navigate to the password page
     loginPage.waitForElementVisible('@passwordInput', browser.globals.elementTimeout);
     loginPage.enterPassword(dsaPassword);
-    loginPage.submitBtnClick();            //Navigate to the home page
+    loginPage.submitBtnClick();          //Navigate to the home page
     patientData.loadView('basics');
   },
   'verify navbar elements present'(browser) {
