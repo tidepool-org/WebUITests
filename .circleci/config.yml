@@ -15,6 +15,8 @@ jobs:
     working_directory: ~/tidepool-org/webuitests
     docker: 
       - image: cimg/node:lts-browsers
+    environment:
+      TEST_EXECUTION_KEY: << pipeline.parameters.testExecKey >>
     steps:
       - checkout
       - browser-tools/install-browser-tools
@@ -25,9 +27,6 @@ jobs:
           paths:
             - ./node_modules
           key: dependency-cache-{{ checksum "package.json" }}
-      - run:
-          name: Export Related Test Execution Number
-          command: export TEST_EXECUTION_KEY='<< pipeline.parameters.testExecKey >>'
       - run:
          name: Run Parallel Tests on Chosen Environments
          command: npm run << pipeline.parameters.testEnvironment >>
