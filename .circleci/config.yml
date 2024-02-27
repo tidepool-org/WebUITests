@@ -26,8 +26,11 @@ jobs:
             - ./node_modules
           key: dependency-cache-{{ checksum "package.json" }}
       - run:
+          name: Export Related Test Execution Number
+          command: export TEST_EXECUTION_KEY='<< pipeline.parameters.testExecKey >>'
+      - run:
          name: Run Parallel Tests on Chosen Environments
-         command: export TEST_EXECUTION_KEY='<< pipeline.parameters.testExecKey >>' npm run << pipeline.parameters.testEnvironment >>
+         command: npm run << pipeline.parameters.testEnvironment >>
       - run:
           name: Consolidate Test Report
           command: npm run merge-reports
