@@ -16,5 +16,6 @@ module.exports = {
     'prefer-destructuring': 'off',
     'chai-friendly/no-unused-expressions': 'off',
     'object-shorthand': ['error', 'properties'],
+    'no-console': 'off',
   },
 };

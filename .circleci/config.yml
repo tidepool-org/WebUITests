@@ -35,7 +35,7 @@ jobs:
           command: npm run merge-reports
           when: always
       - store_artifacts:
-          path: tests_output/nightwatch-html-report/*.html
+          path: tests_output/nightwatch-html-report
       - store_artifacts:
           path: vrt/latest
       - store_artifacts:
@@ -147,14 +147,22 @@ jobs:
               - equal: ["testParallel", << pipeline.parameters.testEnvironment >> ]
           steps:
           - run:
+              name: Gather Test Evidence
+              command: node utilities/browserstackEvidenceDownload.js
+              when: always
+          - run:
               name: Get API token
               command: |
                 echo export token=$(curl -H "Content-Type: application/json" -X POST --data "{ \"client_id\": \"$CLIENT_ID\",\"client_secret\": \"$CLIENT_SECRET\" }" https://xray.cloud.getxray.app/api/v1/authenticate| tr -d '"') >> $BASH_ENV
                 source $BASH_ENV
               when: always
           - run: 
-              name: Send Results to JIRA
+              name: Send Results to XRAY
               command: 'curl -H "Content-Type: text/xml" -H "Authorization: Bearer $token" --data @tests_output/testresults.xml  "https://xray.cloud.getxray.app/api/v1/import/execution/junit?testExecKey=<< pipeline.parameters.testExecKey >>"'
+              when: always
+          - run:
+              name: Add Test Evidence to JIRA
+              command: node utilities/sendTestEvidenceToJira.js
               when: always
 workflows:
   commit-workflow:
