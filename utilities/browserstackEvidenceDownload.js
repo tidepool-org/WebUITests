@@ -3,12 +3,10 @@ const fs = require('fs');
 const https = require('https');
 require('dotenv').config();
 
-// Basic auth credentials
 const username = process.env.BROWSERSTACK_USER;
 const password = process.env.BROWSERSTACK_KEY;
 const auth = Buffer.from(`${username}:${password}`).toString('base64');
 
-// Define the function to download video from URL and save to the local file system
 function downloadVideo(url, filename) {
   const directory = './test_evidence';
   // Sanitize filename to remove potential problematic characters
@@ -37,17 +35,17 @@ function downloadVideo(url, filename) {
   });
   request.on('error', (err) => {
     console.error(`Error during request: ${err.message}`);
-    fs.unlinkSync(filePath); // Attempt to delete the file on error
+    fs.unlinkSync(filePath);
   });
 
   file.on('error', (err) => {
     console.error(`Error writing file '${safeFilename}': ${err.message}`);
-    fs.unlinkSync(filePath); // Attempt to delete the file on error
+    fs.unlinkSync(filePath);
     file.close();
   });
 }
 
-// Define the function to fetch session data for a given build hashed_id
+// fetch session data for a given build hashed_id
 function getSessionData(hashedId) {
   axios({
     method: 'get',
@@ -57,7 +55,6 @@ function getSessionData(hashedId) {
     },
   })
     .then((response) => {
-    // Extract and download video URLs from session data
       response.data.forEach((session) => {
         const videoUrl = session.automation_session.video_url;
         downloadVideo(videoUrl, `${hashedId}-${session.automation_session.name}.mp4`);
@@ -66,7 +63,6 @@ function getSessionData(hashedId) {
     .catch((error) => console.error(error));
 }
 
-// Define the function to process fetched builds to find specific builds and fetch their sessions
 function processBuilds(data) {
   data.filter((build) => build.automation_build.name.includes(process.env.TEST_EXECUTION_KEY))
     .forEach((build) => {
@@ -75,7 +71,6 @@ function processBuilds(data) {
     });
 }
 
-// Define the function to fetch builds and process each for hashed_id
 function getBuilds() {
   axios({
     method: 'get',
@@ -90,10 +85,8 @@ function getBuilds() {
     .catch((error) => console.error(error));
 }
 
-// Entry point to start the process
 function start() {
   getBuilds();
 }
 
-// Invoke the entry point to start the process
 start();
