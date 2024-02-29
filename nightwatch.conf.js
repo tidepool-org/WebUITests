@@ -22,6 +22,7 @@ module.exports = {
 
       desiredCapabilities: {
         browserName: 'chrome',
+        'browserstack.idletimeout': 300,
       },
     },
 
