@@ -7,11 +7,6 @@ module.exports = {
     loginPage.loadPage();
     const dsaUsername = browser.globals.dsaUsernameTandem;
     const dsaPassword = browser.globals.dsaPasswordTandem;
-    loginPage.waitForElementVisible('@usernameInput', browser.globals.elementTimeout);
-    loginPage.enterUsername(dsaUsername);
-    loginPage.nextBtnClick();            //Navigate to the password page
-    loginPage.waitForElementVisible('@passwordInput', browser.globals.elementTimeout);
-    loginPage.enterPassword(dsaPassword);
-    loginPage.submitBtnClick();            //Navigate to the home page
+    loginPage.userLogin(dsaUsername, dsaPassword);
   },
 };
