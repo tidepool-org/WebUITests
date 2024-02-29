@@ -22,7 +22,6 @@ module.exports = {
 
       desiredCapabilities: {
         browserName: 'chrome',
-        'browserstack.idletimeout': 300,
       },
     },
 
@@ -37,6 +36,7 @@ module.exports = {
           userName: process.env.BROWSERSTACK_USER,
           accessKey: process.env.BROWSERSTACK_KEY,
         },
+        'browserstack.idletimeout': 300,
       },
 
       disable_error_log: true,
