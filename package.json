@@ -5,7 +5,9 @@
   "main": "index.js",
   "scripts": {
     "merge-reports": "jrm tests_output/testresults.xml \"tests_output/e2e/*.xml\" \"tests_output/ui/*.xml\"",
-    "testParallel": "nightwatch --tag parallel --env qa2chrome,prdchrome",
+    "testAll": "nightwatch --env qa2chrome,prdchrome,prdedge,qa1chrome,qa2edge,qa1edge",
+    "testAllChrome": "nightwatch --env qa2chrome,prdchrome,qa1chrome",
+    "testAllEdge": "nightwatch --env prdedge,qa2edge,qa1edge",
     "testqa2Chrome": "nightwatch --env qa2chrome",
     "testqa2Edge": "nightwatch --env qa2edge",
     "testqa1Edge": "nightwatch --env qa1edge",
@@ -16,9 +18,9 @@
     "testdev1Chrome": "nightwatch --env dev1chrome"
   },
   "scriptsComments": {
-    "testParallel": "Executes tests that are able to run in parallel on all environments",
-    "testXSeq": "Executes tests that must be run sequentially, and not in conjuction with other environments",
-    "testXAll": "Executes ALL tests on 1 environment"
+    "testAll": "Executes tests on all environments with all supported browsers. This will take a while. Really only used for nightly regression testing.",
+    "testAll<browser>": "Executes tests on all environments with one browser.",
+    "test<env><browser>": "Executes tests on one environment with one browser."
   },
   "repository": {
     "type": "git",

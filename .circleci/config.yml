@@ -6,7 +6,7 @@ orbs:
 parameters:
   testEnvironment:
       type: string
-      default: "testParallel"
+      default: "testAll"
   testExecKey:
       type: string
       default: "none"
@@ -78,7 +78,7 @@ jobs:
       - unless:
           condition:
             and:
-              - equal: ["testParallel", << pipeline.parameters.testEnvironment >> ]
+              - equal: ["testAll", << pipeline.parameters.testEnvironment >> ]
           steps:
           - run:
               name: Gather Test Evidence
