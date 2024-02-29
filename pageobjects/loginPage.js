@@ -53,23 +53,19 @@ module.exports = {
 
   commands: [
     {
-      enterUsername: function (username) {
-        return this.setValue('@usernameInput', username);
-      },
-      enterPassword: function (password) {
-        return this.setValue('@passwordInput', password);
-      },
-      nextBtnClick: function () {
-        return this.click('@nextBtn');
-      },
-      submitBtnClick: function () {
+      // Add other commands/actions related to the login form here
+      userLogin(username, password) {
+        this.waitForElementVisible('@usernameInput', this.api.globals.elementTimeout);
+        this.setValue('@usernameInput', username);
+        this.click('@nextBtn');
+        this.waitForElementVisible('@passwordInput', this.api.globals.elementTimeout);
+        this.setValue('@passwordInput', password);
         return this.click('@submitBtn');
       },
 
-      // Add other commands/actions related to the login form here
       loadPage() {
         this.navigate();
-        browser.window.maximize();
+        this.api.window.maximize();
         return this.waitForElementVisible(
           '#kc-page-title',
           this.api.globals.elementTimeout,
