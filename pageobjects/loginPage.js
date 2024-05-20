@@ -14,7 +14,7 @@ module.exports = {
       selector: '#password', // ID selector for the password input field
     },
     submitBtn: {
-      selector: 'input[name="login"]', // Name selector for the submit btn field
+      selector: '#kc-login', // Name selector for the submit btn field
     },
     rememberChk: {
       selector: '#rememberMe', // ID selector for the rememberMe checkbox field
