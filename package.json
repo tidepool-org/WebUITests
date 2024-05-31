@@ -14,7 +14,8 @@
     "testprdEdge": "nightwatch --env prdedge",
     "testintChrome": "nightwatch --env intchrome",
     "testdev1Chrome": "nightwatch --env dev1chrome",
-    "testqa2ChromeTag": "nightwatch --env qa2chrome --tag clinician"
+    "testqa2ChromeClinician": "nightwatch --env qa2chrome --tag clinician",
+    "testqa2ChromeNotifications": "nightwatch --env qa2chrome --tag notifications"
   },
   "scriptsComments": {
     "testParallel": "Executes tests that are able to run in parallel on all environments",
