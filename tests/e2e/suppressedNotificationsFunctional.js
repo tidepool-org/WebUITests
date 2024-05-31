@@ -7,10 +7,11 @@ module.exports = {
     const loginPage = browser.page.loginPage();
     const clinicianUsername = browser.globals.clinicianUsername;
     const clinicianPassword = browser.globals.clinicianPassword;
+    const environment = browser.launch_url;
     loginPage.loadPage();
     loginPage.userLogin(clinicianUsername, clinicianPassword);
-    browser.suppressedNotificationsTrue();
-    browser.suppressedNotificationsTrueCheck();
+    browser.suppressedNotificationsTrue(clinicianUsername, clinicianPassword, environment);
+    browser.suppressedNotificationsTrueCheck(clinicianUsername, clinicianPassword, environment);
   },
   'Clinic workspace selection'(browser) {
     const clinicWorkspacePage = browser.page.clinicWorkspacePage();
@@ -33,13 +34,16 @@ module.exports = {
     clinicPatientList.waitForElementVisible('@city', browser.globals.elementTimeout);
   },
   'Clinic workspace settings apply changes and check suppressed notifications status'(browser) {
+    const clinicianUsername = browser.globals.clinicianUsername;
+    const clinicianPassword = browser.globals.clinicianPassword;
+    const environment = browser.launch_url;
     const clinicPatientListPage = browser.page.clinicPatientListPage();
     const clinicPatientList = clinicPatientListPage.section.patientList;
     clinicPatientList.waitForElementVisible('@city', browser.globals.elementTimeout);
     clinicPatientList.setValue('@city', 'new');
     clinicPatientList.click('@clinicProfileSubmit');
     clinicPatientList.waitForElementNotVisible('@city', browser.globals.elementTimeout);
-    browser.suppressedNotificationsTrueCheck();
+    browser.suppressedNotificationsTrueCheck(clinicianUsername, clinicianPassword, environment);
   },
 
 };
