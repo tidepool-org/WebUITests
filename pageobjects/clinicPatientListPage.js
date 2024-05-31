@@ -49,6 +49,22 @@ module.exports = {
           selector: '//*[@id="peopleTable-header-cgm-lastUploadDate"]//*[contains(@class," MuiTableSortLabel-iconDirectionDesc")]',
           locateStrategy: 'xpath',
         },
+        workspaceSettings: {
+          selector: '//button[@id="profileNavigationButton"]',
+          locateStrategy: 'xpath',
+        },
+        edit: {
+          selector: '//button//*[text()="Edit"]',
+          locateStrategy: 'xpath',
+        },
+        city: {
+          selector: '//input[@id="city"]',
+          locateStrategy: 'xpath',
+        },
+        clinicProfileSubmit: {
+          selector: '//button[@id="editClinicProfileSubmit"]',
+          locateStrategy: 'xpath',
+        },
 
       },
       commands: [{
