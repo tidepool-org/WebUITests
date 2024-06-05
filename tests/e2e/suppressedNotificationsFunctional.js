@@ -1,17 +1,20 @@
+/* eslint-disable max-len */
 /* eslint-disable linebreak-style */
 require('../../utilities/seleniumKeepAlive');
 
 module.exports = {
   '@tags': ['notifications'],
-  'Clinician User Logs in with Existing Credentials with notification suppressed'(browser) {
+  'Clinician User Logs in with Existing Credentials with notification suppressed': async function (browser) {
     const loginPage = browser.page.loginPage();
     const clinicianUsername = browser.globals.clinicianUsername;
     const clinicianPassword = browser.globals.clinicianPassword;
     const environment = browser.launch_url;
     loginPage.loadPage();
     loginPage.userLogin(clinicianUsername, clinicianPassword);
-    browser.suppressedNotificationsTrue(clinicianUsername, clinicianPassword, environment);
-    browser.suppressedNotificationsTrueCheck(clinicianUsername, clinicianPassword, environment);
+    let res = await browser.setSuppressedNotification(clinicianUsername, clinicianPassword, environment);
+    browser.assert.strictEqual(res, 200, '/suppressed_notification returns 200 ');
+    res = await browser.checkSuppressedNotification(clinicianUsername, clinicianPassword, environment);
+    browser.assert.strictEqual(res, true, '/suppressed_notification status is true in clinic object ');
   },
   'Clinic workspace selection'(browser) {
     const clinicWorkspacePage = browser.page.clinicWorkspacePage();
@@ -33,7 +36,7 @@ module.exports = {
     clinicPatientList.click('@edit');
     clinicPatientList.waitForElementVisible('@city', browser.globals.elementTimeout);
   },
-  'Clinic workspace settings apply changes and check suppressed notifications status'(browser) {
+  'Clinic workspace settings apply changes and check suppressed notifications status': async function (browser) {
     const clinicianUsername = browser.globals.clinicianUsername;
     const clinicianPassword = browser.globals.clinicianPassword;
     const environment = browser.launch_url;
@@ -43,7 +46,8 @@ module.exports = {
     clinicPatientList.setValue('@city', 'new');
     clinicPatientList.click('@clinicProfileSubmit');
     clinicPatientList.waitForElementNotVisible('@city', browser.globals.elementTimeout);
-    browser.suppressedNotificationsTrueCheck(clinicianUsername, clinicianPassword, environment);
+    const res = await browser.checkSuppressedNotification(clinicianUsername, clinicianPassword, environment);
+    browser.assert.strictEqual(res, true, '/suppressed_notification status is true in clinic object ');
   },
 
 };
