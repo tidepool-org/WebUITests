@@ -9,11 +9,14 @@ module.exports = {
     const clinicianUsername = browser.globals.clinicianUsername;
     const clinicianPassword = browser.globals.clinicianPassword;
     const environment = browser.launch_url;
+    const clinicId = browser.globals.clinic_id;
+    console.log(`clinicId${clinicId}`);
+    const clinicianId = browser.globals.clinician_id;
     loginPage.loadPage();
     loginPage.userLogin(clinicianUsername, clinicianPassword);
-    let res = await browser.setSuppressedNotification(clinicianUsername, clinicianPassword, environment);
+    let res = await browser.setSuppressedNotification(clinicId, clinicianUsername, clinicianPassword, environment);
     browser.assert.strictEqual(res, 200, '/suppressed_notification returns 200 ');
-    res = await browser.checkSuppressedNotification(clinicianUsername, clinicianPassword, environment);
+    res = await browser.checkSuppressedNotification(clinicId, clinicianId, clinicianUsername, clinicianPassword, environment);
     browser.assert.strictEqual(res, true, '/suppressed_notification status is true in clinic object ');
   },
   'Clinic workspace selection'(browser) {
@@ -39,6 +42,8 @@ module.exports = {
   'Clinic workspace settings apply changes and check suppressed notifications status': async function (browser) {
     const clinicianUsername = browser.globals.clinicianUsername;
     const clinicianPassword = browser.globals.clinicianPassword;
+    const clinicId = browser.globals.clinic_id;
+    const clinicianId = browser.globals.clinician_id;
     const environment = browser.launch_url;
     const clinicPatientListPage = browser.page.clinicPatientListPage();
     const clinicPatientList = clinicPatientListPage.section.patientList;
@@ -46,7 +51,7 @@ module.exports = {
     clinicPatientList.setValue('@city', 'new');
     clinicPatientList.click('@clinicProfileSubmit');
     clinicPatientList.waitForElementNotVisible('@city', browser.globals.elementTimeout);
-    const res = await browser.checkSuppressedNotification(clinicianUsername, clinicianPassword, environment);
+    const res = await browser.checkSuppressedNotification(clinicId, clinicianId, clinicianUsername, clinicianPassword, environment);
     browser.assert.strictEqual(res, true, '/suppressed_notification status is true in clinic object ');
   },
 
