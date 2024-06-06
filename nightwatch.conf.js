@@ -61,6 +61,10 @@ module.exports = {
     qa2chrome: {
       extends: 'browserstack',
       launch_url: 'https://qa2.development.tidepool.org',
+      globals: {
+        clinic_id: `${process.env.QA2_CLINIC_ID}`,
+        clinician_id: `${process.env.QA2_CLINICIAN_ID}`,
+      },
       environmentName: 'qa2chrome', // an extra key o help vrt distinguish between environments
       desiredCapabilities: {
         browserName: 'chrome',
@@ -175,6 +179,8 @@ module.exports = {
     prdchrome: {
       extends: 'browserstack',
       launch_url: 'https://app.tidepool.org',
+      clinic_id: `${process.env.PRD_CLINIC_ID}`,
+      clinician_id: `${process.env.PRD_CLINICIAN_ID}`,
       environmentName: 'prdchrome',
       desiredCapabilities: {
         browserName: 'chrome',

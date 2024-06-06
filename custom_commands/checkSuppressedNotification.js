@@ -2,9 +2,20 @@
 const axios = require('axios');
 
 module.exports = class checkSuppressedNotification {
-  command(clinicianUsername, clinicianPassword, environment) {
+  /**
+   * command method of class checkSupressedNotification
+   * @param {*} clinicianUsername
+   * @param {*} clinicianPassword
+   * @param {*} environment
+   * @returns
+   */
+  command(clinicId, clinicianId, clinicianUsername, clinicianPassword, environment) {
     return new Promise((resolve) => {
       const auth = btoa(`${clinicianUsername}:${clinicianPassword}`);
+      /**
+       *
+       * @returns @{string} session token
+       */
       const getToken = async () => {
         const response = await axios.post(
           `${environment}/auth/login`,
@@ -18,21 +29,25 @@ module.exports = class checkSuppressedNotification {
         );
         return response.headers['x-tidepool-session-token'];
       };
-
+      /**
+     *asynchronous function checks if clinic id exists
+     *and that the suppressed notifications is enabled
+     * @returns {string} json body of clinic array object
+     */
       const clinicData = async () => {
         const token = await getToken();
-        const response = await axios.get('https://qa2.development.tidepool.org/v1/clinicians/4ae71760b6/clinics', {
+        const response = await axios.get(`${environment}/v1/clinicians/${clinicianId}/clinics`, {
 
           params: {
             limit: '1000',
             offset: '0',
           },
           headers: {
-            authority: 'qa2.development.tidepool.org',
+            authority: this.api.browser_url,
             accept: '*/*',
             'accept-language': 'en-US,en;q=0.9',
             cookie: '_ga=GA1.1.516068539.1692684735; _ga_RWXQ3R57PB=GS1.1.1694192507.4.0.1694192507.0.0.0',
-            referer: 'https://qa2.development.tidepool.org/',
+            referer: this.api.browser_url,
             'sec-ch-ua': '"Google Chrome";v="117", "Not;A=Brand";v="8", "Chromium";v="117"',
             'sec-ch-ua-mobile': '?0',
             'sec-ch-ua-platform': '"Windows"',
@@ -46,12 +61,15 @@ module.exports = class checkSuppressedNotification {
         });
         return response.data;
       };
-
+      /**
+       * function calls asynchronous function clinicData and awaits for result
+       * @returns a resolved promise with true or false if suppressed notifications are enabled
+       */
       const clinicDataRun = async () => {
         let found = false;
         const data = await clinicData();
         for (let i = 0; i < data.length; i++) {
-          if (data[i].clinic.id === '62419f38f85189a39ac4b68d') {
+          if (data[i].clinic.id === clinicId) {
             if (data[i].clinic.suppressedNotifications.patientClinicInvitation === true) {
               resolve(true);
               found = true;

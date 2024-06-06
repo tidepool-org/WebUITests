@@ -3,10 +3,20 @@
 const axios = require('axios');
 
 module.exports = class setSuppressedNotifcation {
-  command(clinicianUsername, clinicianPassword, environment) {
+  /**
+   *  command method of class setSupressedNotification
+   * @param {*} clinicianUsername
+   * @param {*} clinicianPassword
+   * @param {*} environment
+   * @returns {number} http status code
+   */
+  command(clinicId, clinicianUsername, clinicianPassword, environment) {
     return new Promise((resolve) => {
       const auth = btoa(`${clinicianUsername}:${clinicianPassword}`);
-
+      /**
+     *
+     * @returns {string} session token
+     */
       const getToken = async () => {
         const response = await axios.post(
           `${environment}/auth/login`,
@@ -20,11 +30,15 @@ module.exports = class setSuppressedNotifcation {
         );
         return response.headers['x-tidepool-session-token'];
       };
+      /**
+       * sets suppressed notification to True status
+       * @returns {number} http status code
+       */
 
       const setNotification = async () => {
         const token = await getToken();
         const response = await axios.post(
-          'https://qa2.development.tidepool.org/v1/clinics/62419f38f85189a39ac4b68d/suppressed_notifications',
+          `${environment}/v1/clinics/${clinicId}/suppressed_notifications`,
 
           {
             suppressedNotifications: {
@@ -40,6 +54,10 @@ module.exports = class setSuppressedNotifcation {
         );
         return response.status;
       };
+      /**
+       * function calls asynchronous function setNotification and awaits for result
+       * @returns result http status in resolved promise
+       */
       const setNotificationRun = async () => {
         const data = await setNotification();
         resolve(data);
