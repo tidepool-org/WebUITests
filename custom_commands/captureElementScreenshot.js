@@ -2,7 +2,7 @@ const EventEmitter = require('events').EventEmitter;
 const util = require('util');
 const Jimp = require('jimp');
 const Buffer = require('buffer').Buffer;
-const promisifyCommand = require('../lib/promisify-command');
+const promisifyCommand = require('../node_modules/nightwatch-vrt/lib/promisify-command');
 
 /**
  * Takes a screenshot of the visible region encompassed by the bounding rectangle
