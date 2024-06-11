@@ -3,7 +3,7 @@
 require('../../utilities/seleniumKeepAlive');
 
 module.exports = {
-  '@tags': ['notifications'],
+  '@tags': ['notifications', 'parallel'],
   'Clinician User Logs in with Existing Credentials with notification suppressed': async function (browser) {
     const loginPage = browser.page.loginPage();
     const clinicianUsername = browser.globals.clinicianUsername;
