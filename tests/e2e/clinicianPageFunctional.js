@@ -2,7 +2,7 @@
 require('../../utilities/seleniumKeepAlive');
 
 module.exports = {
-  '@tags': ['clinician'],
+  '@tags': ['clinician', 'parallel'],
   'Clinician User Logs in with Existing Credentials'(browser) {
     const loginPage = browser.page.loginPage();
     const clinicianUsername = browser.globals.clinicianUsername;
