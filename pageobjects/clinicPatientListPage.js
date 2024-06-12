@@ -65,6 +65,42 @@ module.exports = {
           selector: '//button[@id="editClinicProfileSubmit"]',
           locateStrategy: 'xpath',
         },
+        rpmReportButton: {
+          selector: '//button[@id="open-rpm-report-config"]',
+          locateStrategy: 'xpath',
+        },
+        cgmUseFilterButton: {
+          selector: '//button[@id="cgm-use-filter-trigger"]',
+          locateStrategy: 'xpath',
+        },
+        cgmUseLessThan70: {
+          selector: '//*[text()="Less than 70%"]',
+          locateStrategy: 'xpath',
+        },
+        cgmUse70OrMore: {
+          selector: '//*[text()="70% or more"]',
+          locateStrategy: 'xpath',
+        },
+        cgmUseClear: {
+          selector: '//button[@id="clear-cgm-use-filter"]',
+          locateStrategy: 'xpath',
+        },
+        cgmUseApply: {
+          selector: '//button[@id="apply-cgm-use-filter"]',
+          locateStrategy: 'xpath',
+        },
+        loadIconHidden: {
+          selector: '//*[contains(@class,"Loader--hidden")]',
+          locateStrategy: 'xpath',
+        },
+        patientsSearch: {
+          selector: '//input[@id="patients-search"]',
+          locateStrategy: 'xpath',
+        },
+        rpmReportConfirm: {
+          selector: '//button[@id="configureRpmReportConfirm"]',
+          locateStrategy: 'xpath',
+        },
 
       },
       commands: [{
