@@ -101,9 +101,265 @@ module.exports = {
           selector: '//button[@id="configureRpmReportConfirm"]',
           locateStrategy: 'xpath',
         },
+        rpmReportStartDate: {
+          selector: '//input[@id="rpm-report-start-date"]',
+          locateStrategy: 'xpath',
+        },
+        rpmReportEndDate: {
+          selector: '//input[@id="rpm-report-end-date"]',
+          locateStrategy: 'xpath',
+        },
+        lastUploadFiltersDropdown:{
+          selector:'//button[@id="last-upload-filter-trigger"]',
+          locateStrategy: 'xpath',
+        },
+        lastUploadFiltersType:{
+          selector:'//label//*[text()="CGM"]',
+          locateStrategy: 'xpath',
+        },
+        lastUploadFiltersToday:{
+          selector:'//label//*[text()="Today"]',
+          locateStrategy: 'xpath',
+        },
+        lastUploadFiltersLast2Days:{
+          selector:'//label//*[text()="Last 2 days"]',
+          locateStrategy: 'xpath',
+        },
+        lastUploadFiltersLast14Days:{
+          selector:'//label//*[text()="Last 14 days"]',
+          locateStrategy: 'xpath',
+        },
+        lastUploadFiltersLast30Days:{
+          selector:'//label//*[text()="Last 30 days"]',
+          locateStrategy: 'xpath',
+        },
+        lastUploadFiltersApply:{
+          selector:'//button[@id="apply-last-upload-filter"]',
+          locateStrategy: 'xpath',
+        }
+        ,
+        rpmClearDates:{
+          selector:'//button[contains(@aria-label,"Clear Dates")]',
+          locateStrategy: 'xpath',
+        }
+        ,
+        previousMonth:{
+          selector:'//div[contains(@aria-label,"Move backward to switch to the previous month.")]',
+          locateStrategy: 'xpath',
+        }
+        ,
+        timeInRangeFilterButton:{
+          selector:'//button[@id="time-in-range-filter-trigger"]',
+          locateStrategy: 'xpath',
+        }
+        ,
+        timeInRangeFilterVeryLow:{
+          selector:'//label[@for="range-timeInVeryLowPercent-filter"]',
+          locateStrategy: 'xpath',
+        }
+        ,
+        timeInRangeFilterLow:{
+          selector:'//label[@for="range-timeInLowPercent-filter"]',
+          locateStrategy: 'xpath',
+        }
+        ,
+        timeInRangeFilterTarget:{
+          selector:'//label[@for="range-timeInTargetPercent-filter"]',
+          locateStrategy: 'xpath',
+        }
+        ,
+        timeInRangeFilterHigh:{
+          selector:'//label[@for="range-timeInHighPercent-filter"]',
+          locateStrategy: 'xpath',
+        }
+        ,
+        timeInRangeFilterVeryHigh:{
+          selector:'//label[@for="range-timeInVeryHighPercent-filter"]',
+          locateStrategy: 'xpath',
+        }
+        ,
+        timeInRangeFilterApply:{
+          selector:'//button[@id="timeInRangeFilterConfirm"]',
+          locateStrategy: 'xpath',
+        }
+
+        
 
       },
       commands: [{
+        cgmFilter70OrMore(){
+          return this.waitForElementVisible('@cgmUseFilterButton', browser.globals.elementTimeout)
+          .click('@cgmUseFilterButton')
+          .waitForElementVisible('@cgmUse70OrMore', browser.globals.elementTimeout)
+          .click('@cgmUse70OrMore')
+          .waitForElementVisible('@cgmUseApply', browser.globals.elementTimeout)
+          .click('@cgmUseApply');
+        },
+        cgmFilterLessThan70(){
+          return this.waitForElementVisible('@cgmUseFilterButton', browser.globals.elementTimeout)
+          .click('@cgmUseFilterButton')
+          .waitForElementVisible('@cgmUseLessThan70', browser.globals.elementTimeout)
+          .click('@cgmUse70OrMore')
+          .waitForElementVisible('@cgmUseApply', browser.globals.elementTimeout)
+          .click('@cgmUseApply');
+        },
+        patientFilterSearch(searchValue){
+          return this.waitForElementVisible('@patientsSearch', browser.globals.elementTimeout)
+          .setValue('@patientsSearch', searchValue)
+          .waitForElementVisible('@loadIconHidden', browser.globals.elementTimeout);
+        },
+        lastUploadFilterToday(){
+          return this.waitForElementVisible('@lastUploadFiltersDropdown', browser.globals.elementTimeout)
+          .click('@lastUploadFiltersDropdown')
+          .waitForElementVisible('@lastUploadFiltersType', browser.globals.elementTimeout)
+          .click('@lastUploadFiltersType')
+          .waitForElementVisible('@lastUploadFiltersToday', browser.globals.elementTimeout)
+          .click('@lastUploadFiltersToday')
+          .waitForElementVisible('@lastUploadFiltersApply', browser.globals.elementTimeout)
+          .click('@lastUploadFiltersApply');
+        },
+        lastUploadFilterLast2days(){
+          return this.waitForElementVisible('@lastUploadFiltersDropdown', browser.globals.elementTimeout)
+          .click('@lastUploadFiltersDropdown')
+          .waitForElementVisible('@lastUploadFiltersType', browser.globals.elementTimeout)
+          .click('@lastUploadFiltersType')
+          .waitForElementVisible('@lastUploadFiltersLast2Days', browser.globals.elementTimeout)
+          .click('@lastUploadFiltersLast2Days')
+          .waitForElementVisible('@lastUploadFiltersApply', browser.globals.elementTimeout)
+          .click('@lastUploadFiltersApply');
+        },
+        lastUploadFilterLast14days(){
+          return this.waitForElementVisible('@lastUploadFiltersDropdown', browser.globals.elementTimeout)
+          .click('@lastUploadFiltersDropdown')
+          .waitForElementVisible('@lastUploadFiltersType', browser.globals.elementTimeout)
+          .click('@lastUploadFiltersType')
+          .waitForElementVisible('@lastUploadFiltersLast14Days', browser.globals.elementTimeout)
+          .click('@lastUploadFiltersLast14Days')
+          .waitForElementVisible('@lastUploadFiltersApply', browser.globals.elementTimeout)
+          .click('@lastUploadFiltersApply');
+        },
+        lastUploadFilterLast30days(){
+          return this.waitForElementVisible('@lastUploadFiltersDropdown', browser.globals.elementTimeout)
+          .click('@lastUploadFiltersDropdown')
+          .waitForElementVisible('@lastUploadFiltersType', browser.globals.elementTimeout)
+          .click('@lastUploadFiltersType')
+          .waitForElementVisible('@lastUploadFiltersLast30Days', browser.globals.elementTimeout)
+          .click('@lastUploadFiltersLast30Days')
+          .waitForElementVisible('@lastUploadFiltersApply', browser.globals.elementTimeout)
+          .click('@lastUploadFiltersApply');
+        },
+        rpmExportClickCalendarStartDate(date){
+          return this.waitForElementVisible('@rpmReportButton', browser.globals.elementTimeout)
+          .click('@rpmReportButton')
+          .click('@rpmClearDates')
+          .click('@rpmReportStartDate')
+          .click('xpath',`//*[contains(@aria-label,'${date}')]`)
+          .waitForElementVisible('@rpmReportConfirm', browser.globals.elementTimeout)
+          .click('@rpmReportConfirm');
+        },
+        rpmExportClickCalendarStartDatePreviousMonth(date){
+          return this.waitForElementVisible('@rpmReportButton', browser.globals.elementTimeout)
+          .click('@rpmReportButton')
+          .click('@rpmClearDates')
+          .click('@rpmReportStartDate')
+          .click('@previousMonth')
+          .click('xpath',`//*[contains(@aria-label,'${date}')]`)
+          .waitForElementVisible('@rpmReportConfirm', browser.globals.elementTimeout)
+          .click('@rpmReportConfirm');
+        },
+        rpmExportClickCalendarEndDate(date){
+          return this.waitForElementVisible('@rpmReportButton', browser.globals.elementTimeout)
+          .click('@rpmReportButton')
+          .click('@rpmClearDates')
+          .click('@rpmReportEndDate')
+          .click('xpath',`//*[contains(@aria-label,'${date}')]`)
+          .waitForElementVisible('@rpmReportConfirm', browser.globals.elementTimeout)
+          .click('@rpmReportConfirm');
+        },
+        rpmExportClickCalendarEndDatePreviousMonth(date){
+          return this.waitForElementVisible('@rpmReportButton', browser.globals.elementTimeout)
+          .click('@rpmReportButton')
+          .click('@rpmClearDates')
+          .click('@rpmReportEndDate')
+          .click('@previousMonth')
+          .click('xpath',`//*[contains(@aria-label,'${date}')]`)
+          .waitForElementVisible('@rpmReportConfirm', browser.globals.elementTimeout)
+          .click('@rpmReportConfirm');
+        },
+        rpmExportTypeInputStartAndEndDate(start,end){
+          return this.waitForElementVisible('@rpmReportButton', browser.globals.elementTimeout)
+          .click('@rpmReportButton')
+          .click('@rpmReportStartDate')
+          .setValue('@rpmReportStartDate', start )
+          .setValue('@rpmReportEndDate', end )
+          .waitForElementVisible('@rpmReportConfirm', browser.globals.elementTimeout)
+          .click('@rpmReportConfirm');
+        },
+        rpmExportDefaultDate(){
+          return this.waitForElementVisible('@rpmReportButton', browser.globals.elementTimeout)
+          .click('@rpmReportButton')
+          .waitForElementVisible('@rpmReportConfirm', browser.globals.elementTimeout)
+          .click('@rpmReportConfirm');
+        },
+        timeInRangeVeryLow(){
+          return this.waitForElementVisible('@timeInRangeFilterButton', browser.globals.elementTimeout)
+          .click('@timeInRangeFilterButton')
+          .waitForElementVisible('@timeInRangeFilterVeryLow', browser.globals.elementTimeout)
+          .click('@timeInRangeFilterVeryLow')
+          .waitForElementVisible('@timeInRangeFilterApply', browser.globals.elementTimeout)
+          .click('@timeInRangeFilterApply');
+        },
+        timeInRangeLow(){
+          return this.waitForElementVisible('@timeInRangeFilterButton', browser.globals.elementTimeout)
+          .click('@timeInRangeFilterButton')
+          .waitForElementVisible('@timeInRangeFilterLow', browser.globals.elementTimeout)
+          .click('@timeInRangeFilterLow')
+          .waitForElementVisible('@timeInRangeFilterApply', browser.globals.elementTimeout)
+          .click('@timeInRangeFilterApply');
+        },
+        timeInRangeTarget(){
+          return this.waitForElementVisible('@timeInRangeFilterButton', browser.globals.elementTimeout)
+          .click('@timeInRangeFilterButton')
+          .waitForElementVisible('@timeInRangeFilterTarget', browser.globals.elementTimeout)
+          .click('@timeInRangeFilterTarget')
+          .waitForElementVisible('@timeInRangeFilterApply', browser.globals.elementTimeout)
+          .click('@timeInRangeFilterApply');
+        },
+        timeInRangeHigh(){
+          return this.waitForElementVisible('@timeInRangeFilterButton', browser.globals.elementTimeout)
+          .click('@timeInRangeFilterButton')
+          .waitForElementVisible('@timeInRangeFilterHigh', browser.globals.elementTimeout)
+          .click('@timeInRangeFilterHigh')
+          .waitForElementVisible('@timeInRangeFilterApply', browser.globals.elementTimeout)
+          .click('@timeInRangeFilterApply');
+        },
+        timeInRangeVeryHigh(){
+          return this.waitForElementVisible('@timeInRangeFilterButton', browser.globals.elementTimeout)
+          .click('@timeInRangeFilterButton')
+          .waitForElementVisible('@timeInRangeFilterVeryHigh', browser.globals.elementTimeout)
+          .click('@timeInRangeFilterVeryHigh')
+          .waitForElementVisible('@timeInRangeFilterApply', browser.globals.elementTimeout)
+          .click('@timeInRangeFilterApply');
+        },
+        timeInRangeAll(){
+          return this.waitForElementVisible('@timeInRangeFilterButton', browser.globals.elementTimeout)
+          .click('@timeInRangeFilterButton')
+          //.moveToElement('@timeInRangeFilterVeryLow', browser.globals.elementTimeout)
+          .click('@timeInRangeFilterVeryLow')
+          //.moveToElement('@timeInRangeFilterLow', browser.globals.elementTimeout)
+          .click('@timeInRangeFilterLow')
+          //.moveToElement('@timeInRangeFilterTarget', browser.globals.elementTimeout)
+          .click('@timeInRangeFilterTarget')
+          //.moveToElement('@timeInRangeFilterVeryHigh', browser.globals.elementTimeout)
+          .click('@timeInRangeFilterVeryHigh')
+          //.moveToElement('@timeInRangeFilterHigh', browser.globals.elementTimeout)
+          .click('@timeInRangeFilterHigh')
+          .waitForElementVisible('@timeInRangeFilterApply', browser.globals.elementTimeout)
+          .click('@timeInRangeFilterApply');
+        },
+       
+        
+
       }],
     },
   },
