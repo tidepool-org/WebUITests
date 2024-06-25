@@ -18,4 +18,12 @@ module.exports = {
     'object-shorthand': ['error', 'properties'],
     'no-console': 'off',
   },
+  'editor.codeActionsOnSave': {
+    'source.fixAll.eslint': true,
+    'source.fixAll': true,
+  },
+  'eslint.codeActionsOnSave.rules': [
+    '!prefer-const'
+  ],
+  'eslint.codeActionsOnSave.mode': 'all',
 };
