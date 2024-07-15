@@ -20,8 +20,6 @@ jobs:
       - node/install
       - run: npm install
       - run: npm run eslint
-    when: on_fail
-    continue_on_fail: false
   test:
     working_directory: ~/tidepool-org/webuitests
     docker: 
@@ -178,7 +176,10 @@ jobs:
 workflows:
   commit-workflow:
     jobs:
-      - test
+      - eslint-check
+      - test:
+          requires:
+            - eslint-check
   scheduled-workflow:
     triggers:
       - schedule:
