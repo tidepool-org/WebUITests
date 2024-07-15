@@ -18,6 +18,5 @@ module.exports = {
   'User Contacts Support'(browser) {
     const helpWidget = browser.page.helpWidget();
     helpWidget.contactSupport();
-    const hello = 1;
   },
 };
