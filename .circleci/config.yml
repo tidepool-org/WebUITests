@@ -11,6 +11,17 @@ parameters:
       type: string
       default: "none"
 jobs:
+  eslint-check:
+    working_directory: ~/tidepool-org/webuitests
+    docker:
+      - image: cimg/node:lts
+    steps:
+      - checkout
+      - node/install
+      - run: npm install
+      - run: npm run eslint
+    when: on_fail
+    continue_on_fail: false
   test:
     working_directory: ~/tidepool-org/webuitests
     docker: 
