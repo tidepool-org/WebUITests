@@ -4,7 +4,7 @@ require('../../utilities/seleniumKeepAlive');
 
 module.exports = {
   '@tags': ['notifications', 'parallel'],
-  'Clinician User Logs in with Existing Credentials with notification suppressed': async function (browser) {
+  'Clinician User Logs in with Existing Credentials with notification suppressed': async (browser) => {
     const loginPage = browser.page.loginPage();
     const clinicianUsername = browser.globals.clinicianUsername;
     const clinicianPassword = browser.globals.clinicianPassword;
@@ -39,7 +39,7 @@ module.exports = {
     clinicPatientList.click('@edit');
     clinicPatientList.waitForElementVisible('@city', browser.globals.elementTimeout);
   },
-  'Clinic workspace settings apply changes and check suppressed notifications status': async function (browser) {
+  'Clinic workspace settings apply changes and check suppressed notifications status': async (browser) => {
     const clinicianUsername = browser.globals.clinicianUsername;
     const clinicianPassword = browser.globals.clinicianPassword;
     const clinicId = browser.globals.clinic_id;

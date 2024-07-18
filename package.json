@@ -46,7 +46,8 @@
     "request": "2.88.2",
     "selenium-webdriver": "^4.21.0",
     "csv-parse":"5.5.6",
-    "moment":"2.30.1"
+    "moment":"2.30.1",
+    "jimp":"0.22.12"
 
   },
   "devDependencies": {
@@ -56,5 +57,6 @@
     "eslint-plugin-import": "2.29.1",
     "junit-report-merger": "6.0.3",
     "nightwatch": "3.4.1"
-  }
+  },
+  "env":{"browser": true}
 }

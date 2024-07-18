@@ -12,6 +12,8 @@ module.exports = {
 
   test_settings: {
     default: {
+      silent: true,
+      detailed_output: false,
       disable_error_log: false,
       launch_url: 'qa2.development.tidepool.org',
 

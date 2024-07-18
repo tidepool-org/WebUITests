@@ -17,13 +17,10 @@ module.exports = {
     'chai-friendly/no-unused-expressions': 'off',
     'object-shorthand': ['error', 'properties'],
     'no-console': 'off',
+    'import/no-extraneous-dependencies': ['error', { devDependencies: false, optionalDependencies: false, peerDependencies: false }],
   },
-  'editor.codeActionsOnSave': {
-    'source.fixAll.eslint': true,
-    'source.fixAll': true,
+  globals: {
+    browser: true,
   },
-  'eslint.codeActionsOnSave.rules': [
-    '!prefer-const'
-  ],
-  'eslint.codeActionsOnSave.mode': 'all',
+
 };
