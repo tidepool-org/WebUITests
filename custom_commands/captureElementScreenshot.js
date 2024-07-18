@@ -10,7 +10,8 @@ const promisifyCommand = require('../node_modules/nightwatch-vrt/lib/promisify-c
 *
  * @link
  * @param {string} id ID of the element to route the command to.
- * @param {function} callback Callback function which is called with the captured screenshot as an argument.
+ * @param {function} callback Callback function which
+ *  is called with the captured screenshot as an argument.
  * @returns {Object} The captured screenshot. This object is a Jimp (library) image instance.
  */
 function CaptureElementScreenshot() {
@@ -28,6 +29,7 @@ CaptureElementScreenshot.prototype.command = function command(
   Promise.all([
     promisifyCommand(api, 'takeElementScreenshot', [selector]),
   ]).then(([screenshotEncoded]) => {
+    // eslint-disable-next-line no-buffer-constructor
     Jimp.read(new Buffer(screenshotEncoded, 'base64')).then((screenshot) => {
       this.api.assert.ok(true, `The screenshot for selector <${selector.name}> was captured successfully.`);
 

@@ -1,8 +1,16 @@
 /* eslint-disable linebreak-style */
 const fs = require('fs');
-const crypto = require('crypto');
-const { hasUncaughtExceptionCaptureCallback } = require('process');
 
+const getFile = (fileName) => new Promise((resolve) => {
+  resolve(browser.executeScript(`browserstack_executor: {"action": "getFileContent", "arguments": {"fileName": "${fileName}"}}`).then((content) => {
+    // Decode the content to Base64 and write to a file
+    const decodedData = Buffer.from(content, 'base64');
+    fs.writeFile('rpm.csv', decodedData, (err) => {
+      console.log(err);
+      // browser.quit();
+    });
+  }));
+});
 
 module.exports = class checkFileContents {
   /**
@@ -16,17 +24,7 @@ module.exports = class checkFileContents {
        *
        * @returns writes file to local
        */
-      const getFile = (fileName) => new Promise((resolve, reject) => {
-        resolve(browser.executeScript(`browserstack_executor: {"action": "getFileContent", "arguments": {"fileName": "${fileName}"}}`).then((content) => {
-          // Decode the content to Base64 and write to a file
-          const decoded_data = Buffer.from(content, 'base64');
-          fs.writeFile('rpm.csv', decoded_data, (err) => {
-            console.log(err)
-            //browser.quit();
-          });
-          
-        }))
-      });
+
       /**
      *asynchronous function checks if clinic id exists
      *and that the suppressed notifications is enabled
