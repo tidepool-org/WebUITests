@@ -13,7 +13,9 @@
     "testprdChrome": "nightwatch --env prdchrome",
     "testprdEdge": "nightwatch --env prdedge",
     "testintChrome": "nightwatch --env intchrome",
-    "testdev1Chrome": "nightwatch --env dev1chrome"
+    "testdev1Chrome": "nightwatch --env dev1chrome",
+    "eslint": "eslint .",
+    "eslint:fix": "eslint . --fix"
   },
   "scriptsComments": {
     "testParallel": "Executes tests that are able to run in parallel on all environments",
