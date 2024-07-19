@@ -18,7 +18,7 @@ module.exports = {
           locateStrategy: 'xpath',
         },
         patientTags: {
-          selector: '//*[@id="peopleTable-header-tags"]//span[@role="button"]',
+          selector: '//*[@id="peopleTable-header-tags"]//span',
           locateStrategy: 'xpath',
         },
         GMI: {
