@@ -35,8 +35,8 @@ module.exports = {
         'bstack:options': {
           userName: process.env.BROWSERSTACK_USER,
           accessKey: process.env.BROWSERSTACK_KEY,
+          'browserstack.idletimeout': 300,
         },
-        idleTimeout: 300,
       },
 
       disable_error_log: true,
