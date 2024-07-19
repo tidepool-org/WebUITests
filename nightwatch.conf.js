@@ -36,6 +36,7 @@ module.exports = {
           userName: process.env.BROWSERSTACK_USER,
           accessKey: process.env.BROWSERSTACK_KEY,
         },
+        idleTimeout: 300,
       },
 
       disable_error_log: true,
