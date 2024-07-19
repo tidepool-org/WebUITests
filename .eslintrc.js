@@ -17,5 +17,7 @@ module.exports = {
     'chai-friendly/no-unused-expressions': 'off',
     'object-shorthand': ['error', 'properties'],
     'no-console': 'off',
+    'max-len': 'warn',
+    'no-plusplus': 'warn',
   },
 };

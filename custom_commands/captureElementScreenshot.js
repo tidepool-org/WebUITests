@@ -28,7 +28,7 @@ CaptureElementScreenshot.prototype.command = function command(
   Promise.all([
     promisifyCommand(api, 'takeElementScreenshot', [selector]),
   ]).then(([screenshotEncoded]) => {
-    Jimp.read(new Buffer(screenshotEncoded, 'base64')).then((screenshot) => {
+    Jimp.read(Buffer.from(screenshotEncoded, 'base64')).then((screenshot) => {
       this.api.assert.ok(true, `The screenshot for selector <${selector.name}> was captured successfully.`);
 
       callback(screenshot);
