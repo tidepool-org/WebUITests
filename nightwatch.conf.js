@@ -77,7 +77,7 @@ module.exports = {
           resolution: '1366x768',
           buildName: `QA2_CHROME ${dayjs().format('YYYY-MM-DD')} JIRA: ${process.env.TEST_EXECUTION_KEY}`,
           local: 'false',
-          idletimeout: 300,
+          idleTimeout: 300,
         },
       },
     },
