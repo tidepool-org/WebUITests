@@ -15,6 +15,8 @@ module.exports = {
   persist_globals: true,
   dsaUsernameTandem: process.env.DSA_USERNAME_TANDEM,
   dsaPasswordTandem: process.env.DSA_PASSWORD_TANDEM,
+  clinicianPassword: process.env.CLINICIAN_PASSWORD,
+  clinicianUsername: process.env.CLINICIAN_USERNAME,
   gmailPassword: process.env.GMAIL_PASSWORD,
   gmailUsername: process.env.GMAIL_USERNAME,
   elementTimeout: 30000,
