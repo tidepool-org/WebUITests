@@ -180,8 +180,10 @@ module.exports = {
     prdchrome: {
       extends: 'browserstack',
       launch_url: 'https://app.tidepool.org',
-      clinic_id: `${process.env.PRD_CLINIC_ID}`,
-      clinician_id: `${process.env.PRD_CLINICIAN_ID}`,
+      globals: {
+        clinic_id: `${process.env.PRD_CLINIC_ID}`,
+        clinician_id: `${process.env.PRD_CLINICIAN_ID}`,
+      },
       environmentName: 'prdchrome',
       desiredCapabilities: {
         browserName: 'chrome',
