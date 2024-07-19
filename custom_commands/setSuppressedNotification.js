@@ -37,22 +37,26 @@ module.exports = class setSuppressedNotifcation {
 
       const setNotification = async () => {
         const token = await getToken();
-        const response = await axios.post(
-          `${environment}/v1/clinics/${clinicId}/suppressed_notifications`,
+        try {
+          const response = await axios.post(
+            `${environment}/v1/clinics/${clinicId}/suppressed_notifications`,
 
-          {
-            suppressedNotifications: {
-              patientClinicInvitation: true,
+            {
+              suppressedNotifications: {
+                patientClinicInvitation: true,
+              },
             },
-          },
-          {
-            headers: {
-              'X-Tidepool-Session-Token': token,
-              'Content-Type': 'application/json',
+            {
+              headers: {
+                'X-Tidepool-Session-Token': token,
+                'Content-Type': 'application/json',
+              },
             },
-          },
-        );
-        return response.status;
+          );
+          return response.status;
+        } catch (error) {
+          return console.error(error);
+        }
       };
       /**
        * function calls asynchronous function setNotification and awaits for result
