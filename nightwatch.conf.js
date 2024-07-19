@@ -35,7 +35,6 @@ module.exports = {
         'bstack:options': {
           userName: process.env.BROWSERSTACK_USER,
           accessKey: process.env.BROWSERSTACK_KEY,
-          'browserstack.idletimeout': 300,
         },
       },
 
@@ -78,6 +77,7 @@ module.exports = {
           resolution: '1366x768',
           buildName: `QA2_CHROME ${dayjs().format('YYYY-MM-DD')} JIRA: ${process.env.TEST_EXECUTION_KEY}`,
           local: 'false',
+          idletimeout: 300,
         },
       },
     },
