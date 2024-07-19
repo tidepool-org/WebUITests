@@ -14,7 +14,7 @@
     "testprdEdge": "nightwatch --env prdedge",
     "testintChrome": "nightwatch --env intchrome",
     "testdev1Chrome": "nightwatch --env dev1chrome",
-    "testqa2ChromeTag": "nightwatch --env qa2chrome --tag clinician"
+    "testqa2ChromeTag": "nightwatch --env qa2chrome --tag clinician",
     "eslint": "eslint .",
     "eslint:fix": "eslint . --fix"
   },
