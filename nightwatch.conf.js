@@ -5,7 +5,7 @@ module.exports = {
   src_folders: ['tests'],
   page_objects_path: ['pageobjects'],
   globals_path: 'global.js',
-  custom_commands_path: ['./custom_commands'],
+  custom_commands_path: ['./custom_commands', 'node_modules/nightwatch-vrt/commands'],
   custom_assertions_path: ['node_modules/nightwatch-vrt/assertions'],
 
   webdriver: {},
