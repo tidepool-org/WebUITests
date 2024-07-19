@@ -16,6 +16,7 @@
     "testdev1Chrome": "nightwatch --env dev1chrome",
     "testqa2ChromeClinician": "nightwatch --env qa2chrome --tag clinician",
     "testqa2ChromeNotifications": "nightwatch --env qa2chrome --tag notifications",
+    "testprdChromeNotifications": "nightwatch --env prd --tag notifications",
     "testqa2ChromeTag": "nightwatch --env qa2chrome --tag clinician",
     "eslint": "eslint .",
     "eslint:fix": "eslint . --fix"
