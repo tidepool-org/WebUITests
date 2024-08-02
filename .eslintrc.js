@@ -17,12 +17,9 @@ module.exports = {
     'chai-friendly/no-unused-expressions': 'off',
     'object-shorthand': ['error', 'properties'],
     'no-console': 'off',
-<<<<<<< HEAD
     'import/no-extraneous-dependencies': ['error', { devDependencies: false, optionalDependencies: false, peerDependencies: false }],
-=======
     'max-len': 'warn',
     'no-plusplus': 'warn',
->>>>>>> supressednotificationstest
   },
   globals: {
     browser: true,
