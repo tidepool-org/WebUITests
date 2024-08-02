@@ -5,7 +5,7 @@ module.exports = {
   src_folders: ['tests'],
   page_objects_path: ['pageobjects'],
   globals_path: 'global.js',
-  custom_commands_path: ['./custom_commands'],
+  custom_commands_path: ['./custom_commands', 'node_modules/nightwatch-vrt/commands'],
   custom_assertions_path: ['node_modules/nightwatch-vrt/assertions'],
 
   webdriver: {},
@@ -79,6 +79,7 @@ module.exports = {
           resolution: '1366x768',
           buildName: `QA2_CHROME ${dayjs().format('YYYY-MM-DD')} JIRA: ${process.env.TEST_EXECUTION_KEY}`,
           local: 'false',
+          idleTimeout: 300,
         },
       },
     },
@@ -181,8 +182,10 @@ module.exports = {
     prdchrome: {
       extends: 'browserstack',
       launch_url: 'https://app.tidepool.org',
-      clinic_id: `${process.env.PRD_CLINIC_ID}`,
-      clinician_id: `${process.env.PRD_CLINICIAN_ID}`,
+      globals: {
+        clinic_id: `${process.env.PRD_CLINIC_ID}`,
+        clinician_id: `${process.env.PRD_CLINICIAN_ID}`,
+      },
       environmentName: 'prdchrome',
       desiredCapabilities: {
         browserName: 'chrome',

@@ -17,6 +17,10 @@
     "testqa2ChromeClinician": "nightwatch --env qa2chrome --tag clinician",
     "testqa2ChromeNotifications": "nightwatch --env qa2chrome --tag notifications",
     "testqa2ChromeRpm": "nightwatch --env qa2chrome --tag rpm"
+    "testprdChromeNotifications": "nightwatch --env prd --tag notifications",
+    "testqa2ChromeTag": "nightwatch --env qa2chrome --tag clinician",
+    "eslint": "eslint .",
+    "eslint:fix": "eslint . --fix"
   },
   "scriptsComments": {
     "testParallel": "Executes tests that are able to run in parallel on all environments",

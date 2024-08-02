@@ -18,7 +18,7 @@ module.exports = {
           locateStrategy: 'xpath',
         },
         patientTags: {
-          selector: '//*[@id="peopleTable-header-tags"]//span[@role="button"]',
+          selector: '//*[@id="peopleTable-header-tags"]//span',
           locateStrategy: 'xpath',
         },
         GMI: {
@@ -26,7 +26,7 @@ module.exports = {
           locateStrategy: 'xpath',
         },
         timeInRange: {
-          selector: '//*[@id="peopleTable-header-bgRangeSummary"]//span[@role="button"]',
+          selector: '//*[@id="peopleTable-header-bgRangeSummary"]//span',
           locateStrategy: 'xpath',
         },
         avgGlucose: {
@@ -46,7 +46,7 @@ module.exports = {
           locateStrategy: 'xpath',
         },
         lastUploadDesc: {
-          selector: '//*[@id="peopleTable-header-cgm-lastUploadDate"]//span[@role="Button"]',
+          selector: '//*[@id="peopleTable-header-cgm-lastUploadDate"]//span',
           locateStrategy: 'xpath',
         },
         workspaceSettings: {
