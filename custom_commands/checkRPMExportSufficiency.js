@@ -21,6 +21,12 @@ async function getReadStreamPromise(filePath) {
       });
   });
 }
+/**
+   * check if row in rpm report that days with qualifying data, item[3] ,
+   * contains the expected result for the sufficient data column
+   * @param {*} hashValue string
+   * @returns true if expected result for the sufficient data column is present
+   */
 function checkSufficiency(item) {
   if (item[3] > 15) {
     return item[4] === 'TRUE';
