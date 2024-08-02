@@ -6,7 +6,7 @@ orbs:
 parameters:
   testEnvironment:
       type: string
-      default: "testqa2ChromeRpm"
+      default: "testParallel"
   testExecKey:
       type: string
       default: "none"
