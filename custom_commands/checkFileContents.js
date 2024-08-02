@@ -14,8 +14,8 @@ const getFile = (fileName) => new Promise((resolve) => {
 
 module.exports = class checkFileContents {
   /**
-   * command method of class checkSupressedNotification
-   * @
+   * command method of class checkFileContents
+   * @param {*} fileName string
    * @returns transfers latest downloaded file from remote server to local machine
    */
   command(fileName) {
