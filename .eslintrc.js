@@ -20,6 +20,7 @@ module.exports = {
     'import/no-extraneous-dependencies': ['error', { devDependencies: false, optionalDependencies: false, peerDependencies: false }],
     'max-len': 'warn',
     'no-plusplus': 'warn',
+    'class-methods-use-this': 'warn',
   },
   globals: {
     browser: true,
