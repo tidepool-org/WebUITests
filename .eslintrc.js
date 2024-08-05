@@ -21,6 +21,8 @@ module.exports = {
     'max-len': 'warn',
     'no-plusplus': 'warn',
     'class-methods-use-this': 'warn',
+    'no-unused-vars': 'warn',
+    'prefer-const': 'warn',
   },
   globals: {
     browser: true,
