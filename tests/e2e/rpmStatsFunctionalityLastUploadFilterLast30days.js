@@ -23,10 +23,13 @@ module.exports = {
     const clinicPatientListPage = browser.page.clinicPatientListPage();
     const clinicPatientList = clinicPatientListPage.section.patientList;
     const daysFromToday = 40;
-    const startDate = moment().subtract(daysFromToday, 'days').format('MMMM D, YYYY');
-    const startDateFile = moment().subtract(daysFromToday, 'days').format('MM-DD-YYYY');
-    const endDateFile = moment(startDateFile, 'MM-DD-YYYY').add(29, 'days').format('MM-DD-YYYY');
-    const fileName = `RPM Report (${startDateFile} - ${endDateFile}).csv`;
+    const start = moment().subtract(daysFromToday, 'days');
+    const end = moment(start).add(29, 'days');
+    let startDate; let endDate; let startDateFile; let endDatefile; let
+      fileName;
+    ({
+      startDate, endDate, startDateFile, endDatefile, fileName,
+    } = await browser.createDatesLong(start, end));
     const attemptsCheckFileExists = 10;
     const filePath = './rpm.csv';
 
@@ -60,10 +63,13 @@ module.exports = {
     const clinicPatientListPage = browser.page.clinicPatientListPage();
     const clinicPatientList = clinicPatientListPage.section.patientList;
     const daysFromToday = 10;
-    const endDate = moment().subtract(daysFromToday, 'days').format('MMMM D, YYYY');
-    const endDateFile = moment().subtract(daysFromToday, 'days').format('MM-DD-YYYY');
-    const startDateFile = moment(endDate, 'MMM D, YYYY').subtract(29, 'days').format('MM-DD-YYYY');
-    const fileName = `RPM Report (${startDateFile} - ${endDateFile}).csv`;
+    const end = moment().subtract(daysFromToday, 'days');
+    const start = moment(end).subtract(29, 'days');
+    let startDate; let endDate; let startDateFile; let endDatefile; let
+      fileName;
+    ({
+      startDate, endDate, startDateFile, endDatefile, fileName,
+    } = await browser.createDatesLong(start, end));
     const attemptsCheckFileExists = 10;
     const filePath = './rpm.csv';
 
@@ -96,11 +102,13 @@ module.exports = {
     const clinicPatientList = clinicPatientListPage.section.patientList;
     const daysFromToday = 57;
     const dateRange = 15;
-    const startDate = moment().subtract(daysFromToday, 'days').format('MMM D, YYYY');
-    const endDate = moment(startDate, 'MMM D, YYYY').add(dateRange, 'days').format('MMM D, YYYY');
-    const startDateFile = moment().subtract(daysFromToday, 'days').format('MM-DD-YYYY');
-    const endDateFile = moment(startDateFile, 'MM-DD-YYYY').add(dateRange, 'days').format('MM-DD-YYYY');
-    const fileName = `RPM Report (${startDateFile} - ${endDateFile}).csv`;
+    const start = moment().subtract(daysFromToday, 'days');
+    const end = moment(start).add(dateRange, 'days');
+    let startDate; let endDate; let startDateFile; let endDatefile; let
+      fileName;
+    ({
+      startDate, endDate, startDateFile, endDatefile, fileName,
+    } = await browser.createDatesShort(start, end));
     const attemptsCheckFileExists = 10;
     const filePath = './rpm.csv';
 
@@ -125,10 +133,14 @@ module.exports = {
     // setup config
     const clinicPatientListPage = browser.page.clinicPatientListPage();
     const clinicPatientList = clinicPatientListPage.section.patientList;
-    const today = moment().format('MM-DD-YYYY');
-    const startDateFile = moment().subtract(29, 'days').format('MM-DD-YYYY');
-    const endDateFile = today;
-    const fileName = `RPM Report (${startDateFile} - ${endDateFile}).csv`;
+    const today = moment();
+    const start = moment().subtract(29, 'days');
+    const end = today;
+    let startDate; let endDate; let startDateFile; let endDatefile; let
+      fileName;
+    ({
+      startDate, endDate, startDateFile, endDatefile, fileName,
+    } = await browser.createDatesLong(start, end));
     const attemptsCheckFileExists = 10;
     const filePath = './rpm.csv';
 
