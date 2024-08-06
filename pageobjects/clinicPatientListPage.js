@@ -333,15 +333,10 @@ module.exports = {
         timeInRangeAll() {
           return this.waitForElementVisible('@timeInRangeFilterButton', browser.globals.elementTimeout)
             .click('@timeInRangeFilterButton')
-          // .moveToElement('@timeInRangeFilterVeryLow', browser.globals.elementTimeout)
             .click('@timeInRangeFilterVeryLow')
-          // .moveToElement('@timeInRangeFilterLow', browser.globals.elementTimeout)
             .click('@timeInRangeFilterLow')
-          // .moveToElement('@timeInRangeFilterTarget', browser.globals.elementTimeout)
             .click('@timeInRangeFilterTarget')
-          // .moveToElement('@timeInRangeFilterVeryHigh', browser.globals.elementTimeout)
             .click('@timeInRangeFilterVeryHigh')
-          // .moveToElement('@timeInRangeFilterHigh', browser.globals.elementTimeout)
             .click('@timeInRangeFilterHigh')
             .waitForElementVisible('@timeInRangeFilterApply', browser.globals.elementTimeout)
             .click('@timeInRangeFilterApply');
