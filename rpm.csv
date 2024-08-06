@@ -1,5 +1,0 @@
-Name,Date of Birth,MRN,# Days With Qualifying Data between 06/26/2024 and 07/25/2024,Sufficient Data for CPT-99454
-"autodex1","01/01/2000",N/A,30,TRUE
-"autodex2","02/02/2002","DEXCOM",30,TRUE
-"autodex3","01/01/2000","DEXCOM2",30,TRUE
-"autodex4","01/01/2000",N/A,2,FALSE
