@@ -68,7 +68,7 @@ module.exports = class checkSuppressedNotification {
       const clinicDataRun = async () => {
         let found = false;
         const data = await clinicData();
-        for (let i = 0; i < data.length; i++) {
+        for (let i = 0; i < data.length; i += 1) {
           if (data[i].clinic.id === clinicId) {
             if (data[i].clinic.suppressedNotifications.patientClinicInvitation === true) {
               resolve(true);
