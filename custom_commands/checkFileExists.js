@@ -37,7 +37,7 @@ module.exports = class checkFileExists {
 
     }
     catch (error) {
-      console.error('Error:', error);
+      return console.error(error);
     }
       
 };
