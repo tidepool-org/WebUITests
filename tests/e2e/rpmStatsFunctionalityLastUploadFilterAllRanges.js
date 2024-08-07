@@ -3,7 +3,7 @@ require('../../utilities/seleniumKeepAlive');
 const moment = require('moment');
 
 module.exports = {
-  '@tags': ['rpm', 'clinician', 'parallel'],
+  '@tags': ['rpm2', 'clinician', 'parallel'],
   'Clinician User Logs in with Existing Credentials'(browser) {
     const loginPage = browser.page.loginPage();
     const clinicianUsername = browser.globals.clinicianUsername;

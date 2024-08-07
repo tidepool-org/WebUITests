@@ -3,7 +3,7 @@ require('../../utilities/seleniumKeepAlive');
 const moment = require('moment');
 
 module.exports = {
-  '@tags': ['rpm2', 'clinician', 'parallel'],
+  '@tags': ['rpm', 'clinician', 'parallel'],
   'Clinician User Logs in with Existing Credentials'(browser) {
     const loginPage = browser.page.loginPage();
     const clinicianUsername = browser.globals.clinicianUsername;
@@ -30,6 +30,8 @@ module.exports = {
     ({
       startDate, endDate, startDateFile, endDatefile, fileName,
     } = await browser.createDatesLong(start, end));
+    console.log(`startDate${startDate}`);
+    console.log(`startDateFile${startDateFile}`);
     const attemptsCheckFileExists = 10;
     const filePath = './rpm.csv';
 
