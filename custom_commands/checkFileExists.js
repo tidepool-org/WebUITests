@@ -13,6 +13,7 @@ module.exports = class checkFileExists {
   command(attempts, fileName) {
     let attempts1 = attempts;
     return new Promise((resolve, reject) => {
+    try{
       browser.executeScript(
         `browserstack_executor: {"action": "fileExists","arguments":{"file_name":"${fileName}"}}`,
         [],
@@ -33,4 +34,10 @@ module.exports = class checkFileExists {
       return delay(1000).then(() => checkFileExists(attempts, browser, fileName));
     });
   }
+
+    }
+    catch (error) {
+      console.error('Error:', error);
+    }
+      
 };
