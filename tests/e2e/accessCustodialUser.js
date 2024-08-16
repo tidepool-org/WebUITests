@@ -20,6 +20,7 @@ module.exports = {
     const clinicPatientListPage = browser.page.clinicPatientListPage();
     const clinicPatientList = clinicPatientListPage.section.patientList;
     clinicPatientList.patientFilterSearch('custodial user');
+    clinicPatientList.waitForElementVisible('@row0PatientName', browser.globals.elementTimeout);
     clinicPatientList.click('@row0PatientName');
     clinicPatientList.expect.element('@uploadButton').to.be.present.before(browser.globals.elementTimeout);
     clinicPatientList.expect.element('@resendVerificationEmailButton').to.be.present.before(browser.globals.elementTimeout);
