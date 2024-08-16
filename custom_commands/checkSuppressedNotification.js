@@ -62,6 +62,7 @@ module.exports = class checkSuppressedNotification {
           });
           return response.data;
         } catch (error) {
+          browser.quit();
           return console.error(error);
         }
       };
