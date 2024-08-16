@@ -173,6 +173,18 @@ module.exports = {
           selector: '//button[@id="timeInRangeFilterConfirm"]',
           locateStrategy: 'xpath',
         },
+        row0PatientName: {
+          selector: '//*[@id="peopleTable-row-0"]//div',
+          locateStrategy: 'xpath',
+        },
+        uploadButton: {
+          selector: '//*[@class="patientcard-actions-upload" and contains(text(),"Upload")]',
+          locateStrategy: 'xpath',
+        },
+        resendVerificationEmailButton: {
+          selector: '//button[contains(text(),"RESEND VERIFICATION EMAIL")]',
+          locateStrategy: 'xpath',
+        },
 
       },
       commands: [{
