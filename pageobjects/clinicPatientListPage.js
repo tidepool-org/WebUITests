@@ -254,6 +254,7 @@ module.exports = {
             .click('@rpmReportButton')
             .click('@rpmClearDates')
             .click('@rpmReportStartDate')
+            .waitForElementVisible('xpath', `//*[contains(@aria-label,'${date}')]`, browser.globals.elementTimeout)
             .click('xpath', `//*[contains(@aria-label,'${date}')]`)
             .waitForElementVisible('@rpmReportConfirm', browser.globals.elementTimeout)
             .click('@rpmReportConfirm');

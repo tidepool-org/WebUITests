@@ -30,6 +30,8 @@ module.exports = {
     ({
       startDate, endDate, startDateFile, endDatefile, fileName,
     } = await browser.createDatesLong(start, end));
+    console.log(`startDate${startDate}`);
+    console.log(`startDateFile${startDateFile}`);
     const attemptsCheckFileExists = 10;
     const filePath = './rpm.csv';
 
