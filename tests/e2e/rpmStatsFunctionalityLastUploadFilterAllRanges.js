@@ -52,6 +52,7 @@ module.exports = {
       browser.assert.strictEqual(exists, true, 'exported rpm csv file exists ');
     } catch (error) {
       console.log(error);
+      browser.quit();
       browser.assert.strictEqual(false, true, 'exported rpm csv file exists ');
     }
     const written = await browser.checkFileContents(fileName);
@@ -93,6 +94,7 @@ module.exports = {
       browser.assert.strictEqual(exists, true, 'exported rpm csv file exists ');
     } catch (error) {
       console.log(error);
+      browser.quit();
       browser.assert.strictEqual(false, true, 'exported rpm csv file exists ');
     }
     const sufficient = await browser.checkRPMExportSufficiency(filePath);
@@ -126,6 +128,7 @@ module.exports = {
       browser.assert.strictEqual(exists, true, 'exported rpm csv file exists ');
     } catch (error) {
       console.log(error);
+      browser.quit();
       browser.assert.strictEqual(false, true, 'exported rpm csv file exists ');
     }
     const sufficient = await browser.checkRPMExportSufficiency(filePath);
@@ -158,6 +161,7 @@ module.exports = {
       browser.assert.strictEqual(exists, true, 'exported rpm csv file exists ');
     } catch (error) {
       console.log(error);
+      browser.quit();
       browser.assert.strictEqual(false, true, 'exported rpm csv file exists ');
     }
     const sufficient = await browser.checkRPMExportSufficiency(filePath);

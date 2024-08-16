@@ -35,6 +35,7 @@ module.exports = class checkFileContents {
           resolve(await getFile(fileName));
         } catch (error) {
           console.error('Error:', error);
+          browser.quit();
         }
       }
 
