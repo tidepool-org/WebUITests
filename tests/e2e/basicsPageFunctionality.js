@@ -1,7 +1,7 @@
 require('../../utilities/seleniumKeepAlive');
 
 module.exports = {
-  '@tags': ['paralleld'],
+  '@tags': ['parallel'],
   'User Logs in with Existing Credentials'(browser) {
     const loginPage = browser.page.loginPage();
     const dsaUsername = browser.globals.dsaUsernameTandem;
