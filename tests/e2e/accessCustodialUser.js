@@ -7,11 +7,11 @@ module.exports = {
     const loginPage = browser.page.loginPage();
     const clinicianUsername = browser.globals.clinicianUsername;
     const clinicianPassword = browser.globals.clinicianPassword;
-    const clinicPatientListPage = browser.page.clinicPatientListPage();
-    const clinicPatientList = clinicPatientListPage.section.patientList;
+    const clinicWorkspacePage = browser.page.clinicWorkspacePage();
+    const clinicWorkspace = clinicWorkspacePage.section.clinicWorkspace;
     loginPage.loadPage();
     loginPage.userLogin(clinicianUsername, clinicianPassword);
-    clinicPatientList.expect.element('@title').to.be.present.before(browser.globals.elementTimeout);
+    clinicWorkspace.expect.element('@title').to.be.present.before(browser.globals.elementTimeout);
   },
   'Clinician is able to select workspace'(browser) {
     const clinicWorkspacePage = browser.page.clinicWorkspacePage();
