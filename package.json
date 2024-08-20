@@ -21,6 +21,8 @@
     "testprdChromeNotifications": "nightwatch --env prdchrome --tag notifications",
     "testqa2ChromeTag": "nightwatch --env qa2chrome --tag clinician",
     "testCustodial": "nightwatch --env prdchrome,qa2chrome --tag qae222",
+    "testCustodialProfile": "nightwatch --env prdchrome,qa2chrome --tag qae223",
+    "testCustodialProfilePrd": "nightwatch --env prdchrome --tag qae223p",
     "testqa2ChromeCustodial": "nightwatch --env qa2chrome --tag qae222",
     "eslint": "eslint .",
     "eslint:fix": "eslint . --fix"
