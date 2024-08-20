@@ -14,7 +14,8 @@ module.exports = {
     default: {
       silent: true,
       detailed_output: false,
-      disable_error_log: false,
+      disable_error_log: true,
+      live_output: false,
       launch_url: 'qa2.development.tidepool.org',
 
       screenshots: {
