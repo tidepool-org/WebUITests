@@ -2,7 +2,7 @@
 require('../../utilities/seleniumKeepAlive');
 
 module.exports = {
-  '@tags': ['qae223p', 'clinician', 'parallel'],
+  '@tags': ['qae223', 'clinician', 'parallel'],
   'Clinician User Logs in with Existing Credentials'(browser) {
     const loginPage = browser.page.loginPage();
     const clinicianUsername = browser.globals.clinicianUsername;
@@ -46,7 +46,7 @@ module.exports = {
       console.log('result', result);
       previousName = result.value;
     });
-    await userProfile.setValue('@fullName', `${previousName}new`);
+    userProfile.setValue('@fullName', `${previousName}new`);
     let newName;
     await userProfile.getValue('@fullName', (result) => {
       console.log('result', result);
@@ -66,16 +66,16 @@ module.exports = {
     const userProfilePage = browser.page.userProfilePage();
     const userProfile = userProfilePage.section.profile;
     userProfile.waitForElementVisible('@edit', browser.globals.elementTimeout);
-    await userProfile.click('@edit');
+    userProfile.click('@edit');
     let previousDOB;
     await userProfile.getValue('@dob', (result) => {
       console.log('result', result);
       previousDOB = result.value;
       console.log(`previousdob${previousDOB}`);
     });
-    await userProfile.setValue('@dob', '04/04/2000');
-    await userProfile.click('@save');
-    await userProfile.click('@edit');
+    userProfile.setValue('@dob', '04/04/2000');
+    userProfile.click('@save');
+    userProfile.click('@edit');
     let newDOB;
     await userProfile.getValue('@dob', (result) => {
       console.log('result', result);
@@ -97,16 +97,16 @@ module.exports = {
       console.log('result', result);
       previousDiagnosisDate = result.value;
     });
-    await userProfile.setValue('@diagnosisDate', '03/03/2000');
-    await userProfile.click('@save');
-    await userProfile.waitForElementVisible('@edit', browser.globals.elementTimeout);
-    await userProfile.click('@edit');
+    userProfile.setValue('@diagnosisDate', '03/03/2000');
+    userProfile.click('@save');
+    userProfile.waitForElementVisible('@edit', browser.globals.elementTimeout);
+    userProfile.click('@edit');
     let newDiagnosisDate;
     await userProfile.getValue('@diagnosisDate', (result) => {
       console.log('result', result);
       newDiagnosisDate = result.value;
     });
-    await browser.assert.not.strictEqual(previousDiagnosisDate, newDiagnosisDate, 'previous diagnosis and new diagnosis are not equal');
+    browser.assert.not.strictEqual(previousDiagnosisDate, newDiagnosisDate, 'previous diagnosis and new diagnosis are not equal');
     userProfile.waitForElementVisible('@diagnosisDate', browser.globals.elementTimeout);
     userProfile.setValue('@diagnosisDate', previousDiagnosisDate);
     userProfile.click('@save');
