@@ -277,7 +277,7 @@ module.exports = {
       console.log('result', result);
       previousBio = result.value;
     });
-    userProfile.setValue('@bio', 'brian+custodialuser1@tidepool.org');
+    userProfile.setValue('@bio', 'test bio');
     let newBio;
     userProfile.click('@save');
     userProfile.waitForElementVisible('@edit', browser.globals.elementTimeout);
