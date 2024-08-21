@@ -53,6 +53,9 @@ module.exports = {
       previousName = result.value;
     });
     userProfile.setValue('@fullName', `${previousName}new`);
+    userProfile.click('@save');
+    userProfile.waitForElementVisible('@edit', browser.globals.elementTimeout);
+    userProfile.click('@edit');
     let newName;
     await userProfile.getValue('@fullName', (result) => {
       console.log('result', result);
@@ -81,6 +84,7 @@ module.exports = {
     });
     userProfile.setValue('@dob', '04/04/2000');
     userProfile.click('@save');
+    userProfile.waitForElementVisible('@edit', browser.globals.elementTimeout);
     userProfile.click('@edit');
     let newDOB;
     await userProfile.getValue('@dob', (result) => {
@@ -247,6 +251,9 @@ module.exports = {
       previousMRN = result.value;
     });
     userProfile.setValue('@mrn', '8192024');
+    userProfile.click('@save');
+    userProfile.waitForElementVisible('@edit', browser.globals.elementTimeout);
+    userProfile.click('@edit');
     let newMRN;
     await userProfile.getValue('@mrn', (result) => {
       console.log('result', result);
@@ -273,6 +280,7 @@ module.exports = {
     userProfile.setValue('@bio', 'brian+custodialuser1@tidepool.org');
     let newBio;
     userProfile.click('@save');
+    userProfile.waitForElementVisible('@edit', browser.globals.elementTimeout);
     userProfile.click('@edit');
     await userProfile.getText('@bio', (result) => {
       console.log('result', result);
