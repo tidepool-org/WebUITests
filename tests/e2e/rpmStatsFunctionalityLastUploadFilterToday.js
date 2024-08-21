@@ -1,6 +1,7 @@
 /* eslint-disable linebreak-style */
 require('../../utilities/seleniumKeepAlive');
 const moment = require('moment');
+const utilFile = require('../../modules/utilFile');
 
 module.exports = {
   '@tags': ['rpm2', 'clinician', 'parallel'],
@@ -47,14 +48,7 @@ module.exports = {
     }
 
     // validate file export results
-    try {
-      const exists = await browser.checkFileExists(attemptsCheckFileExists, fileName);
-      browser.assert.strictEqual(exists, true, 'exported rpm csv file exists ');
-    } catch (error) {
-      console.log(error);
-      browser.quit();
-      browser.assert.strictEqual(false, true, 'exported rpm csv file exists ');
-    }
+    utilFile.checkFile(browser, fileName, attemptsCheckFileExists);
     const written = await browser.checkFileContents(fileName);
     console.log(`write${written}`);
     const sufficient = await browser.checkRPMExportSufficiency(filePath);
@@ -88,14 +82,7 @@ module.exports = {
       clinicPatientList.rpmExportClickCalendarEndDate(endDate);
     }
     // validate file export results
-    try {
-      const exists = await browser.checkFileExists(attemptsCheckFileExists, fileName);
-      browser.assert.strictEqual(exists, true, 'exported rpm csv file exists ');
-    } catch (error) {
-      console.log(error);
-      browser.quit();
-      browser.assert.strictEqual(false, true, 'exported rpm csv file exists ');
-    }
+    utilFile.checkFile(browser, fileName, attemptsCheckFileExists);
     const sufficient = await browser.checkRPMExportSufficiency(filePath);
     browser.assert.strictEqual(sufficient, true, 'exported rpm csv file sufficiency is valid');
   },
@@ -122,14 +109,7 @@ module.exports = {
 
     clinicPatientList.rpmExportTypeInputStartAndEndDate(startDate, endDate);
     // validate file export results
-    try {
-      const exists = await browser.checkFileExists(attemptsCheckFileExists, fileName);
-      browser.assert.strictEqual(exists, true, 'exported rpm csv file exists ');
-    } catch (error) {
-      console.log(error);
-      browser.quit();
-      browser.assert.strictEqual(false, true, 'exported rpm csv file exists ');
-    }
+    utilFile.checkFile(browser, fileName, attemptsCheckFileExists);
     const sufficient = await browser.checkRPMExportSufficiency(filePath);
     browser.assert.strictEqual(sufficient, true, 'exported rpm csv file sufficiency is valid');
   },
@@ -155,14 +135,7 @@ module.exports = {
 
     clinicPatientList.rpmExportDefaultDate();
     // validate file export results
-    try {
-      const exists = await browser.checkFileExists(attemptsCheckFileExists, fileName);
-      browser.assert.strictEqual(exists, true, 'exported rpm csv file exists ');
-    } catch (error) {
-      console.log(error);
-      browser.quit();
-      browser.assert.strictEqual(false, true, 'exported rpm csv file exists ');
-    }
+    utilFile.checkFile(browser, fileName, attemptsCheckFileExists);
     const sufficient = await browser.checkRPMExportSufficiency(filePath);
     browser.assert.strictEqual(sufficient, true, 'exported rpm csv file sufficiency is valid');
   },
