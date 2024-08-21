@@ -2,19 +2,25 @@
 require('../../utilities/seleniumKeepAlive');
 
 module.exports = {
-  '@tags': ['qae223', 'clinician', 'parallel'],
+  '@tags': ['qae-223', 'clinician', 'parallel'],
   'Clinician User Logs in with Existing Credentials'(browser) {
     const loginPage = browser.page.loginPage();
     const clinicianUsername = browser.globals.clinicianUsername;
     const clinicianPassword = browser.globals.clinicianPassword;
+    const clinicWorkspacePage = browser.page.clinicWorkspacePage();
+    const clinicWorkspace = clinicWorkspacePage.section.clinicWorkspace;
     loginPage.loadPage();
     loginPage.userLogin(clinicianUsername, clinicianPassword);
+    clinicWorkspace.expect.element('@title').to.be.present.before(browser.globals.elementTimeout);
   },
   'Clinic workspace selection'(browser) {
     const clinicWorkspacePage = browser.page.clinicWorkspacePage();
     const clinicWorkspace = clinicWorkspacePage.section.clinicWorkspace;
+    const clinicPatientListPage = browser.page.clinicPatientListPage();
+    const clinicPatientList = clinicPatientListPage.section.patientList;
     clinicWorkspace.waitForElementVisible('@title', browser.globals.elementTimeout);
     clinicWorkspace.click('@goToWorkspace');
+    clinicPatientList.expect.element('@showAll').to.be.present.before(browser.globals.elementTimeout);
   },
   'Clinic workspace search custodial user and click patient name'(browser) {
     const clinicPatientListPage = browser.page.clinicPatientListPage();
