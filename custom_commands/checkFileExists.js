@@ -5,8 +5,9 @@ function delay(ms) {
 }
 module.exports = class checkFileExists {
   /**
-   * command method of class checkSupressedNotification
-   * @param {*} hashValue string
+   * command method of class checkSupressedNotification , checks if a file exists
+   * @param {number} attempts - number of attempts to rerun function
+   * @param {string} fileName - name of file
    * @returns true if file exists otherwise false
    */
 

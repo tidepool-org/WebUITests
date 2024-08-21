@@ -14,8 +14,9 @@ const getFile = (fileName) => new Promise((resolve) => {
 
 module.exports = class checkFileContents {
   /**
-   * command method of class checkFileContents
-   * @param {*} fileName string
+   * command method of class checkFileContents, downloads file to local
+   * so that it can opened and read
+   * @param {string} fileName - name of file
    * @returns transfers latest downloaded file from remote server to local machine
    */
   command(fileName) {
@@ -24,12 +25,6 @@ module.exports = class checkFileContents {
        *
        * @returns writes file to local
        */
-
-      /**
-     *asynchronous function checks if clinic id exists
-     *and that the suppressed notifications is enabled
-     * @returns {string} json body of clinic array object
-     */
       async function getFileRun() {
         try {
           resolve(await getFile(fileName));
