@@ -48,10 +48,10 @@ module.exports = {
     }
 
     // validate file export results
-    await utilFile.checkFileExistence(browser, fileName, attemptsCheckFileExists);
+    utilFile.checkFileExistence(browser, fileName, attemptsCheckFileExists);
     const written = await browser.checkFileContents(fileName);
     console.log(`write${written}`);
-    await utilFile.checkFileExistence(browser, filePath, attemptsCheckFileExists);
+    utilFile.checkFileExistence(browser, filePath, attemptsCheckFileExists);
     const sufficient = await browser.checkRPMExportSufficiency(filePath);
     console.log(`suff${sufficient}`);
     browser.assert.strictEqual(sufficient, true, 'exported rpm csv file sufficiency is valid ');
@@ -83,7 +83,7 @@ module.exports = {
       clinicPatientList.rpmExportClickCalendarEndDate(endDate);
     }
     // validate file export results
-    await utilFile.checkFileExistence(browser, fileName, attemptsCheckFileExists);
+    utilFile.checkFileExistence(browser, fileName, attemptsCheckFileExists);
     const sufficient = await browser.checkRPMExportSufficiency(filePath);
     browser.assert.strictEqual(sufficient, true, 'exported rpm csv file sufficiency is valid');
   },
@@ -110,7 +110,7 @@ module.exports = {
 
     clinicPatientList.rpmExportTypeInputStartAndEndDate(startDate, endDate);
     // validate file export results
-    await utilFile.checkFileExistence(browser, fileName, attemptsCheckFileExists);
+    utilFile.checkFileExistence(browser, fileName, attemptsCheckFileExists);
     const sufficient = await browser.checkRPMExportSufficiency(filePath);
     browser.assert.strictEqual(sufficient, true, 'exported rpm csv file sufficiency is valid');
   },
@@ -136,7 +136,7 @@ module.exports = {
 
     clinicPatientList.rpmExportDefaultDate();
     // validate file export results
-    await utilFile.checkFileExistence(browser, fileName, attemptsCheckFileExists);
+    utilFile.checkFileExistence(browser, fileName, attemptsCheckFileExists);
     const sufficient = await browser.checkRPMExportSufficiency(filePath);
     browser.assert.strictEqual(sufficient, true, 'exported rpm csv file sufficiency is valid');
   },
