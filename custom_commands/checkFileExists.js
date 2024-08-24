@@ -19,7 +19,7 @@ module.exports = class checkFileExists {
         [],
         (result) => {
           console.log(`res${result}`);
-          if (result.value) {
+          if (result.value !== null) {
             resolve(result.value);
           } else {
             console.log(`fail${attempts}`);
