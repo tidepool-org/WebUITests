@@ -51,6 +51,7 @@ module.exports = {
     await utilFile.checkFileExistence(browser, fileName, attemptsCheckFileExists);
     const written = await browser.checkFileContents(fileName);
     console.log(`write${written}`);
+    await utilFile.checkFileExistence(browser, filePath, attemptsCheckFileExists);
     const sufficient = await browser.checkRPMExportSufficiency(filePath);
     console.log(`suff${sufficient}`);
     browser.assert.strictEqual(sufficient, true, 'exported rpm csv file sufficiency is valid ');
