@@ -89,9 +89,10 @@ module.exports = {
     let newDOB;
     await userProfile.getValue('@dob', (result) => {
       console.log('result', result);
-      console.log(`${newDOB} ${result.value}`);
-      browser.assert.not.strictEqual(previousDOB, result.value, 'previous dob and new dob are not equal');
+      newDOB = result.value;
+      console.log(`${newDOB} ${previousDOB}`);
     });
+    browser.assert.not.strictEqual(previousDOB, newDOB, 'previous dob and new dob are not equal');
     userProfile.waitForElementVisible('@dob', browser.globals.elementTimeout);
     userProfile.setValue('@dob', previousDOB);
     userProfile.click('@save');
@@ -113,8 +114,9 @@ module.exports = {
     let newDiagnosisDate;
     await userProfile.getValue('@diagnosisDate', (result) => {
       console.log('result', result);
-      browser.assert.not.strictEqual(previousDiagnosisDate, result.value, 'previous diagnosis and new diagnosis are not equal');
+      newDiagnosisDate = result.value;
     });
+    browser.assert.not.strictEqual(previousDiagnosisDate, newDiagnosisDate, 'previous diagnosis and new diagnosis are not equal');
     userProfile.waitForElementVisible('@diagnosisDate', browser.globals.elementTimeout);
     userProfile.setValue('@diagnosisDate', previousDiagnosisDate);
     userProfile.click('@save');
@@ -256,9 +258,9 @@ module.exports = {
     await userProfile.getValue('@mrn', (result) => {
       console.log('result', result);
       newMRN = result.value;
-      browser.assert.not.strictEqual(previousMRN, newMRN, 'previous mrn and new mrn are not equal');
     });
     userProfile.click('@save');
+    browser.assert.not.strictEqual(previousMRN, newMRN, 'previous mrn and new mrn are not equal');
     userProfile.click('@edit');
     userProfile.waitForElementVisible('@mrn', browser.globals.elementTimeout);
     userProfile.setValue('@mrn', previousMRN);
@@ -283,8 +285,8 @@ module.exports = {
     await userProfile.getText('@bio', (result) => {
       console.log('result', result);
       newBio = result.value;
-      browser.assert.not.strictEqual(previousBio, newBio, 'previous bio and new bio are not equal');
     });
+    browser.assert.not.strictEqual(previousBio, newBio, 'previous bio and new bio are not equal');
     userProfile.waitForElementVisible('@bio', browser.globals.elementTimeout);
     userProfile.setValue('@bio', previousBio);
     userProfile.click('@save');
