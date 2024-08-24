@@ -18,12 +18,12 @@ module.exports = class checkFileExists {
         `browserstack_executor: {"action": "fileExists","arguments":{"file_name":"${fileName}"}}`,
         [],
         (result) => {
-          console.log(`res${result}`);
+          console.log(`res${result.value}`);
           if (result.value !== null) {
             resolve(result.value);
           } else {
             console.log(`fail${attempts}`);
-            reject(Error);
+            throw (Error);
           }
         },
       );
