@@ -12,7 +12,6 @@
  * @return {Promise<void>} - A Promise that resolves when the file existence has been checked.
  */
 
-
 exports.checkFileExistence = async (browser, fileName, attemptsCheckFileExists) => {
   try {
     console.log(fileName);
