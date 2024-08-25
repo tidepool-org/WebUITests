@@ -74,14 +74,20 @@ module.exports = {
           selector: '//button[text()="Save changes"]',
           locateStrategy: 'xpath',
         },
+        patientInfoDiagnosed: {
+          selector: '//div[@class="PatientInfo-block" and contains(text(),"Diagnosed")]',
+          locateStrategy: 'xpath',
+        },
       },
       commands: [{
         selectDiagnosesAs(diagnosisType) {
           return this
+            .waitForElementVisible('@edit', browser.globals.elementTimeout)
             .click('@edit')
             .click('@diagnosisType')
             .click(diagnosisType)
             .click('@save')
+            .waitForElementVisible('@patientInfoDiagnosed', browser.globals.elementTimeout)
             .click('@edit');
         },
       }],
