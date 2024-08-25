@@ -248,7 +248,13 @@ module.exports = {
     userProfile.waitForElementVisible('@bio', browser.globals.elementTimeout);
     userProfile.setValue('@bio', previousBio);
     userProfile.click('@save');
-    browser.assert.not.strictEqual(previousBio, newBio, 'previous bio saved in bio field');
+    userProfile.click('@edit');
+    await userProfile.getText('@bio', (result) => {
+      console.log('result', result);
+      newBio = result.value;
+    });
+    userProfile.click('@save');
+    browser.assert.strictEqual(previousBio, newBio, 'previous bio saved in bio field');
   },
 
 };
