@@ -76,6 +76,14 @@ module.exports = {
         },
       },
       commands: [{
+        selectDiagnosesAs(diagnosisType) {
+          return this.userProfile
+            .click('@edit')
+            .click('@diagnosisType')
+            .click(diagnosisType)
+            .click('@save')
+            .click('@edit');
+        },
       }],
     },
   },
