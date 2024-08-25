@@ -77,7 +77,7 @@ module.exports = {
       },
       commands: [{
         selectDiagnosesAs(diagnosisType) {
-          return this.userProfile
+          return this
             .click('@edit')
             .click('@diagnosisType')
             .click(diagnosisType)
