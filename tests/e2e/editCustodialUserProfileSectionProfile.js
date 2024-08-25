@@ -124,13 +124,7 @@ module.exports = {
   'Edit and save diagnosis type to type 1 in custodial user profile page': async (browser) => {
     const userProfilePage = browser.page.userProfilePage();
     const userProfile = userProfilePage.section.profile;
-    userProfile.waitForElementVisible('@edit', browser.globals.elementTimeout);
-    userProfile.click('@edit');
-    userProfile.click('@diagnosisType');
-    userProfile.click('@diagnosisTypeOptionType1');
-    userProfile.click('@save');
-    userProfile.waitForElementVisible('@edit', browser.globals.elementTimeout);
-    userProfile.click('@edit');
+    userProfile.selectDiagnosesAs('@diagnosisTypeOptionType1');
     userProfile.isSelected('@diagnosisTypeOptionType1', function (result) {
       this.assert.equal(typeof result, 'object');
       this.assert.equal(result.status, 0);
@@ -141,13 +135,7 @@ module.exports = {
   'Edit and save diagnosis type to type 2 in custodial user profile page': async (browser) => {
     const userProfilePage = browser.page.userProfilePage();
     const userProfile = userProfilePage.section.profile;
-    userProfile.waitForElementVisible('@edit', browser.globals.elementTimeout);
-    userProfile.click('@edit');
-    userProfile.click('@diagnosisType');
-    userProfile.click('@diagnosisTypeOptionType2');
-    userProfile.click('@save');
-    userProfile.waitForElementVisible('@edit', browser.globals.elementTimeout);
-    userProfile.click('@edit');
+    userProfile.selectDiagnosesAs('@diagnosisTypeOptionType2');
     userProfile.isSelected('@diagnosisTypeOptionType2', function (result) {
       this.assert.equal(typeof result, 'object');
       this.assert.equal(result.status, 0);
@@ -158,13 +146,7 @@ module.exports = {
   'Edit and save diagnosis type to gestational in custodial user profile page': async (browser) => {
     const userProfilePage = browser.page.userProfilePage();
     const userProfile = userProfilePage.section.profile;
-    userProfile.waitForElementVisible('@edit', browser.globals.elementTimeout);
-    userProfile.click('@edit');
-    userProfile.click('@diagnosisType');
-    userProfile.click('@diagnosisTypeGestational');
-    userProfile.click('@save');
-    userProfile.waitForElementVisible('@edit', browser.globals.elementTimeout);
-    userProfile.click('@edit');
+    userProfile.selectDiagnosesAs('@diagnosisTypeGestational');
     userProfile.isSelected('@diagnosisTypeGestational', function (result) {
       this.assert.equal(typeof result, 'object');
       this.assert.equal(result.status, 0);
@@ -175,13 +157,7 @@ module.exports = {
   'Edit and save diagnosis type to prediabetes in custodial user profile page': async (browser) => {
     const userProfilePage = browser.page.userProfilePage();
     const userProfile = userProfilePage.section.profile;
-    userProfile.waitForElementVisible('@edit', browser.globals.elementTimeout);
-    userProfile.click('@edit');
-    userProfile.click('@diagnosisType');
-    userProfile.click('@diagnosisTypePrediabetes');
-    userProfile.click('@save');
-    userProfile.waitForElementVisible('@edit', browser.globals.elementTimeout);
-    userProfile.click('@edit');
+    userProfile.selectDiagnosesAs('@diagnosisTypePrediabetes');
     userProfile.isSelected('@diagnosisTypePrediabetes', function (result) {
       this.assert.equal(typeof result, 'object');
       this.assert.equal(result.status, 0);
@@ -192,13 +168,7 @@ module.exports = {
   'Edit and save diagnosis type to lada in custodial user profile page': async (browser) => {
     const userProfilePage = browser.page.userProfilePage();
     const userProfile = userProfilePage.section.profile;
-    userProfile.waitForElementVisible('@edit', browser.globals.elementTimeout);
-    userProfile.click('@edit');
-    userProfile.click('@diagnosisType');
-    userProfile.click('@diagnosisTypeLada');
-    userProfile.click('@save');
-    userProfile.waitForElementVisible('@edit', browser.globals.elementTimeout);
-    userProfile.click('@edit');
+    userProfile.selectDiagnosesAs('@diagnosisTypeLada');
     userProfile.isSelected('@diagnosisTypeLada', function (result) {
       this.assert.equal(typeof result, 'object');
       this.assert.equal(result.status, 0);
@@ -209,13 +179,7 @@ module.exports = {
   'Edit and save diagnosis type to mody in custodial user profile page': async (browser) => {
     const userProfilePage = browser.page.userProfilePage();
     const userProfile = userProfilePage.section.profile;
-    userProfile.waitForElementVisible('@edit', browser.globals.elementTimeout);
-    userProfile.click('@edit');
-    userProfile.click('@diagnosisType');
-    userProfile.click('@diagnosisTypeMody');
-    userProfile.click('@save');
-    userProfile.waitForElementVisible('@edit', browser.globals.elementTimeout);
-    userProfile.click('@edit');
+    userProfile.selectDiagnosesAs('@diagnosisTypeMody');
     userProfile.isSelected('@diagnosisTypeMody', function (result) {
       this.assert.equal(typeof result, 'object');
       this.assert.equal(result.status, 0);
@@ -226,13 +190,7 @@ module.exports = {
   'Edit and save diagnosis type to other in custodial user profile page': async (browser) => {
     const userProfilePage = browser.page.userProfilePage();
     const userProfile = userProfilePage.section.profile;
-    userProfile.waitForElementVisible('@edit', browser.globals.elementTimeout);
-    userProfile.click('@edit');
-    userProfile.click('@diagnosisType');
-    userProfile.click('@diagnosisTypeOther');
-    userProfile.click('@save');
-    userProfile.waitForElementVisible('@edit', browser.globals.elementTimeout);
-    userProfile.click('@edit');
+    userProfile.selectDiagnosesAs('@diagnosisTypeOther');
     userProfile.isSelected('@diagnosisTypeOther', function (result) {
       this.assert.equal(typeof result, 'object');
       this.assert.equal(result.status, 0);
