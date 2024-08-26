@@ -23,6 +23,8 @@
     "testCustodial": "nightwatch --env prdchrome,qa2chrome --tag qae-222",
     "testCustodialProfile": "nightwatch --env prdchrome,qa2chrome --tag qae-223",
     "testCustodialProfilePrd": "nightwatch --env prdchrome --tag qae-223p",
+    "testCustodialProfileRangeMGDL": "nightwatch --env qa2chrome --tag qae-223rangemgdl",
+    "testCustodialProfileRangeMMOLL": "nightwatch --env qa2chrome --tag qae-223rangemmoll",
     "testqa2ChromeCustodial": "nightwatch --env qa2chrome --tag qae-222",
     "eslint": "eslint .",
     "eslint:fix": "eslint . --fix"

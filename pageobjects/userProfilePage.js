@@ -92,6 +92,55 @@ module.exports = {
         },
       }],
     },
+    targetRange: {
+      selector: '#app',
+      elements: {
+        increaseLow: {
+          selector: '//*[@class="IncrementalInput IncrementalInput--low"]//*[@class="IncrementalInputArrow IncrementalInputArrow--increase"]',
+          locateStrategy: 'xpath',
+        },
+        decreaseLow: {
+          selector: '//*[@class="IncrementalInput IncrementalInput--low"]//*[@class="IncrementalInputArrow IncrementalInputArrow--decrease"]',
+          locateStrategy: 'xpath',
+        },
+        increaseHigh: {
+          selector: '//*[@class="IncrementalInput IncrementalInput--high"]//*[@class="IncrementalInputArrow IncrementalInputArrow--increase"]',
+          locateStrategy: 'xpath',
+        },
+        decreaseHigh: {
+          selector: '//*[@class="IncrementalInput IncrementalInput--high"]//*[@class="IncrementalInputArrow IncrementalInputArrow--decrease"]',
+          locateStrategy: 'xpath',
+        },
+        low: {
+          selector: '//*[@class="IncrementalInput IncrementalInput--low"]//span',
+          locateStrategy: 'xpath',
+        },
+        high: {
+          selector: '//*[@class="IncrementalInput IncrementalInput--high"]//span',
+          locateStrategy: 'xpath',
+        },
+        reset: {
+          selector: '//*[@class="PatientSettings-reset"]',
+          locateStrategy: 'xpath',
+        },
+
+      },
+    },
+    units: {
+      selector: '#app',
+      elements: {
+        mgdl: {
+          selector: '//input[@id="bgUnits0"]',
+          locateStrategy: 'xpath',
+        },
+        mmoll: {
+          selector: '//input[@id="bgUnits1"]',
+          locateStrategy: 'xpath',
+        },
+
+      },
+    },
+
   },
   commands: [{
   }],
