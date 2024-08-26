@@ -1,8 +1,9 @@
 module.exports = class createDatesLong {
   /**
-   * command method of class checkSupressedNotification
-   * @param {*} start
-   * @param {*} end
+   * command method of class createDatesLong, creates date strings
+   * to be used to validate ui or files
+   * @param {object} start
+   * @param {object} end
    * @returns startDate, endDate, startDateFile, endDateFile
    */
 

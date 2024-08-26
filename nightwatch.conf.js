@@ -14,7 +14,8 @@ module.exports = {
     default: {
       silent: true,
       detailed_output: false,
-      disable_error_log: false,
+      disable_error_log: true,
+      live_output: false,
       launch_url: 'qa2.development.tidepool.org',
 
       screenshots: {
@@ -198,6 +199,7 @@ module.exports = {
           resolution: '1366x768',
           buildName: `PRD_CHROME ${dayjs().format('YYYY-MM-DD')} JIRA: ${process.env.TEST_EXECUTION_KEY}`,
           local: 'false',
+          idleTimeout: 300,
         },
       },
     },

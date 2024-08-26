@@ -1,8 +1,8 @@
 module.exports = class createDatesShort {
   /**
-   * command method of class checkSupressedNotification
-   * @param {*} start
-   * @param {*} end
+   * command method of class checkSupressedNotification, creates date strings for validatio of ui and files
+   * @param {object} start
+   * @param {object} end
    * @returns startDate, endDate, startDateFile, endDateFile
    */
 

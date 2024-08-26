@@ -55,6 +55,7 @@ module.exports = class setSuppressedNotifcation {
           );
           return response.status;
         } catch (error) {
+          browser.quit();
           return console.error(error);
         }
       };

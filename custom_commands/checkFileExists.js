@@ -5,8 +5,9 @@ function delay(ms) {
 }
 module.exports = class checkFileExists {
   /**
-   * command method of class checkSupressedNotification
-   * @param {*} hashValue string
+   * command method of class checkSupressedNotification , checks if a file exists
+   * @param {number} attempts - number of attempts to rerun function
+   * @param {string} fileName - name of file
    * @returns true if file exists otherwise false
    */
 
@@ -17,12 +18,12 @@ module.exports = class checkFileExists {
         `browserstack_executor: {"action": "fileExists","arguments":{"file_name":"${fileName}"}}`,
         [],
         (result) => {
-          console.log(`res${result}`);
-          if (result.value) {
+          console.log(`res${result.value}`);
+          if (result.value !== null) {
             resolve(result.value);
           } else {
             console.log(`fail${attempts}`);
-            reject(Error);
+            throw (Error);
           }
         },
       );

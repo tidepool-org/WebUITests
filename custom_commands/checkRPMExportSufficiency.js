@@ -72,6 +72,7 @@ module.exports = class checkRPMReportSufficiency {
           resolve(await checkSufficiencyResult(filePath));
         } catch (error) {
           console.error('Error:', error);
+          browser.quit();
         }
       }
 

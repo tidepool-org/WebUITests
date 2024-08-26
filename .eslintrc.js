@@ -23,6 +23,7 @@ module.exports = {
     'class-methods-use-this': 'warn',
     'no-unused-vars': 'warn',
     'prefer-const': 'warn',
+    'linebreak-style': 'warn',
   },
   globals: {
     browser: true,
