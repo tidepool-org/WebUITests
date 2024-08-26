@@ -248,6 +248,7 @@ module.exports = {
     userProfile.waitForElementVisible('@bio', browser.globals.elementTimeout);
     userProfile.setValue('@bio', previousBio);
     userProfile.click('@save');
+    userProfile.waitForElementVisible('@edit', browser.globals.elementTimeout);
     userProfile.click('@edit');
     await userProfile.getText('@bio', (result) => {
       console.log('result', result);
