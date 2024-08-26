@@ -45,6 +45,7 @@ module.exports = {
           );
         });
       }
+      browser.quit();
     });
     if (browser.currentTest.results.failed > 0 || browser.currentTest.results.errors > 0) {
       request({

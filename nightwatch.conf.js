@@ -5,14 +5,17 @@ module.exports = {
   src_folders: ['tests'],
   page_objects_path: ['pageobjects'],
   globals_path: 'global.js',
-  custom_commands_path: ['node_modules/nightwatch-vrt/commands'],
+  custom_commands_path: ['./custom_commands', 'node_modules/nightwatch-vrt/commands'],
   custom_assertions_path: ['node_modules/nightwatch-vrt/assertions'],
 
   webdriver: {},
 
   test_settings: {
     default: {
-      disable_error_log: false,
+      silent: true,
+      detailed_output: false,
+      disable_error_log: true,
+      live_output: false,
       launch_url: 'qa2.development.tidepool.org',
 
       screenshots: {
@@ -61,6 +64,10 @@ module.exports = {
     qa2chrome: {
       extends: 'browserstack',
       launch_url: 'https://qa2.development.tidepool.org',
+      globals: {
+        clinic_id: `${process.env.QA2_CLINIC_ID}`,
+        clinician_id: `${process.env.QA2_CLINICIAN_ID}`,
+      },
       environmentName: 'qa2chrome', // an extra key o help vrt distinguish between environments
       desiredCapabilities: {
         browserName: 'chrome',
@@ -73,6 +80,7 @@ module.exports = {
           resolution: '1366x768',
           buildName: `QA2_CHROME ${dayjs().format('YYYY-MM-DD')} JIRA: ${process.env.TEST_EXECUTION_KEY}`,
           local: 'false',
+          idleTimeout: 300,
         },
       },
     },
@@ -175,6 +183,10 @@ module.exports = {
     prdchrome: {
       extends: 'browserstack',
       launch_url: 'https://app.tidepool.org',
+      globals: {
+        clinic_id: `${process.env.PRD_CLINIC_ID}`,
+        clinician_id: `${process.env.PRD_CLINICIAN_ID}`,
+      },
       environmentName: 'prdchrome',
       desiredCapabilities: {
         browserName: 'chrome',
@@ -187,6 +199,7 @@ module.exports = {
           resolution: '1366x768',
           buildName: `PRD_CHROME ${dayjs().format('YYYY-MM-DD')} JIRA: ${process.env.TEST_EXECUTION_KEY}`,
           local: 'false',
+          idleTimeout: 300,
         },
       },
     },

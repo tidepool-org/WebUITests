@@ -17,5 +17,16 @@ module.exports = {
     'chai-friendly/no-unused-expressions': 'off',
     'object-shorthand': ['error', 'properties'],
     'no-console': 'off',
+    'import/no-extraneous-dependencies': ['error', { devDependencies: false, optionalDependencies: false, peerDependencies: false }],
+    'max-len': 'warn',
+    'no-plusplus': 'warn',
+    'class-methods-use-this': 'warn',
+    'no-unused-vars': 'warn',
+    'prefer-const': 'warn',
+    'linebreak-style': 'warn',
   },
+  globals: {
+    browser: true,
+  },
+
 };
