@@ -140,6 +140,55 @@ module.exports = {
 
       },
     },
+    export: {
+      selector: '#app',
+      elements: {
+        allData: {
+          selector: '//*[text()="All Data"]',
+          locateStrategy: 'xpath',
+        },
+        last90Days: {
+          selector: '//*[text()="Last 90 Days"]',
+          locateStrategy: 'xpath',
+        },
+        last30Days: {
+          selector: '//*[text()="Last 30 Days"]',
+          locateStrategy: 'xpath',
+        },
+        last14Days: {
+          selector: '//*[text()="Last 14 Days"]',
+          locateStrategy: 'xpath',
+        },
+        startDate: {
+          selector: '//input[@name="startDate"]',
+          locateStrategy: 'xpath',
+        },
+        endDate: {
+          selector: '//input[@name="endDate"]',
+          locateStrategy: 'xpath',
+        },
+        export: {
+          selector: '//input[@value="Export"]',
+          locateStrategy: 'xpath',
+        },
+        mgdl: {
+          selector: '//div[@class="Export-units"]//*[@value="mg/dL"]',
+          locateStrategy: 'xpath',
+        },
+        mmoll: {
+          selector: '//div[@class="Export-units"]//*[@value="mmol/L"]',
+          locateStrategy: 'xpath',
+        },
+        excel: {
+          selector: '//div[@class="Export-filetype"]//*[@value="excel"]',
+          locateStrategy: 'xpath',
+        },
+        json: {
+          selector: '//div[@class="Export-filetype"]//*[@value="json"]',
+          locateStrategy: 'xpath',
+        },
+      },
+    },
 
   },
   commands: [{
