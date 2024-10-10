@@ -53,9 +53,17 @@ jobs:
           path: vrt/baseline/ui
       - store_test_results:
           path: tests_output/testresults.xml
+      - run:
+          name: Parse Test Results
+          command: |
+            TOTAL_TESTS=$(grep -oP 'tests="\K\d+' tests_output/testresults.xml)
+            PASSED_TESTS=$(grep -oP 'passed="\K\d+' tests_output/testresults.xml)
+            echo "export TOTAL_TESTS=$TOTAL_TESTS" >> $BASH_ENV
+            echo "export PASSED_TESTS=$PASSED_TESTS" >> $BASH_ENV
+          when: always
       - slack/notify:
           event: fail
-          branch_pattern: main
+          # branch_pattern: main
           mentions: '<@UG56AQFK2>'
           custom: |
             {
@@ -64,7 +72,7 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": " The Tidepool Web UI tests have failed. :sad_tapani: \n\n *Please confirm resolution details:*"
+                    "text": " The Tidepool Web UI tests have failed. :sad_tapani: \n\n :link: <${CIRCLE_BUILD_URL}|View CircleCI Build>\n\n *Please confirm resolution details:*"
                   }
                 },
                 {
@@ -137,7 +145,7 @@ jobs:
             }
       - slack/notify:
           event: pass
-          branch_pattern: main
+          # branch_pattern: main
           custom: |
             {
               "blocks": [
@@ -145,7 +153,7 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                      "text": " The Tidepool Web UI tests have passed. :catjam:  \n\n"
+                      "text": " The Tidepool Web UI tests have passed. :catjam:  \n\n We ran $TOTAL_TESTS tests and $PASSED_TESTS passed! \n\n :link: <${CIRCLE_BUILD_URL}|View CircleCI Build>"
                   }
                 }
               ]
