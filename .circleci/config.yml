@@ -72,7 +72,7 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": " The Tidepool Web UI tests have failed. :sad_tapani: \n\n :link: <${CIRCLE_BUILD_URL}|View CircleCI Build>\n\n *Please confirm resolution details:*"
+                    "text": " The Tidepool Web UI tests have failed. :sad_tapani: \n\n We ran $TOTAL_TESTS tests and $PASSED_TESTS passed! \n\n :link: <${CIRCLE_BUILD_URL}|View CircleCI Build>\n\n *Please confirm resolution details:*"
                   }
                 },
                 {
