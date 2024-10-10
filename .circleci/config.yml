@@ -72,7 +72,7 @@ jobs:
           when: always
       - slack/notify:
           event: fail
-          branch_pattern: main
+          # branch_pattern: main
           mentions: '<@UG56AQFK2>'
           custom: |
             {
@@ -81,7 +81,7 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": " The Tidepool Web UI tests have failed. :sad_tapani: \n\n ```TOTAL_TESTS: $TOTAL_TESTS tests \nPASSED_TESTS: $PASSED_TESTS\nFAILED_TESTS: $FAILURES\nERRORS: $ERRORS```  \n\n :link: <${CIRCLE_BUILD_URL}|View CircleCI Build>\n\n *Please confirm resolution details:*"
+                    "text": "*:x: Tidepool Web UI Tests Failed* :sad_tapani: \n\n *Summary:* \n *$PASSED_TESTS/$TOTAL_TESTS tests passed* \n *$FAILURES tests failed* \n *$ERRORS errors encountered* \n\n :link: *<${CIRCLE_BUILD_URL}|View CircleCI Build Details>* \n\n :exclamation: *Please confirm resolution details.*"
                   }
                 },
                 {
@@ -154,7 +154,7 @@ jobs:
             }
       - slack/notify:
           event: pass
-          branch_pattern: main
+          # branch_pattern: main
           custom: |
             {
               "blocks": [
@@ -162,9 +162,9 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                      "text": " ✅ The Tidepool Web UI tests have passed. :catjam:  \n\n ```TOTAL_TESTS: $TOTAL_TESTS \nPASSED_TESTS: $PASSED_TESTS``` \n\n :link: <${CIRCLE_BUILD_URL}|View CircleCI Build>"
+                    "text": "*:white_check_mark: Tidepool Web UI Tests Passed!* :catjam:  \n\n *Summary:* \n *$PASSED_TESTS/$TOTAL_TESTS tests passed* \n\n :link: *<${CIRCLE_BUILD_URL}|View CircleCI Build Details>*"
                   }
-                }
+                },
               ]
             }
       - unless:
