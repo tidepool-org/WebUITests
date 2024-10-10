@@ -40,8 +40,8 @@ jobs:
             - ./node_modules
           key: dependency-cache-{{ checksum "package.json" }}
       - run:
-         name: Run Parallel Tests on Chosen Environments
-         command: npm run << pipeline.parameters.testEnvironment >>
+          name: Run Parallel Tests on Chosen Environments
+          command: npm run << pipeline.parameters.testEnvironment >>
       - run:
           name: Consolidate Test Report
           command: npm run merge-reports
@@ -72,7 +72,7 @@ jobs:
           when: always
       - slack/notify:
           event: fail
-          # branch_pattern: main
+          branch_pattern: main
           mentions: '<@UG56AQFK2>'
           custom: |
             {
@@ -154,7 +154,7 @@ jobs:
             }
       - slack/notify:
           event: pass
-          # branch_pattern: main
+          branch_pattern: main
           custom: |
             {
               "blocks": [
@@ -162,7 +162,7 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                      "text": " ✅ The Tidepool Web UI tests have passed. :catjam:  \n\n ```TOTAL_TESTS: $TOTAL_TESTS \nPASSED_TESTS: $PASSED_TESTS \n\n :link: <${CIRCLE_BUILD_URL}|View CircleCI Build>"
+                      "text": " ✅ The Tidepool Web UI tests have passed. :catjam:  \n\n ```TOTAL_TESTS: $TOTAL_TESTS \nPASSED_TESTS: $PASSED_TESTS``` \n\n :link: <${CIRCLE_BUILD_URL}|View CircleCI Build>"
                   }
                 }
               ]
