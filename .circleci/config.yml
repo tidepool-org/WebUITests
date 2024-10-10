@@ -72,7 +72,7 @@ jobs:
           when: always
       - slack/notify:
           event: fail
-          # branch_pattern: main
+          branch_pattern: main
           mentions: '<@UG56AQFK2>'
           custom: |
             {
@@ -154,7 +154,7 @@ jobs:
             }
       - slack/notify:
           event: pass
-          # branch_pattern: main
+          branch_pattern: main
           custom: |
             {
               "blocks": [
