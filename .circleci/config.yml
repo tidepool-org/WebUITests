@@ -164,7 +164,7 @@ jobs:
                     "type": "mrkdwn",
                     "text": "*:white_check_mark: Tidepool Web UI Tests Passed!* :catjam:  \n\n *Summary:* \n *$PASSED_TESTS/$TOTAL_TESTS tests passed* \n\n :link: *<${CIRCLE_BUILD_URL}|View CircleCI Build Details>*"
                   }
-                },
+                }
               ]
             }
       - unless:
