@@ -27,7 +27,7 @@ module.exports = {
     clinicPatientList.expect.element('@GMI').text.to.contain('GMI');
     clinicPatientList.expect.element('@timeInRange').text.to.contain('% Time in Range');
     clinicPatientList.expect.element('@avgGlucose').text.to.contain('Avg. Glucose');
-    clinicPatientList.expect.element('@lows').text.to.contain('Lows');
+    clinicPatientList.expect.element('@lowss').text.to.contain('Lows');
     clinicPatientList.expect.element('@highs').text.to.contain('Highs');
     clinicPatientList.waitForElementVisible('@lastUploadDesc', browser.globals.elementTimeout);
   },

@@ -69,10 +69,20 @@ jobs:
             echo "export PASSED_TESTS=$PASSED_TESTS" >> $BASH_ENV
             echo "export FAILURES=$FAILURES" >> $BASH_ENV
             echo "export ERRORS=$ERRORS" >> $BASH_ENV
+            
+            # Parse failed test cases
+            FAILED_CASES=$(xmllint --xpath "//testcase[failure]" tests_output/testresults.xml | sed -E 's/<testcase name="([^"]*)" classname="([^"]*)".*<failure message="([^"]*)".*/<\2> - \1: \3/' | sed 's/&lt;/</g; s/&gt;/>/g; s/&quot;/"/g; s/&#39;/'"'"'/g')
+            echo "export FAILED_CASES='$FAILED_CASES'" >> $BASH_ENV
+          when: always
+      - run:
+          name: Get Failed Test Cases
+          command: |
+            FAILED_CASES=$(xmllint --xpath "string(/testsuites/testsuite/testcase/failure/@message)" tests_output/testresults.xml)
+            echo "export FAILED_CASES=$FAILED_CASES" >> $BASH_ENV
           when: always
       - slack/notify:
           event: fail
-          branch_pattern: main
+          # branch_pattern: main
           mentions: '<@UG56AQFK2>'
           custom: |
             {
@@ -81,74 +91,18 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "*:x: Tidepool Web UI Tests Failed* :sad_tapani: \n\n *Summary:* \n *$PASSED_TESTS/$TOTAL_TESTS tests passed* \n *$FAILURES tests failed* \n *$ERRORS errors encountered* \n\n :link: *<${CIRCLE_BUILD_URL}|View CircleCI Build Details>* \n\n :exclamation: *Please confirm resolution details.*"
+                    "text": "*:x: Tidepool Web UI Tests Failed* :sad_tapani: \n\n :pencil:*Summary* \n\n *$PASSED_TESTS/$TOTAL_TESTS* tests passed \n *$FAILURES* tests failed \n *$ERRORS* errors encountered"
                   }
                 },
                 {
                   "type": "divider"
                 },
                 {
-                  "type": "actions",
-                  "elements": [
-                    {
-                      "type": "checkboxes",
-                      "options": [
-                        {
-                          "text": {
-                            "type": "plain_text",
-                            "text": "Confirmed defect :x:",
-                            "emoji": true
-                          },
-                          "description": {
-                            "type": "plain_text",
-                            "text": "This failure has been vetted and confirmed a defect.",
-                            "emoji": true
-                          },
-                          "value": "value-0"
-                        },
-                        {
-                          "text": {
-                            "type": "plain_text",
-                            "text": "Expected change :white_check_mark:",
-                            "emoji": true
-                          },
-                          "description": {
-                            "type": "plain_text",
-                            "text": "This failure has been due to an expected product change. \n Corresponding tests need to be updated.",
-                            "emoji": true
-                          },
-                          "value": "value-1"
-                        },
-                        {
-                          "text": {
-                            "type": "plain_text",
-                            "text": "Development run :female-technologist:",
-                            "emoji": true
-                          },
-                          "description": {
-                            "type": "plain_text",
-                            "text": "This failure was produced during a development run of these tests. \n Pay no mind.",
-                            "emoji": true
-                          },
-                          "value": "value-2"
-                        },
-                        {
-                          "text": {
-                            "type": "plain_text",
-                            "text": "Unreliable test :warning:",
-                            "emoji": true
-                          },
-                          "description": {
-                            "type": "plain_text",
-                            "text": "This failure was due to an unreliable test. \n The test will need to be modified or removed.",
-                            "emoji": true
-                          },
-                            "value": "value-3"
-                        }
-                      ],
-                      "action_id": "actionId-0"
-                    }
-                  ]
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": ":crying_cat_face:  *Failed Test Cases:* \n$FAILED_CASES \n\n \n\n :link: *<${CIRCLE_BUILD_URL}|View CircleCI Build Details>*"
+                  }
                 }
               ]
             }
@@ -162,7 +116,7 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "*:white_check_mark: Tidepool Web UI Tests Passed!* :catjam:  \n\n *Summary:* \n *$PASSED_TESTS/$TOTAL_TESTS tests passed* \n\n :link: *<${CIRCLE_BUILD_URL}|View CircleCI Build Details>*"
+                    "text": "*:white_check_mark: Tidepool Web UI Tests Passed!* :catjam:  \n\n *Summary:* \n *$PASSED_TESTS/$TOTAL_TESTS* tests passed \n\n :link: *<${CIRCLE_BUILD_URL}|View CircleCI Build Details>*"
                   }
                 }
               ]
