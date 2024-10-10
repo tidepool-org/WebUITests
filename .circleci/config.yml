@@ -30,6 +30,9 @@ jobs:
       - checkout
       - browser-tools/install-browser-tools
       - node/install
+      - run:
+          name: Install xmllint
+          command: sudo apt-get update && sudo apt-get install -y libxml2-utils
       - run: node --version
       - run: npm install
       - save_cache:
@@ -58,10 +61,14 @@ jobs:
       - run:
           name: Parse Test Results
           command: |
-            TOTAL_TESTS=$(grep -oP 'tests="\K\d+' tests_output/testresults.xml)
-            PASSED_TESTS=$(grep -oP 'passed="\K\d+' tests_output/testresults.xml)
+            TOTAL_TESTS=$(xmllint --xpath "string(/testsuites/@tests)" tests_output/testresults.xml)
+            FAILURES=$(xmllint --xpath "string(/testsuites/@failures)" tests_output/testresults.xml)
+            ERRORS=$(xmllint --xpath "string(/testsuites/@errors)" tests_output/testresults.xml)
+            PASSED_TESTS=$((TOTAL_TESTS - FAILURES - ERRORS))
             echo "export TOTAL_TESTS=$TOTAL_TESTS" >> $BASH_ENV
             echo "export PASSED_TESTS=$PASSED_TESTS" >> $BASH_ENV
+            echo "export FAILURES=$FAILURES" >> $BASH_ENV
+            echo "export ERRORS=$ERRORS" >> $BASH_ENV
           when: always
       - slack/notify:
           event: fail
@@ -74,7 +81,7 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": " The Tidepool Web UI tests have failed. :sad_tapani: \n\n We ran $TOTAL_TESTS tests and $PASSED_TESTS passed! \n\n :link: <${CIRCLE_BUILD_URL}|View CircleCI Build>\n\n *Please confirm resolution details:*"
+                    "text": " The Tidepool Web UI tests have failed. :sad_tapani: \n\n ```TOTAL_TESTS: $TOTAL_TESTS tests \nPASSED_TESTS: $PASSED_TESTS\nFAILED_TESTS: $FAILURES\nERRORS: $ERRORS```  \n\n :link: <${CIRCLE_BUILD_URL}|View CircleCI Build>\n\n *Please confirm resolution details:*"
                   }
                 },
                 {
@@ -155,7 +162,7 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                      "text": " The Tidepool Web UI tests have passed. :catjam:  \n\n We ran $TOTAL_TESTS tests and $PASSED_TESTS passed! \n\n :link: <${CIRCLE_BUILD_URL}|View CircleCI Build>"
+                      "text": " ✅ The Tidepool Web UI tests have passed. :catjam:  \n\n ```TOTAL_TESTS: $TOTAL_TESTS \nPASSED_TESTS: $PASSED_TESTS \n\n :link: <${CIRCLE_BUILD_URL}|View CircleCI Build>"
                   }
                 }
               ]
