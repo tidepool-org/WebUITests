@@ -53,6 +53,8 @@ jobs:
           path: vrt/baseline/ui
       - store_test_results:
           path: tests_output/testresults.xml
+      - store_artifacts:
+          path: tests_output/testresults.xml
       - run:
           name: Parse Test Results
           command: |
