@@ -30,6 +30,9 @@ jobs:
       - checkout
       - browser-tools/install-browser-tools
       - node/install
+      - run:
+          name: Install xmllint
+          command: sudo apt-get update && sudo apt-get install -y libxml2-utils
       - run: node --version
       - run: npm install
       - save_cache:
@@ -37,8 +40,8 @@ jobs:
             - ./node_modules
           key: dependency-cache-{{ checksum "package.json" }}
       - run:
-         name: Run Parallel Tests on Chosen Environments
-         command: npm run << pipeline.parameters.testEnvironment >>
+          name: Run Parallel Tests on Chosen Environments
+          command: npm run << pipeline.parameters.testEnvironment >>
       - run:
           name: Consolidate Test Report
           command: npm run merge-reports
@@ -53,6 +56,20 @@ jobs:
           path: vrt/baseline/ui
       - store_test_results:
           path: tests_output/testresults.xml
+      - store_artifacts:
+          path: tests_output/testresults.xml
+      - run:
+          name: Parse Test Results
+          command: |
+            TOTAL_TESTS=$(xmllint --xpath "string(/testsuites/@tests)" tests_output/testresults.xml)
+            FAILURES=$(xmllint --xpath "string(/testsuites/@failures)" tests_output/testresults.xml)
+            ERRORS=$(xmllint --xpath "string(/testsuites/@errors)" tests_output/testresults.xml)
+            PASSED_TESTS=$((TOTAL_TESTS - FAILURES - ERRORS))
+            echo "export TOTAL_TESTS=$TOTAL_TESTS" >> $BASH_ENV
+            echo "export PASSED_TESTS=$PASSED_TESTS" >> $BASH_ENV
+            echo "export FAILURES=$FAILURES" >> $BASH_ENV
+            echo "export ERRORS=$ERRORS" >> $BASH_ENV
+          when: always
       - slack/notify:
           event: fail
           branch_pattern: main
@@ -64,74 +81,18 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": " The Tidepool Web UI tests have failed. :sad_tapani: \n\n *Please confirm resolution details:*"
+                    "text": "*:x: Tidepool Web UI Tests Failed* :sad_tapani: \n\n :pencil:*Summary* \n\n *$PASSED_TESTS/$TOTAL_TESTS* tests passed \n *$FAILURES* tests failed \n *$ERRORS* errors encountered"
                   }
                 },
                 {
                   "type": "divider"
                 },
                 {
-                  "type": "actions",
-                  "elements": [
-                    {
-                      "type": "checkboxes",
-                      "options": [
-                        {
-                          "text": {
-                            "type": "plain_text",
-                            "text": "Confirmed defect :x:",
-                            "emoji": true
-                          },
-                          "description": {
-                            "type": "plain_text",
-                            "text": "This failure has been vetted and confirmed a defect.",
-                            "emoji": true
-                          },
-                          "value": "value-0"
-                        },
-                        {
-                          "text": {
-                            "type": "plain_text",
-                            "text": "Expected change :white_check_mark:",
-                            "emoji": true
-                          },
-                          "description": {
-                            "type": "plain_text",
-                            "text": "This failure has been due to an expected product change. \n Corresponding tests need to be updated.",
-                            "emoji": true
-                          },
-                          "value": "value-1"
-                        },
-                        {
-                          "text": {
-                            "type": "plain_text",
-                            "text": "Development run :female-technologist:",
-                            "emoji": true
-                          },
-                          "description": {
-                            "type": "plain_text",
-                            "text": "This failure was produced during a development run of these tests. \n Pay no mind.",
-                            "emoji": true
-                          },
-                          "value": "value-2"
-                        },
-                        {
-                          "text": {
-                            "type": "plain_text",
-                            "text": "Unreliable test :warning:",
-                            "emoji": true
-                          },
-                          "description": {
-                            "type": "plain_text",
-                            "text": "This failure was due to an unreliable test. \n The test will need to be modified or removed.",
-                            "emoji": true
-                          },
-                            "value": "value-3"
-                        }
-                      ],
-                      "action_id": "actionId-0"
-                    }
-                  ]
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": ":link: *<${CIRCLE_BUILD_URL}|View CircleCI Build Details>*"
+                  }
                 }
               ]
             }
@@ -145,7 +106,7 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                      "text": " The Tidepool Web UI tests have passed. :catjam:  \n\n"
+                    "text": "*:white_check_mark: Tidepool Web UI Tests Passed!* :catjam:  \n\n :pencil:*Summary:* \n *$PASSED_TESTS/$TOTAL_TESTS* tests passed \n\n :link: *<${CIRCLE_BUILD_URL}|View CircleCI Build Details>*"
                   }
                 }
               ]
