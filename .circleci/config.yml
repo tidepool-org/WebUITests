@@ -69,16 +69,6 @@ jobs:
             echo "export PASSED_TESTS=$PASSED_TESTS" >> $BASH_ENV
             echo "export FAILURES=$FAILURES" >> $BASH_ENV
             echo "export ERRORS=$ERRORS" >> $BASH_ENV
-            
-            # Parse failed test cases
-            FAILED_CASES=$(xmllint --xpath "//testcase[failure]" tests_output/testresults.xml | sed -E 's/<testcase name="([^"]*)" classname="([^"]*)".*<failure message="([^"]*)".*/<\2> - \1: \3/' | sed 's/&lt;/</g; s/&gt;/>/g; s/&quot;/"/g; s/&#39;/'"'"'/g')
-            echo "export FAILED_CASES='$FAILED_CASES'" >> $BASH_ENV
-          when: always
-      - run:
-          name: Get Failed Test Cases
-          command: |
-            FAILED_CASES=$(xmllint --xpath "string(/testsuites/testsuite/testcase/failure/@message)" tests_output/testresults.xml)
-            echo "export FAILED_CASES=$FAILED_CASES" >> $BASH_ENV
           when: always
       - slack/notify:
           event: fail
@@ -101,7 +91,7 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": ":crying_cat_face:  *Failed Test Cases:* \n$FAILED_CASES \n\n \n\n :link: *<${CIRCLE_BUILD_URL}|View CircleCI Build Details>*"
+                    "text": ":link: *<${CIRCLE_BUILD_URL}|View CircleCI Build Details>*"
                   }
                 }
               ]
@@ -116,7 +106,7 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "*:white_check_mark: Tidepool Web UI Tests Passed!* :catjam:  \n\n *Summary:* \n *$PASSED_TESTS/$TOTAL_TESTS* tests passed \n\n :link: *<${CIRCLE_BUILD_URL}|View CircleCI Build Details>*"
+                    "text": "*:white_check_mark: Tidepool Web UI Tests Passed!* :catjam:  \n\n :pencil:*Summary:* \n *$PASSED_TESTS/$TOTAL_TESTS* tests passed \n\n :link: *<${CIRCLE_BUILD_URL}|View CircleCI Build Details>*"
                   }
                 }
               ]
