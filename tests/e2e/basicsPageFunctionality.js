@@ -50,7 +50,7 @@ module.exports = {
       dailyViewDay.waitForElementVisible('@allCharts', browser.globals.elementTimeout);
       dailyViewDay.waitForElementVisible('@bgChart', browser.globals.elementTimeout);
       patientData.getLocationInView('@date');
-      patientData.expect.element('@datee').text.to.contain(day);
+      patientData.expect.element('@date').text.to.contain(day);
     }));
     patientData.click('@basics');
     bolusDashboard.waitForElementVisible('@title', browser.globals.elementTimeout);
