@@ -92,7 +92,7 @@ module.exports = {
       newDOB = result.value;
       console.log(`${newDOB} ${previousDOB}`);
     });
-    browser.assert.not.strictEqual(previousDOB, newDOB, 'previous dob and new dob are not equal');
+    browser.assert.strictEqual('04/04/2000', newDOB, ' dob equal 04/04/2000');
     userProfile.waitForElementVisible('@dob', browser.globals.elementTimeout);
     userProfile.setValue('@dob', previousDOB);
     userProfile.click('@save');
