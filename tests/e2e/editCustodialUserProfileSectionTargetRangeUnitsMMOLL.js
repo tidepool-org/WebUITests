@@ -53,6 +53,7 @@ module.exports = {
       console.log(previousLow);
     });
     userProfile.click('@increaseLow');
+    userProfile.waitForBgValue(`${previousLow + 0.1}`);
     let currentLow;
     await userProfile.getText('@low', (result) => {
       console.log('result', result);
@@ -73,6 +74,7 @@ module.exports = {
       console.log(previousHigh);
     });
     userProfile.click('@increaseHigh');
+    userProfile.waitForBgValue(`${previousHigh + 0.1}`);
     let currentHigh;
     await userProfile.getText('@high', (result) => {
       console.log('result', result);
@@ -93,6 +95,7 @@ module.exports = {
       console.log(previousLow);
     });
     userProfile.click('@decreaseLow');
+    userProfile.waitForBgValue(`${previousLow - 0.1}`);
     let currentLow;
     await userProfile.getText('@low', (result) => {
       console.log('result', result);
@@ -113,6 +116,7 @@ module.exports = {
       console.log(previousHigh);
     });
     userProfile.click('@decreaseHigh');
+    userProfile.waitForBgValue(`${previousHigh - 0.1}`);
     let currentHigh;
     await userProfile.getText('@high', (result) => {
       console.log('result', result);

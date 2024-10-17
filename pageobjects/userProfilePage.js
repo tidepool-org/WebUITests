@@ -91,6 +91,12 @@ module.exports = {
             .waitForElementVisible('@patientInfoDiagnosed', browser.globals.elementTimeout)
             .click('@edit');
         },
+      },
+      {
+        waitForBgValue(bgValue) {
+          return this
+            .waitForElementVisible('xpath', `//*[contains(@span,'${bgValue}')]`, browser.globals.elementTimeout);
+        },
       }],
     },
     targetRange: {
