@@ -92,12 +92,7 @@ module.exports = {
             .click('@edit');
         },
       },
-      {
-        waitForBgValue(bgValue) {
-          return this
-            .waitForElementVisible('xpath', `//*[contains(@span,'${bgValue}')]`, browser.globals.elementTimeout);
-        },
-      }],
+      ],
     },
     targetRange: {
       selector: '#app',
@@ -132,6 +127,13 @@ module.exports = {
         },
 
       },
+      commands: [{
+        waitForBgValue(bgValue) {
+          return this
+            .waitForElementVisible('xpath', `//span[contains(text(),'${bgValue}')]`, browser.globals.elementTimeout);
+        },
+
+      }],
     },
     units: {
       selector: '#app',
@@ -199,5 +201,6 @@ module.exports = {
 
   },
   commands: [{
+
   }],
 };
