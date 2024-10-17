@@ -257,5 +257,7 @@ module.exports = {
     dateRangeSelector.click('@fourteenDays');
     dateRangeSelector.expect.element('@datePicker').to.not.be.present;
     dateRangeSelector.click('@modalDismiss');
+    const loginPage = browser.page.loginPage();
+    loginPage.userLogout();
   },
 };

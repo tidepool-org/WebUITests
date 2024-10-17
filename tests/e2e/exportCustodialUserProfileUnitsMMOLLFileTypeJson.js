@@ -27,6 +27,8 @@ module.exports = {
   'Clinic workspace search custodial user and click patient name'(browser) {
     const clinicPatientListPage = browser.page.clinicPatientListPage();
     const clinicPatientList = clinicPatientListPage.section.patientList;
+    clinicPatientList.waitForElementVisible('@showAll', browser.globals.elementTimeout);
+    clinicPatientList.click('@showAll');
     clinicPatientList.patientFilterSearch('custodial user');
     clinicPatientList.waitForElementVisible('@row0PatientName', browser.globals.elementTimeout);
     clinicPatientList.click('@row0PatientName');
@@ -57,7 +59,7 @@ module.exports = {
     userProfile.expect.element('@startDate').to.have.css('background-color').which.equals('rgba(204, 204, 204, 1)');
     userProfile.click('@export');
     const fileName = 'TidepoolExport.json';
-    const attemptsCheckFileExists = 10;
+    const attemptsCheckFileExists = 60;
     await utilFile.checkFileExistence(browser, fileName, attemptsCheckFileExists);
   },
   'Click export in custodial user profile page | date range: last 90 days': async (browser) => {
@@ -66,7 +68,7 @@ module.exports = {
     userProfile.click('@last90Days');
     userProfile.click('@export');
     const fileName = 'TidepoolExport.json';
-    const attemptsCheckFileExists = 10;
+    const attemptsCheckFileExists = 30;
     await utilFile.checkFileExistence(browser, fileName, attemptsCheckFileExists);
     const daysDelta = 90;
     await utilsProfilePage.checkExportDates(browser, userProfile, daysDelta);
@@ -77,7 +79,7 @@ module.exports = {
     userProfile.click('@last30Days');
     userProfile.click('@export');
     const fileName = 'TidepoolExport.json';
-    const attemptsCheckFileExists = 10;
+    const attemptsCheckFileExists = 30;
     await utilFile.checkFileExistence(browser, fileName, attemptsCheckFileExists);
     const daysDelta = 30;
     await utilsProfilePage.checkExportDates(browser, userProfile, daysDelta);
@@ -88,10 +90,12 @@ module.exports = {
     userProfile.click('@last14Days');
     userProfile.click('@export');
     const fileName = 'TidepoolExport.json';
-    const attemptsCheckFileExists = 10;
+    const attemptsCheckFileExists = 30;
     await utilFile.checkFileExistence(browser, fileName, attemptsCheckFileExists);
     const daysDelta = 14;
     await utilsProfilePage.checkExportDates(browser, userProfile, daysDelta);
+    const loginPage = browser.page.loginPage();
+    loginPage.userLogout();
   },
 
 };

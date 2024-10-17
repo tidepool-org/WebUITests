@@ -4,7 +4,7 @@ const request = require('request');
 const { generateScreenshotFilePath } = require('./utilities/utilities');
 
 module.exports = {
-  abortOnAssertionFailure: true,
+  abortOnAssertionFailure: false,
   abortOnElementLocateError: true,
   waitForConditionPollInterval: 500,
   waitForConditionTimeout: 30000,

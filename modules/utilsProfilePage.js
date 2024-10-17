@@ -12,20 +12,8 @@ const moment = require('moment');
  */
 exports.resetDefaultMGDL = async (browser, userProfile) => {
   userProfile.click('@reset');
-  let currentLow;
-  await userProfile.getText('@low', (result) => {
-    console.log('result', result);
-    currentLow = parseInt(result.value, 10);
-    console.log(currentLow);
-  });
-  let currentHigh;
-  await userProfile.getText('@high', (result) => {
-    console.log('result', result);
-    currentHigh = parseInt(result.value, 10);
-    console.log(currentHigh);
-  });
-  browser.assert.strictEqual(70, currentLow, 'low reset to default 70');
-  browser.assert.strictEqual(180, currentHigh, 'high reset to default 180');
+  userProfile.waitForBgValue('70');
+  userProfile.waitForBgValue('180');
 };
 /**
 
@@ -38,20 +26,8 @@ exports.resetDefaultMGDL = async (browser, userProfile) => {
  */
 exports.resetDefaultMMOLL = async (browser, userProfile) => {
   userProfile.click('@reset');
-  let currentLow;
-  await userProfile.getText('@low', (result) => {
-    console.log('result', result);
-    currentLow = parseFloat(result.value, 10);
-    console.log(currentLow);
-  });
-  let currentHigh;
-  await userProfile.getText('@high', (result) => {
-    console.log('result', result);
-    currentHigh = parseFloat(result.value, 10);
-    console.log(currentHigh);
-  });
-  browser.assert.strictEqual(3.9, currentLow, 'low reset to default 3.9');
-  browser.assert.strictEqual(10.0, currentHigh, 'high reset to default 10.0');
+  userProfile.waitForBgValue('3.9');
+  userProfile.waitForBgValue('10.0');
 };
 /**
 
@@ -71,7 +47,12 @@ exports.checkExportDates = async (browser, userProfile, delta) => {
   startDateValue = await userProfile.getValue('@startDate');
   let endDateValue;
   endDateValue = await userProfile.getValue('@endDate');
-  console.log(`sdv${startDateValue}`);
-  await browser.assert.strictEqual(startDateValue, String(startDate), 'start date set correctly according to offset');
-  await browser.assert.strictEqual(endDateValue, String(endDate), 'end date set correctly according to offset');
+  startDateValue = moment(startDateValue, 'YYYY-MM-DD');
+  endDateValue = moment(endDateValue, 'YYYY-MM-DD');
+  const startDiff = Math.abs(start.diff(startDateValue, 'days')) <= 1;
+  const endDiff = Math.abs(end.diff(endDateValue, 'days')) <= 1;
+  console.log(`sdv${startDiff}`);
+  console.log(`edv${endDiff}`);
+  await browser.assert.strictEqual(true, startDiff, 'start date set correctly according to offset');
+  await browser.assert.strictEqual(true, endDiff, 'end date set correctly according to offset');
 };

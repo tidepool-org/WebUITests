@@ -80,17 +80,23 @@ module.exports = {
         },
       },
       commands: [{
-        selectDiagnosesAs(diagnosisType) {
+        selectDiagnosesAs(diagnosisType, name) {
           return this
             .waitForElementVisible('@edit', browser.globals.elementTimeout)
             .click('@edit')
+            .waitForElementVisible('@diagnosisType', browser.globals.elementTimeout)
             .click('@diagnosisType')
+            .waitForElementVisible(diagnosisType, browser.globals.elementTimeout)
             .click(diagnosisType)
+            .pause(1000)
+            .waitForElementVisible('@save', browser.globals.elementTimeout)
             .click('@save')
+            .waitForElementVisible('xpath', `//div[contains(text(),'${name}')]`, browser.globals.elementTimeout)
             .waitForElementVisible('@patientInfoDiagnosed', browser.globals.elementTimeout)
             .click('@edit');
         },
-      }],
+      },
+      ],
     },
     targetRange: {
       selector: '#app',
@@ -125,6 +131,13 @@ module.exports = {
         },
 
       },
+      commands: [{
+        waitForBgValue(bgValue) {
+          return this
+            .waitForElementVisible('xpath', `//span[contains(text(),'${bgValue}')]`, browser.globals.elementTimeout);
+        },
+
+      }],
     },
     units: {
       selector: '#app',
@@ -192,5 +205,6 @@ module.exports = {
 
   },
   commands: [{
+
   }],
 };

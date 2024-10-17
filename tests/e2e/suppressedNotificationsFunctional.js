@@ -53,6 +53,8 @@ module.exports = {
     clinicPatientList.waitForElementNotVisible('@city', browser.globals.elementTimeout);
     const res = await browser.checkSuppressedNotification(clinicId, clinicianId, clinicianUsername, clinicianPassword, environment);
     browser.assert.strictEqual(res, true, '/suppressed_notification status is true in clinic object ');
+    const loginPage = browser.page.loginPage();
+    loginPage.userLogout();
   },
 
 };

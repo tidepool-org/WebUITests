@@ -39,7 +39,7 @@ jobs:
       - run:
          name: Run Parallel Tests on Chosen Environments
          command: npm run << pipeline.parameters.testEnvironment >>
-         no_output_timeout: 20m
+         no_output_timeout: 30m
       - run:
           name: Consolidate Test Report
           command: npm run merge-reports

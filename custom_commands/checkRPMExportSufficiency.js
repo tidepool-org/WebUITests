@@ -5,7 +5,7 @@ const { parse } = require('csv-parse');
 async function getReadStreamPromise(filePath) {
   return new Promise((resolve, reject) => {
     const arr = [];
-    fs.createReadStream(filePath)
+    fs.createReadStream(`./${filePath}`)
       .pipe(parse({ delimiter: ',', from_line: 2 }))
       .on('data', async (row) => {
         arr.push(row);

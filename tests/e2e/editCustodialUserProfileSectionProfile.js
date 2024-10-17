@@ -47,54 +47,31 @@ module.exports = {
   'Edit and save full name in custodial user profile page': async (browser) => {
     const userProfilePage = browser.page.userProfilePage();
     const userProfile = userProfilePage.section.profile;
-    let previousName;
-    await userProfile.getValue('@fullName', (result) => {
-      console.log('result', result);
-      previousName = result.value;
-    });
-    userProfile.setValue('@fullName', `${previousName}new`);
+
+    userProfile.waitForElementVisible('@fullName', browser.globals.elementTimeout);
+    userProfile.setValue('@fullName', 'new1');
     userProfile.click('@save');
+    userProfile.waitForElementVisible('xpath', "//div[contains(text(),'new1')]", browser.globals.elementTimeout);
     userProfile.waitForElementVisible('@edit', browser.globals.elementTimeout);
     userProfile.click('@edit');
-    let newName;
-    await userProfile.getValue('@fullName', (result) => {
-      console.log('result', result);
-      newName = result.value;
-    });
-    console.log(`${newName}newname`);
-    console.log(`${previousName}previousname`);
-    userProfile.click('@save');
-    browser.assert.not.strictEqual(previousName, newName, 'previous name and new name are not equal');
-    userProfile.click('@edit');
     userProfile.waitForElementVisible('@fullName', browser.globals.elementTimeout);
-    userProfile.setValue('@fullName', previousName);
+    userProfile.assert.valueEquals('@fullName', 'new1', 'full name equals new1');
+    userProfile.waitForElementVisible('@save', browser.globals.elementTimeout);
     userProfile.click('@save');
-    browser.assert.not.strictEqual(previousName, newName, 'previous name saved in full name field');
   },
   'Edit and save dob in custodial user profile page': async (browser) => {
     const userProfilePage = browser.page.userProfilePage();
     const userProfile = userProfilePage.section.profile;
     userProfile.waitForElementVisible('@edit', browser.globals.elementTimeout);
     userProfile.click('@edit');
-    let previousDOB;
-    await userProfile.getValue('@dob', (result) => {
-      console.log('result', result);
-      previousDOB = result.value;
-      console.log(`previousdob${previousDOB}`);
-    });
     userProfile.setValue('@dob', '04/04/2000');
+    userProfile.setValue('@fullName', 'new2');
     userProfile.click('@save');
+    userProfile.waitForElementVisible('xpath', "//div[contains(text(),'new2')]", browser.globals.elementTimeout);
     userProfile.waitForElementVisible('@edit', browser.globals.elementTimeout);
     userProfile.click('@edit');
-    let newDOB;
-    await userProfile.getValue('@dob', (result) => {
-      console.log('result', result);
-      newDOB = result.value;
-      console.log(`${newDOB} ${previousDOB}`);
-    });
-    browser.assert.strictEqual('04/04/2000', newDOB, ' dob equal 04/04/2000');
-    userProfile.waitForElementVisible('@dob', browser.globals.elementTimeout);
-    userProfile.setValue('@dob', previousDOB);
+    userProfile.assert.valueEquals('@dob', '04/04/2000', 'dob date equals 04/04/2000');
+    userProfile.waitForElementVisible('@save', browser.globals.elementTimeout);
     userProfile.click('@save');
   },
   'Edit and save diagnosis date in custodial user profile page': async (browser) => {
@@ -102,100 +79,98 @@ module.exports = {
     const userProfile = userProfilePage.section.profile;
     userProfile.waitForElementVisible('@edit', browser.globals.elementTimeout);
     userProfile.click('@edit');
-    let previousDiagnosisDate;
-    await userProfile.getValue('@diagnosisDate', (result) => {
-      console.log('result', result);
-      previousDiagnosisDate = result.value;
-    });
     userProfile.setValue('@diagnosisDate', '03/03/2000');
+    userProfile.setValue('@fullName', 'new3');
     userProfile.click('@save');
+    userProfile.waitForElementVisible('xpath', "//div[contains(text(),'new3')]", browser.globals.elementTimeout);
     userProfile.waitForElementVisible('@edit', browser.globals.elementTimeout);
     userProfile.click('@edit');
-    let newDiagnosisDate;
-    await userProfile.getValue('@diagnosisDate', (result) => {
-      console.log('result', result);
-      newDiagnosisDate = result.value;
-    });
-    browser.assert.not.strictEqual(previousDiagnosisDate, newDiagnosisDate, 'previous diagnosis and new diagnosis are not equal');
-    userProfile.waitForElementVisible('@diagnosisDate', browser.globals.elementTimeout);
-    userProfile.setValue('@diagnosisDate', previousDiagnosisDate);
+    userProfile.assert.valueEquals('@diagnosisDate', '03/03/2000', 'diagnosis date equals 03/03/2000');
+    userProfile.waitForElementVisible('@save', browser.globals.elementTimeout);
     userProfile.click('@save');
   },
   'Edit and save diagnosis type to type 1 in custodial user profile page': async (browser) => {
     const userProfilePage = browser.page.userProfilePage();
     const userProfile = userProfilePage.section.profile;
-    userProfile.selectDiagnosesAs('@diagnosisTypeOptionType1');
+    userProfile.selectDiagnosesAs('@diagnosisTypeOptionType1', 'Type 1');
     userProfile.isSelected('@diagnosisTypeOptionType1', function (result) {
       this.assert.equal(typeof result, 'object');
       this.assert.equal(result.status, 0);
       this.assert.equal(result.value, true);
     });
+    userProfile.waitForElementVisible('@save', browser.globals.elementTimeout);
     userProfile.click('@save');
   },
   'Edit and save diagnosis type to type 2 in custodial user profile page': async (browser) => {
     const userProfilePage = browser.page.userProfilePage();
     const userProfile = userProfilePage.section.profile;
-    userProfile.selectDiagnosesAs('@diagnosisTypeOptionType2');
+    userProfile.selectDiagnosesAs('@diagnosisTypeOptionType2', 'Type 2');
     userProfile.isSelected('@diagnosisTypeOptionType2', function (result) {
       this.assert.equal(typeof result, 'object');
       this.assert.equal(result.status, 0);
       this.assert.equal(result.value, true);
     });
+    userProfile.waitForElementVisible('@save', browser.globals.elementTimeout);
     userProfile.click('@save');
   },
   'Edit and save diagnosis type to gestational in custodial user profile page': async (browser) => {
     const userProfilePage = browser.page.userProfilePage();
     const userProfile = userProfilePage.section.profile;
-    userProfile.selectDiagnosesAs('@diagnosisTypeGestational');
+    userProfile.selectDiagnosesAs('@diagnosisTypeGestational', 'Gestational');
     userProfile.isSelected('@diagnosisTypeGestational', function (result) {
       this.assert.equal(typeof result, 'object');
       this.assert.equal(result.status, 0);
       this.assert.equal(result.value, true);
     });
+    userProfile.waitForElementVisible('@save', browser.globals.elementTimeout);
     userProfile.click('@save');
   },
   'Edit and save diagnosis type to prediabetes in custodial user profile page': async (browser) => {
     const userProfilePage = browser.page.userProfilePage();
     const userProfile = userProfilePage.section.profile;
-    userProfile.selectDiagnosesAs('@diagnosisTypePrediabetes');
+    userProfile.selectDiagnosesAs('@diagnosisTypePrediabetes', 'Pre-diabetes');
     userProfile.isSelected('@diagnosisTypePrediabetes', function (result) {
       this.assert.equal(typeof result, 'object');
       this.assert.equal(result.status, 0);
       this.assert.equal(result.value, true);
     });
+    userProfile.waitForElementVisible('@save', browser.globals.elementTimeout);
     userProfile.click('@save');
   },
   'Edit and save diagnosis type to lada in custodial user profile page': async (browser) => {
     const userProfilePage = browser.page.userProfilePage();
     const userProfile = userProfilePage.section.profile;
-    userProfile.selectDiagnosesAs('@diagnosisTypeLada');
+    userProfile.selectDiagnosesAs('@diagnosisTypeLada', 'LADA');
     userProfile.isSelected('@diagnosisTypeLada', function (result) {
       this.assert.equal(typeof result, 'object');
       this.assert.equal(result.status, 0);
       this.assert.equal(result.value, true);
     });
+    userProfile.waitForElementVisible('@save', browser.globals.elementTimeout);
     userProfile.click('@save');
   },
   'Edit and save diagnosis type to mody in custodial user profile page': async (browser) => {
     const userProfilePage = browser.page.userProfilePage();
     const userProfile = userProfilePage.section.profile;
-    userProfile.selectDiagnosesAs('@diagnosisTypeMody');
+    userProfile.selectDiagnosesAs('@diagnosisTypeMody', 'MODY');
     userProfile.isSelected('@diagnosisTypeMody', function (result) {
       this.assert.equal(typeof result, 'object');
       this.assert.equal(result.status, 0);
       this.assert.equal(result.value, true);
     });
+    userProfile.waitForElementVisible('@save', browser.globals.elementTimeout);
     userProfile.click('@save');
   },
   'Edit and save diagnosis type to other in custodial user profile page': async (browser) => {
     const userProfilePage = browser.page.userProfilePage();
     const userProfile = userProfilePage.section.profile;
-    userProfile.selectDiagnosesAs('@diagnosisTypeOther');
+    userProfile.selectDiagnosesAs('@diagnosisTypeOther', 'Other');
     userProfile.isSelected('@diagnosisTypeOther', function (result) {
       this.assert.equal(typeof result, 'object');
       this.assert.equal(result.status, 0);
       this.assert.equal(result.value, true);
     });
+    userProfile.waitForElementVisible('@save', browser.globals.elementTimeout);
     userProfile.click('@save');
   },
   'Edit and save MRN in custodial user profile page': async (browser) => {
@@ -203,59 +178,44 @@ module.exports = {
     const userProfile = userProfilePage.section.profile;
     userProfile.waitForElementVisible('@edit', browser.globals.elementTimeout);
     userProfile.click('@edit');
-    let previousMRN;
-    await userProfile.getValue('@mrn', (result) => {
-      console.log('result', result);
-      previousMRN = result.value;
-    });
     userProfile.setValue('@mrn', '8192024');
+    userProfile.setValue('@fullName', 'new4');
     userProfile.click('@save');
+    userProfile.waitForElementVisible('xpath', "//div[contains(text(),'new4')]", browser.globals.elementTimeout);
     userProfile.waitForElementVisible('@edit', browser.globals.elementTimeout);
     userProfile.click('@edit');
-    let newMRN;
-    await userProfile.getValue('@mrn', (result) => {
-      console.log('result', result);
-      newMRN = result.value;
-    });
+    userProfile.assert.valueEquals('@mrn', '8192024', 'mrn equals 8192024');
+    userProfile.waitForElementVisible('@save', browser.globals.elementTimeout);
     userProfile.click('@save');
-    browser.assert.not.strictEqual(previousMRN, newMRN, 'previous mrn and new mrn are not equal');
-    userProfile.click('@edit');
-    userProfile.waitForElementVisible('@mrn', browser.globals.elementTimeout);
-    userProfile.setValue('@mrn', previousMRN);
-    userProfile.click('@save');
-    browser.assert.not.strictEqual(previousMRN, newMRN, 'previous mrn saved in mrn field');
   },
   'Edit and save bio in custodial user profile page': async (browser) => {
     const userProfilePage = browser.page.userProfilePage();
     const userProfile = userProfilePage.section.profile;
     userProfile.waitForElementVisible('@edit', browser.globals.elementTimeout);
     userProfile.click('@edit');
-    let previousBio;
-    await userProfile.getText('@bio', (result) => {
-      console.log('result', result);
-      previousBio = result.value;
-    });
     userProfile.setValue('@bio', 'test bio');
-    let newBio;
+    userProfile.setValue('@fullName', 'new5');
     userProfile.click('@save');
+    userProfile.waitForElementVisible('xpath', "//div[contains(text(),'new5')]", browser.globals.elementTimeout);
     userProfile.waitForElementVisible('@edit', browser.globals.elementTimeout);
     userProfile.click('@edit');
-    await userProfile.getText('@bio', (result) => {
-      console.log('result', result);
-      newBio = result.value;
-    });
-    browser.assert.not.strictEqual(previousBio, newBio, 'previous bio and new bio are not equal');
-    userProfile.waitForElementVisible('@bio', browser.globals.elementTimeout);
-    userProfile.setValue('@bio', previousBio);
+    userProfile.assert.valueEquals('@bio', 'test bio', 'bio equals test bio');
+    userProfile.waitForElementVisible('@save', browser.globals.elementTimeout);
     userProfile.click('@save');
-    userProfile.waitForElementVisible('@edit', browser.globals.elementTimeout);
+  },
+  'Reset custodial user profile page'(browser) {
+    const userProfilePage = browser.page.userProfilePage();
+    const userProfile = userProfilePage.section.profile;
     userProfile.click('@edit');
-    await userProfile.getText('@bio', (result) => {
-      console.log('result', result);
-      newBio = result.value;
-    });
+    userProfile.setValue('@diagnosisDate', '04/04/2000');
+    userProfile.setValue('@dob', '03/03/2000');
+    userProfile.setValue('@fullName', 'custodial user');
+    userProfile.setValue('@bio', 'empty');
+    userProfile.setValue('@mrn', '7182022');
+    userProfile.waitForElementVisible('@save', browser.globals.elementTimeout);
     userProfile.click('@save');
-    browser.assert.strictEqual(previousBio, newBio, 'previous bio saved in bio field');
+    const loginPage = browser.page.loginPage();
+    loginPage.userLogout();
   },
 
 };
