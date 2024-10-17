@@ -35,12 +35,14 @@ module.exports = {
   'Click custodial user profile link and set to mgdl  '(browser) {
     const userProfilePage = browser.page.userProfilePage();
     const userProfile = userProfilePage.section.profile;
+    const userProfileTargetRange = userProfilePage.section.targetRange;
     const userProfileUnits = userProfilePage.section.units;
     userProfile.waitForElementVisible('@profile', browser.globals.elementTimeout);
     userProfile.click('@profile');
     userProfile.expect.element('@edit').to.be.present.before(browser.globals.elementTimeout);
-    userProfileUnits.click('@mgdl');
+    userProfileUnits.click('@mgdl').pause(1000);
     userProfileUnits.expect.element('@mgdl').to.be.selected;
+    utils.resetDefaultMGDL(browser, userProfileTargetRange);
   },
   'Click increment low in custodial user profile page': async (browser) => {
     const userProfilePage = browser.page.userProfilePage();
@@ -53,6 +55,7 @@ module.exports = {
       console.log(previousLow);
     });
     userProfile.click('@increaseLow');
+    userProfile.waitForBgValue(`${previousLow + 5}`);
     let currentLow;
     await userProfile.getText('@low', (result) => {
       console.log('result', result);
@@ -73,6 +76,7 @@ module.exports = {
       console.log(previousHigh);
     });
     userProfile.click('@increaseHigh');
+    userProfile.waitForBgValue(`${previousHigh + 5}`);
     let currentHigh;
     await userProfile.getText('@high', (result) => {
       console.log('result', result);
@@ -93,6 +97,7 @@ module.exports = {
       console.log(previousLow);
     });
     userProfile.click('@decreaseLow');
+    userProfile.waitForBgValue(`${previousLow - 5}`);
     let currentLow;
     await userProfile.getText('@low', (result) => {
       console.log('result', result);
@@ -113,6 +118,7 @@ module.exports = {
       console.log(previousHigh);
     });
     userProfile.click('@decreaseHigh');
+    userProfile.waitForBgValue(`${previousHigh - 5}`);
     let currentHigh;
     await userProfile.getText('@high', (result) => {
       console.log('result', result);
@@ -121,5 +127,7 @@ module.exports = {
     });
     browser.assert.strictEqual(previousHigh - 5, currentHigh, 'previous high decrease by 5');
     utils.resetDefaultMGDL(browser, userProfile);
+    const loginPage = browser.page.loginPage();
+    loginPage.userLogout();
   },
 };
