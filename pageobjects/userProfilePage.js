@@ -86,6 +86,7 @@ module.exports = {
             .click('@edit')
             .click('@diagnosisType')
             .click(diagnosisType)
+            .waitForElementVisible('@save', browser.globals.elementTimeout)
             .click('@save')
             .waitForElementVisible('@patientInfoDiagnosed', browser.globals.elementTimeout)
             .click('@edit');
