@@ -30,6 +30,8 @@ module.exports = {
     clinicPatientList.click('@row0PatientName');
     clinicPatientList.expect.element('@uploadButton').to.be.present.before(browser.globals.elementTimeout);
     clinicPatientList.expect.element('@resendVerificationEmailButton').to.be.present.before(browser.globals.elementTimeout);
+    const loginPage = browser.page.loginPage();
+    loginPage.userLogout();
   },
 
 };

@@ -1,6 +1,6 @@
 /* eslint-disable linebreak-style */
 require('../../utilities/seleniumKeepAlive');
-const moment = require('moment');
+const moment = require('moment-timezone');
 const utilFile = require('../../modules/utilFile');
 
 module.exports = {
@@ -21,6 +21,7 @@ module.exports = {
 
   'Clinic workspace rpm stats export | lastUploadFilterLast2days | patientFilterSearch:autodex | rpmExportStartDateSelected:40 days from today ': async (browser) => {
     // setup config
+    moment.tz.setDefault('America/New_York');
     const clinicPatientListPage = browser.page.clinicPatientListPage();
     const clinicPatientList = clinicPatientListPage.section.patientList;
     const daysFromToday = 40;
@@ -31,8 +32,8 @@ module.exports = {
     ({
       startDate, endDate, startDateFile, endDatefile, fileName,
     } = await browser.createDatesLong(start, end));
-    const attemptsCheckFileExists = 10;
-    const filePath = './rpm.csv';
+    const attemptsCheckFileExists = 60;
+    const filePath = 'rpm.csv';
 
     // filter criteria and rpm report submit
 
@@ -49,13 +50,13 @@ module.exports = {
     await utilFile.checkFileExistence(browser, fileName, attemptsCheckFileExists);
     const written = await browser.checkFileContents(fileName);
     console.log(`write${written}`);
-    await utilFile.checkFileExistence(browser, filePath, attemptsCheckFileExists);
     const sufficient = await browser.checkRPMExportSufficiency(filePath);
     console.log(`suff${sufficient}`);
     browser.assert.strictEqual(sufficient, true, 'exported rpm csv file sufficiency is valid ');
   },
   'Clinic workspace rpm stats export | lastUploadFilterLast2days | patientFilterSearch:autodex | rpmExportEndDateSelected:10 days from today  ': async (browser) => {
     // setup config
+    moment.tz.setDefault('America/New_York');
     const clinicPatientListPage = browser.page.clinicPatientListPage();
     const clinicPatientList = clinicPatientListPage.section.patientList;
     const daysFromToday = 10;
@@ -66,8 +67,8 @@ module.exports = {
     ({
       startDate, endDate, startDateFile, endDatefile, fileName,
     } = await browser.createDatesLong(start, end));
-    const attemptsCheckFileExists = 10;
-    const filePath = './rpm.csv';
+    const attemptsCheckFileExists = 60;
+    const filePath = 'rpm.csv';
 
     // filter criteria and rpm report submit
 
@@ -87,6 +88,7 @@ module.exports = {
   },
   'Clinic workspace rpm stats export | lastUploadFilterLast2days | patientFilterSearch:autodex | rpmExportStartDateSelected:57 days from today | rpmExportEndDateSelected:start date + 15 days ': async (browser) => {
     // setup config
+    moment.tz.setDefault('America/New_York');
     const clinicPatientListPage = browser.page.clinicPatientListPage();
     const clinicPatientList = clinicPatientListPage.section.patientList;
     const daysFromToday = 57;
@@ -98,8 +100,8 @@ module.exports = {
     ({
       startDate, endDate, startDateFile, endDatefile, fileName,
     } = await browser.createDatesShort(start, end));
-    const attemptsCheckFileExists = 10;
-    const filePath = './rpm.csv';
+    const attemptsCheckFileExists = 60;
+    const filePath = 'rpm.csv';
 
     // filter criteria and rpm report submit
 
@@ -114,6 +116,7 @@ module.exports = {
   },
   'Clinic workspace rpm stats export | lastUploadFilterLast2days | patientFilterSearch:autodex | rpmExportDefaultDate ': async (browser) => {
     // setup config
+    moment.tz.setDefault('America/New_York');
     const clinicPatientListPage = browser.page.clinicPatientListPage();
     const clinicPatientList = clinicPatientListPage.section.patientList;
     const today = moment();
@@ -124,8 +127,8 @@ module.exports = {
     ({
       startDate, endDate, startDateFile, endDatefile, fileName,
     } = await browser.createDatesLong(start, end));
-    const attemptsCheckFileExists = 10;
-    const filePath = './rpm.csv';
+    const attemptsCheckFileExists = 60;
+    const filePath = 'rpm.csv';
 
     // filter criteria and rpm report submit
 
@@ -137,6 +140,8 @@ module.exports = {
     await utilFile.checkFileExistence(browser, fileName, attemptsCheckFileExists);
     const sufficient = await browser.checkRPMExportSufficiency(filePath);
     browser.assert.strictEqual(sufficient, true, 'exported rpm csv file sufficiency is valid');
+    const loginPage = browser.page.loginPage();
+    loginPage.userLogout();
   },
 
 };

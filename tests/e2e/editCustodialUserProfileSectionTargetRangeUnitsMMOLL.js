@@ -36,11 +36,13 @@ module.exports = {
     const userProfilePage = browser.page.userProfilePage();
     const userProfile = userProfilePage.section.profile;
     const userProfileUnits = userProfilePage.section.units;
+    const userProfileTargetRange = userProfilePage.section.targetRange;
     userProfile.waitForElementVisible('@profile', browser.globals.elementTimeout);
     userProfile.click('@profile');
     userProfile.expect.element('@edit').to.be.present.before(browser.globals.elementTimeout);
-    userProfileUnits.click('@mmoll');
+    userProfileUnits.click('@mmoll').pause(1000);
     userProfileUnits.expect.element('@mmoll').to.be.selected;
+    utils.resetDefaultMMOLL(browser, userProfileTargetRange);
   },
   'Click increment low in custodial user profile page': async (browser) => {
     const userProfilePage = browser.page.userProfilePage();
@@ -53,6 +55,7 @@ module.exports = {
       console.log(previousLow);
     });
     userProfile.click('@increaseLow');
+    userProfile.waitForBgValue(`${previousLow + 0.1}`);
     let currentLow;
     await userProfile.getText('@low', (result) => {
       console.log('result', result);
@@ -73,6 +76,7 @@ module.exports = {
       console.log(previousHigh);
     });
     userProfile.click('@increaseHigh');
+    userProfile.waitForBgValue(`${previousHigh + 0.1}`);
     let currentHigh;
     await userProfile.getText('@high', (result) => {
       console.log('result', result);
@@ -93,6 +97,7 @@ module.exports = {
       console.log(previousLow);
     });
     userProfile.click('@decreaseLow');
+    userProfile.waitForBgValue(`${previousLow - 0.1}`);
     let currentLow;
     await userProfile.getText('@low', (result) => {
       console.log('result', result);
@@ -113,6 +118,7 @@ module.exports = {
       console.log(previousHigh);
     });
     userProfile.click('@decreaseHigh');
+    userProfile.waitForBgValue(`${previousHigh - 0.1}`);
     let currentHigh;
     await userProfile.getText('@high', (result) => {
       console.log('result', result);
@@ -121,5 +127,7 @@ module.exports = {
     });
     browser.assert.strictEqual(previousHigh - 0.1, currentHigh, 'previous high decrease by 0.1');
     utils.resetDefaultMMOLL(browser, userProfile);
+    const loginPage = browser.page.loginPage();
+    loginPage.userLogout();
   },
 };

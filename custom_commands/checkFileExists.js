@@ -12,26 +12,27 @@ module.exports = class checkFileExists {
    */
 
   command(attempts, fileName) {
-    let attempts1 = attempts;
+    let results = false;
     return new Promise((resolve, reject) => {
-      browser.executeScript(
-        `browserstack_executor: {"action": "fileExists","arguments":{"file_name":"${fileName}"}}`,
-        [],
-        (result) => {
-          console.log(`res${result.value}`);
-          if (result.value !== null) {
-            resolve(result.value);
-          } else {
-            console.log(`fail${attempts}`);
-            throw (Error);
+      async function checkFileRun() {
+        /* eslint-disable no-await-in-loop */
+        for (let i = 0; i < attempts; i++) {
+          try {
+            console.log(`${i}filecheck`);
+            const exists = await browser.executeScript(
+              `browserstack_executor: {"action": "fileExists","arguments":{"fileName":"${fileName}"}}`,
+            );
+            results = exists;
+            if (exists) { break; }
+          } catch (error) {
+            console.error('Error:', error);
+            browser.quit();
           }
-        },
-      );
-    }).catch((err) => {
-      console.log(`att${attempts}${err}`);
-      attempts1 -= 1;
-      if (attempts1 <= 0) throw err; // give up
-      return delay(1000).then(() => checkFileExists(attempts, browser, fileName));
+          /* eslint-enable no-await-in-loop */
+        }
+        resolve(results);
+      }
+      checkFileRun();
     });
   }
 };

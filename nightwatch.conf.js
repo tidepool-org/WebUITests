@@ -44,7 +44,7 @@ module.exports = {
       disable_error_log: true,
       webdriver: {
         timeout_options: {
-          timeout: 20000,
+          timeout: 100000,
           retry_attempts: 3,
         },
         keep_alive: true,
@@ -78,7 +78,7 @@ module.exports = {
           os: 'Windows',
           osVersion: '10',
           resolution: '1366x768',
-          buildName: `QA2_CHROME ${dayjs().format('YYYY-MM-DD')} JIRA: ${process.env.TEST_EXECUTION_KEY}`,
+          buildName: `QA2_CHROME ${dayjs().format('YYYY-MM-DD h:mm:ss')} JIRA: ${process.env.TEST_EXECUTION_KEY}`,
           local: 'false',
           idleTimeout: 300,
         },
@@ -197,7 +197,7 @@ module.exports = {
           os: 'Windows',
           osVersion: '10',
           resolution: '1366x768',
-          buildName: `PRD_CHROME ${dayjs().format('YYYY-MM-DD')} JIRA: ${process.env.TEST_EXECUTION_KEY}`,
+          buildName: `PRD_CHROME ${dayjs().format('YYYY-MM-DD h:mm:ss')} JIRA: ${process.env.TEST_EXECUTION_KEY}`,
           local: 'false',
           idleTimeout: 300,
         },

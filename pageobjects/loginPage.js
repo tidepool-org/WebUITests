@@ -47,6 +47,14 @@ module.exports = {
     jdrfLink: {
       selector: 'a[href="http://jdrf.org/"]',
     },
+    menuLink: {
+      selector: "//button[@id='navigation-menu-trigger']",
+      locateStrategy: 'xpath',
+    },
+    logout: {
+      selector: "//button//*[contains(text(),'Logout')]",
+      locateStrategy: 'xpath',
+    },
 
     // Add other elements of the login form here (e.g., password input, submit button, etc.)
   },
@@ -61,6 +69,12 @@ module.exports = {
         this.waitForElementVisible('@passwordInput', this.api.globals.elementTimeout);
         this.setValue('@passwordInput', password);
         return this.click('@submitBtn');
+      },
+      userLogout() {
+        this.waitForElementVisible('@menuLink', this.api.globals.elementTimeout);
+        this.click('@menuLink');
+        this.waitForElementVisible('@logout', this.api.globals.elementTimeout);
+        return this.click('@logout');
       },
 
       loadPage() {

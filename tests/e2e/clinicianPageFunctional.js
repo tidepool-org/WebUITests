@@ -30,6 +30,8 @@ module.exports = {
     clinicPatientList.expect.element('@lows').text.to.contain('Lows');
     clinicPatientList.expect.element('@highs').text.to.contain('Highs');
     clinicPatientList.waitForElementVisible('@lastUploadDesc', browser.globals.elementTimeout);
+    const loginPage = browser.page.loginPage();
+    loginPage.userLogout();
   },
 
 };

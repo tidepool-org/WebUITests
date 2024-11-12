@@ -80,17 +80,23 @@ module.exports = {
         },
       },
       commands: [{
-        selectDiagnosesAs(diagnosisType) {
+        selectDiagnosesAs(diagnosisType, name) {
           return this
             .waitForElementVisible('@edit', browser.globals.elementTimeout)
             .click('@edit')
+            .waitForElementVisible('@diagnosisType', browser.globals.elementTimeout)
             .click('@diagnosisType')
+            .waitForElementVisible(diagnosisType, browser.globals.elementTimeout)
             .click(diagnosisType)
+            .pause(1000)
+            .waitForElementVisible('@save', browser.globals.elementTimeout)
             .click('@save')
+            .waitForElementVisible('xpath', `//div[contains(text(),'${name}')]`, browser.globals.elementTimeout)
             .waitForElementVisible('@patientInfoDiagnosed', browser.globals.elementTimeout)
             .click('@edit');
         },
-      }],
+      },
+      ],
     },
     targetRange: {
       selector: '#app',
@@ -125,6 +131,13 @@ module.exports = {
         },
 
       },
+      commands: [{
+        waitForBgValue(bgValue) {
+          return this
+            .waitForElementVisible('xpath', `//span[contains(text(),'${bgValue}')]`, browser.globals.elementTimeout);
+        },
+
+      }],
     },
     units: {
       selector: '#app',
@@ -140,8 +153,58 @@ module.exports = {
 
       },
     },
+    export: {
+      selector: '#app',
+      elements: {
+        allData: {
+          selector: '//*[text()="All Data"]',
+          locateStrategy: 'xpath',
+        },
+        last90Days: {
+          selector: '//*[text()="Last 90 Days"]',
+          locateStrategy: 'xpath',
+        },
+        last30Days: {
+          selector: '//*[text()="Last 30 Days"]',
+          locateStrategy: 'xpath',
+        },
+        last14Days: {
+          selector: '//*[text()="Last 14 Days"]',
+          locateStrategy: 'xpath',
+        },
+        startDate: {
+          selector: '//input[@name="startDate"]',
+          locateStrategy: 'xpath',
+        },
+        endDate: {
+          selector: '//input[@name="endDate"]',
+          locateStrategy: 'xpath',
+        },
+        export: {
+          selector: '//input[@value="Export"]',
+          locateStrategy: 'xpath',
+        },
+        mgdl: {
+          selector: '//div[@class="Export-units"]//*[@value="mg/dL"]',
+          locateStrategy: 'xpath',
+        },
+        mmoll: {
+          selector: '//div[@class="Export-units"]//*[@value="mmol/L"]',
+          locateStrategy: 'xpath',
+        },
+        excel: {
+          selector: '//div[@class="Export-filetype"]//*[@value="excel"]',
+          locateStrategy: 'xpath',
+        },
+        json: {
+          selector: '//div[@class="Export-filetype"]//*[@value="json"]',
+          locateStrategy: 'xpath',
+        },
+      },
+    },
 
   },
   commands: [{
+
   }],
 };
