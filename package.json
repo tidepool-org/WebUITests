@@ -26,7 +26,7 @@
     "testCustodialProfileRangeMGDL": "nightwatch --env qa2chrome --tag qae-223rangemgdl",
     "testCustodialProfileRangeMMOLL": "nightwatch --env qa2chrome --tag qae-223rangemmoll",
     "testqa2ChromeCustodial": "nightwatch --env qa2chrome --tag qae-222",
-    "testqa2ChromeCustodialExport": "nightwatch --env qa2chrome --tag qae-223exporta",
+    "testqa2ChromeCustodialExport": "nightwatch --env qa2chrome --tag qae-223export",
     "eslint": "eslint .",
     "eslint:fix": "eslint . --fix"
   },

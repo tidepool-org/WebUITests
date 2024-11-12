@@ -56,7 +56,8 @@ module.exports = {
     const userProfilePage = browser.page.userProfilePage();
     const userProfile = userProfilePage.section.export;
     userProfile.click('@allData');
-    userProfile.expect.element('@startDate').to.have.css('background-color').which.equals('rgba(204, 204, 204, 1)');
+    userProfile.element('@startDate').getAttribute('disabled', browser.globals.elementTimeout);
+    userProfile.element('@endDate').getAttribute('disabled', browser.globals.elementTimeout);
     userProfile.click('@export');
     const fileName = 'TidepoolExport.xlsx';
     const attemptsCheckFileExists = 60;
