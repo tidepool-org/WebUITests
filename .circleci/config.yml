@@ -41,7 +41,7 @@ jobs:
           key: dependency-cache-{{ checksum "package.json" }}
       - run:
           name: Run Parallel Tests on Chosen Environments
-          command: npm run << pipeline.parameters.testEnvironment >> -- --reporter=junit --reporter=html
+          command: npm run << pipeline.parameters.testEnvironment >>
       - run:
           name: Consolidate Test Report
           command: npm run merge-reports
