@@ -41,7 +41,7 @@ jobs:
           key: dependency-cache-{{ checksum "package.json" }}
       - run:
           name: Run Parallel Tests on Chosen Environments
-          command: npm run << pipeline.parameters.testEnvironment >>
+          command: npm run << pipeline.parameters.testEnvironment >> -- --reporter=junit --reporter=html
       - run:
           name: Consolidate Test Report
           command: npm run merge-reports
@@ -54,6 +54,8 @@ jobs:
           path: vrt/diff
       - store_artifacts:
           path: vrt/baseline/ui
+      - store_artifacts:
+          path: tests_output/combined_testresults.xml
       - store_test_results:
           path: tests_output/testresults.xml
       - store_artifacts:

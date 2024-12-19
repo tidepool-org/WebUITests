@@ -2,6 +2,7 @@ require('dotenv').config();
 const dayjs = require('dayjs');
 
 module.exports = {
+  output_folder: 'tests_output',
   src_folders: ['tests'],
   page_objects_path: ['pageobjects'],
   globals_path: 'global.js',
