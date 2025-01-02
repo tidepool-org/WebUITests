@@ -8,11 +8,6 @@ module.exports = {
       elements: {
         navBarContainer: '.App-navbar',
         logo: 'a[href="/"]',
-        patientCard: '.patientcard',
-        patientProfile: 'a[href$="profile"]',
-        patientView: 'a[href$="data"]',
-        patientShare: 'a[href$="share"]',
-        patientUpload: 'a[title="Upload data"]',
         loginDropdown: '#navigation-menu-trigger',
         loginDropdownMenu: {
           selector: '//span[@aria-label="Logout"]/ancestor::button/..',
@@ -34,6 +29,16 @@ module.exports = {
       },
       commands: [{
       }],
+    },
+    navBarPatientHeader: {
+      selector: '#navPatientHeader',
+      elements: {
+        self: '#navPatientHeader',
+        patientProfile: '#navPatientHeader_profileButton',
+        patientView: '#navPatientHeader_viewDataButton',
+        patientShare: '#navPatientHeader_shareButton',
+        patientUpload: '#navPatientHeader_uploadButton',
+      },
     },
     patientData: {
       selector: '#app',
