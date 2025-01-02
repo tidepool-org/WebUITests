@@ -7,7 +7,9 @@ module.exports = {
   globals_path: 'global.js',
   custom_commands_path: ['node_modules/nightwatch-vrt/commands'],
   custom_assertions_path: ['node_modules/nightwatch-vrt/assertions'],
-
+  disable_colors: !!process.env.CI,
+  live_output: !process.env.CI,
+  detailed_output: !process.env.CI,
   webdriver: {},
 
   test_settings: {
