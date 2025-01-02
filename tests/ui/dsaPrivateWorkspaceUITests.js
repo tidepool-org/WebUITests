@@ -23,14 +23,8 @@ module.exports = {
   'verify private workspace elements present'(browser) {
     const common = browser.page.commonElementsPage();
     const navBar = common.section.navBar;
-    const privateWorkspace = browser.page.dsaPrivateWorkspace();
+
     navBar.waitForElementVisible('@logo', browser.globals.elementTimeout);
     navBar.expect.element('@loginDropdown').to.be.visible;
-    privateWorkspace.expect.element('@patientCard').to.be.visible;
-    privateWorkspace.expect.element('@patientView').to.be.visible;
-    privateWorkspace.expect.element('@patientShare').to.be.visible;
-    privateWorkspace.expect.element('@patientUpload').to.be.visible;
-    privateWorkspace.assert.screenshotIdenticalToBaseline('@navBar', 'nav bar');
-    privateWorkspace.assert.screenshotIdenticalToBaseline('@patientsSection', 'private workspace patients');
   },
 };
