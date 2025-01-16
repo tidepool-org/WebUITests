@@ -13,8 +13,8 @@ module.exports = {
           selector: '//*[@id="peopleTable-header-fullName"]//span',
           locateStrategy: 'xpath',
         },
-        lastUpload: {
-          selector: '//*[@id="peopleTable-header-cgm-lastUploadDate"]//span',
+        dataRecency: {
+          selector: '//*[@id="peopleTable-header-cgm-lastData"]//span',
           locateStrategy: 'xpath',
         },
         patientTags: {
@@ -46,7 +46,7 @@ module.exports = {
           locateStrategy: 'xpath',
         },
         lastUploadDesc: {
-          selector: '//*[@id="peopleTable-header-cgm-lastUploadDate"]//*[contains(@class," MuiTableSortLabel-iconDirectionDesc")]',
+          selector: '//*[@id="peopleTable-header-cgm-lastData"]//*[contains(@class," MuiTableSortLabel-iconDirectionDesc")]',
           locateStrategy: 'xpath',
         },
 
