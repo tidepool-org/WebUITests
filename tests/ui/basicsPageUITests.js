@@ -1,7 +1,7 @@
 require('../../utilities/seleniumKeepAlive');
 
 module.exports = {
-  '@tags': ['parallel'],
+  '@tags': ['parallel', 'debug'],
   'log in and navigate to basics page'(browser) {
     const loginPage = browser.page.loginPage();
     const common = browser.page.commonElementsPage();
@@ -15,14 +15,16 @@ module.exports = {
   'verify navbar elements present'(browser) {
     const common = browser.page.commonElementsPage();
     const navBar = common.section.navBar;
+    const navBarPatientHeader = common.section.navBarPatientHeader;
+
     navBar.waitForElementVisible('@logo', browser.globals.elementTimeout);
-    navBar.expect.element('@patientCard').to.be.visible;
-    navBar.expect.element('@patientProfile').to.be.visible;
-    navBar.expect.element('@patientView').to.be.visible;
-    navBar.expect.element('@patientShare').to.be.visible;
-    navBar.expect.element('@patientUpload').to.be.visible;
+    navBarPatientHeader.expect.element('@patientProfile').to.be.visible;
+    navBarPatientHeader.expect.element('@patientView').to.be.visible;
+    navBarPatientHeader.expect.element('@patientShare').to.be.visible;
+    navBarPatientHeader.expect.element('@patientUpload').to.be.visible;
     navBar.expect.element('@loginDropdown').to.be.visible;
     navBar.assert.screenshotIdenticalToBaseline('@navBarContainer', 'nav bar');
+    navBarPatientHeader.assert.screenshotIdenticalToBaseline('@self', 'nav bar patient header');
   },
   'verify common patient data elements present'(browser) {
     const common = browser.page.commonElementsPage();

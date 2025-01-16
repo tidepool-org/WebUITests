@@ -22,7 +22,7 @@ module.exports = {
     clinicPatientList.waitForElementVisible('@showAll', browser.globals.elementTimeout);
     clinicPatientList.click('@showAll');
     clinicPatientList.expect.element('@patientDetails').text.to.contain('Patient Details');
-    clinicPatientList.expect.element('@lastUpload').text.to.contain('Last Upload');
+    clinicPatientList.expect.element('@dataRecency').text.to.contain('Data Recency');
     clinicPatientList.expect.element('@patientTags').text.to.contain('Patient Tags');
     clinicPatientList.expect.element('@GMI').text.to.contain('GMI');
     clinicPatientList.expect.element('@timeInRange').text.to.contain('% Time in Range');
