@@ -120,7 +120,6 @@ module.exports = {
     footer.expect.element('@facebook').to.be.visible;
     footer.expect.element('@support').to.be.visible;
     footer.expect.element('@termsOfUse').to.be.visible;
-    footer.expect.element('@jdrf').to.be.visible;
   },
   'verify sidebar and BGM agg stat elements present'(browser) {
     const basics = browser.page.basicsPage();

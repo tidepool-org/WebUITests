@@ -82,7 +82,6 @@ module.exports = {
         facebook: '#facebook',
         support: '#support',
         termsOfUse: '#legal',
-        jdrf: '#jdrf',
       },
       commands: [{
       }],
