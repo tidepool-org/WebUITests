@@ -1,4 +1,4 @@
-const { getToken } = require('../utilities/utilities');
+const { getToken } = require('../../utilities/utilities');
 
 module.exports = {
   url: function useEnvironmentUrl() {
