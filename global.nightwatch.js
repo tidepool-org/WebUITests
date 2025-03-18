@@ -1,7 +1,7 @@
 /* eslint-disable no-console */
 require('dotenv').config();
 const request = require('request');
-const { generateScreenshotFilePath } = require('./utilities/utilities');
+const { generateScreenshotFilePath } = require('./utilities/nightwatch/utilities');
 
 module.exports = {
   abortOnAssertionFailure: true,

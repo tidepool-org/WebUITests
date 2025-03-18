@@ -1,6 +1,6 @@
-const { dsaUsernameTandem, dsaPasswordTandem } = require('../../../global');
+const { dsaUsernameTandem, dsaPasswordTandem } = require('../../../global.nightwatch');
 
-require('../../../utilities/seleniumKeepAlive');
+require('../../../utilities/nightwatch/seleniumKeepAlive');
 
 module.exports = {
   '@disabled': true, // Skipping for now until we decide how to best handle test email access

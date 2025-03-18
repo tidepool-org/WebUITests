@@ -1,7 +1,7 @@
-require('../../../utilities/seleniumKeepAlive');
+require('../../../utilities/nightwatch/seleniumKeepAlive');
 
 module.exports = {
-  '@tags': ['parallel'],
+  '@tags': ['parallel', 'only'],
   'User Logs in with Existing Credentials'(browser) {
     const loginPage = browser.page.loginPage();
     const dsaUsername = browser.globals.dsaUsernameTandem;
