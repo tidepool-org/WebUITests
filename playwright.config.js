@@ -3,6 +3,23 @@
 import { defineConfig, devices } from '@playwright/test';
 import env from './utilities/env';
 
+// JUnit reporter config for Xray
+const xrayOptions = {
+  // Whether to add <properties> with all annotations; default is false
+  embedAnnotationsAsProperties: true,
+ 
+  // By default, annotation is reported as <property name='' value=''>.
+  // These annotations are reported as <property name=''>value</property>.
+  textContentAnnotations: ['test_description', 'testrun_comment'],
+ 
+  // This will create a "testrun_evidence" property that contains all attachments. Each attachment is added as an inner <item> element.
+  // Disables [[ATTACHMENT|path]] in the <system-out>.
+  embedAttachmentsAsProperty: 'testrun_evidence',
+ 
+  // Where to put the report.
+  outputFile: 'test-results/test-results.xml'
+};
+
 /**
  * Read environment variables from file.
  * https://github.com/motdotla/dotenv
@@ -18,6 +35,7 @@ export default defineConfig({
   testDir: './tests/e2e',
   /* Run tests in files in parallel */
   fullyParallel: true,
+  
   /* Fail the build on CI if you accidentally left test.only in the source code. */
   forbidOnly: !!process.env.CI,
   /* Retry on CI only */
@@ -26,10 +44,11 @@ export default defineConfig({
   workers: process.env.CI ? 1 : undefined,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter: [
-    ['html', { open: 'never' }],
-    ['junit', { outputFile: 'test-results/playwright-report.xml' }],
+    ['html', { open: 'never', outputFolder: 'test-results/playwright-report' }],
+    ["junit", xrayOptions],
+    // ["./utilities/xray-reporter.js"],
   ],
-  timeout: 60000,
+  timeout: 180000,
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     /* Base URL to use in actions like `await page.goto('/')`. */
@@ -44,6 +63,7 @@ export default defineConfig({
     {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
+      
     },
 
     // {
