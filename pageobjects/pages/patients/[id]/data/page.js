@@ -1,5 +1,5 @@
-import NavigationSection from "../../../sections/navigation.section";
-import NavigationSubMenu from "../../../sections/navigation-submenu.section";
+import NavigationSubMenu from "../../../../sections/navigation-submenu.section";
+import NavigationSection from "../../../../sections/navigation.section";
 
 export default class PatientDataPage {
   /**
@@ -24,8 +24,11 @@ export default class PatientDataPage {
        * Get the text of the weekday of the hovered day
        * @returns {Promise<string>}
        */
-      text: async () => await this.calendarDayHover.el.locator(".Calendar-weekday").textContent(),
-    }
+      text: async () =>
+        await this.calendarDayHover.el
+          .locator(".Calendar-weekday")
+          .textContent(),
+    };
 
     this.bolusingContainer = page.locator(".Calendar-container-boluses");
     this.calendarDayMostRecentBolusing = this.bolusingContainer.locator(
