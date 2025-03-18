@@ -1,4 +1,4 @@
-require('../../utilities/seleniumKeepAlive');
+require('../../../utilities/nightwatch/seleniumKeepAlive');
 
 module.exports = {
   '@tags': ['parallel', 'debug'],

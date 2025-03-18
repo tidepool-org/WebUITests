@@ -8,3 +8,9 @@ vrt/latest
 # ui
 screens
 test_evidence
+
+# Playwright
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/

@@ -1,5 +1,5 @@
 /* eslint-disable linebreak-style */
-require('../../utilities/seleniumKeepAlive');
+require('../../../utilities/seleniumKeepAlive');
 
 module.exports = {
   '@tags': ['clinician'],

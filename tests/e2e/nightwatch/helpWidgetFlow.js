@@ -1,4 +1,4 @@
-require('../../utilities/seleniumKeepAlive');
+require('../../../utilities/nightwatch/seleniumKeepAlive');
 
 module.exports = {
   '@disabled': true, // Skipping for now until we decide how to best handle tests involving iframes
