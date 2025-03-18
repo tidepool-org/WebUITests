@@ -1,9 +1,9 @@
 // @ts-check
 import { expect, test } from "@playwright/test";
 
-import LoginPage from "../../pageobjects/login.page";
-import PatientDataDailyPage from "../../pageobjects/patients/[id]/data/daily/page";
-import PatientDataPage from "../../pageobjects/patients/[id]/data/page";
+import LoginPage from "../../pageobjects/pages/login.page";
+import PatientDataDailyPage from "../../pageobjects/pages/patients/[id]/data/daily/page";
+import PatientDataPage from "../../pageobjects/pages/patients/[id]/data/page";
 import env from "../../utilities/env";
 
 test.describe("Basic functionality of the application", () => {
