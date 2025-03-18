@@ -2,9 +2,9 @@ require('dotenv').config();
 const dayjs = require('dayjs');
 
 module.exports = {
-  src_folders: ['tests'],
-  page_objects_path: ['pageobjects'],
-  globals_path: 'global.js',
+  src_folders: ['tests/e2e/nightwatch', 'tests/ui/nightwatch'],
+  page_objects_path: ['pageobjects/nightwatch'],
+  globals_path: 'global.nightwatch.js',
   custom_commands_path: ['node_modules/nightwatch-vrt/commands'],
   custom_assertions_path: ['node_modules/nightwatch-vrt/assertions'],
   disable_colors: !!process.env.CI,

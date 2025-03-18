@@ -1,4 +1,4 @@
-require('../../utilities/seleniumKeepAlive');
+require('../../../utilities/seleniumKeepAlive');
 
 module.exports = {
   '@tags': ['parallel'],
