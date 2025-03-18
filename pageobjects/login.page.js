@@ -1,6 +1,19 @@
+/**
+ * @typedef {import('@playwright/test').Page} Page
+ * @typedef {import('@playwright/test').Locator} Locator
+ */
+
+/**
+ * @class
+ * @property {Page} page
+ * @property {Locator} emailInput
+ * @property {Locator} nextButton
+ * @property {Locator} passwordInput
+ * @property {Locator} loginButton
+ */
 export default class LoginPage {
   /**
-   * @param {import('@playwright/test').Page} page
+   * @param {Page} page
    */
   constructor(page) {
     this.page = page;
@@ -10,6 +23,10 @@ export default class LoginPage {
     this.loginButton = page.getByRole("button", { name: "Log In" });
   }
 
+  /**
+   * Navigate to the login page
+   * @returns {Promise<void>}
+   */
   async goto() {
     await this.page.goto(`/`);
   }
@@ -18,6 +35,7 @@ export default class LoginPage {
    * Login to the application
    * @param {string} email
    * @param {string} password
+   * @returns {Promise<void>}
    */
   async login(email, password) {
     await this.emailInput.fill(email);
