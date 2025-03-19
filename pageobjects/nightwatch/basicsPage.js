@@ -13,8 +13,7 @@ module.exports = {
           locateStrategy: "xpath",
         },
         modalDismiss: {
-          selector:
-            '//*[@id="ChartDateRangePicker"]//button[@aria-label="close dialog"]',
+          selector: '//*[@id="ChartDateRangePicker"]//button[@aria-label="close dialog"]',
           locateStrategy: "xpath",
         },
         daysOptions: {
@@ -72,8 +71,7 @@ module.exports = {
           locateStrategy: "xpath",
         },
         averagePerDay: {
-          selector:
-            '//div[contains(@class,"Calendar-container-fingersticks")]//span[text()="Avg per day"]',
+          selector: '//div[contains(@class,"Calendar-container-fingersticks")]//span[text()="Avg per day"]',
           locateStrategy: "xpath",
         },
         meter: {
@@ -98,13 +96,11 @@ module.exports = {
           locateStrategy: "xpath",
         },
         dayHover: {
-          selector:
-            '//div[contains(@class,"Calendar-day--HOVER")]//*[@class="Calendar-weekday"]',
+          selector: '//div[contains(@class,"Calendar-day--HOVER")]//*[@class="Calendar-weekday"]',
           locateStrategy: "xpath",
         },
         bgReading: {
-          selector:
-            '//div[contains(@class,"Calendar-day--fingersticks")]//*[name()="circle"]',
+          selector: '//div[contains(@class,"Calendar-day--fingersticks")]//*[name()="circle"]',
           locateStrategy: "xpath",
         },
       },
@@ -134,8 +130,7 @@ module.exports = {
           locateStrategy: "xpath",
         },
         bolusesCalendar: {
-          selector:
-            '//h3[text()="Bolusing"]/parent::*[@class="DashboardSection"]',
+          selector: '//h3[text()="Bolusing"]/parent::*[@class="DashboardSection"]',
           locateStrategy: "xpath",
         },
         bottomOfDashboard: {
@@ -143,8 +138,7 @@ module.exports = {
           locateStrategy: "xpath",
         },
         averagePerDay: {
-          selector:
-            '//div[contains(@class,"Calendar-container-boluses")]//span[text()="Avg per day"]',
+          selector: '//div[contains(@class,"Calendar-container-boluses")]//span[text()="Avg per day"]',
           locateStrategy: "xpath",
         },
         calculator: {
@@ -172,18 +166,15 @@ module.exports = {
           locateStrategy: "xpath",
         },
         mostRecentDay: {
-          selector:
-            '//div[contains(@class,"Calendar-day--boluses") and contains(@class, "Calendar-day-most-recent")]',
+          selector: '//div[contains(@class,"Calendar-day--boluses") and contains(@class, "Calendar-day-most-recent")]',
           locateStrategy: "xpath",
         },
         dayHover: {
-          selector:
-            '//div[contains(@class,"Calendar-day--HOVER")]//*[@class="Calendar-weekday"]',
+          selector: '//div[contains(@class,"Calendar-day--HOVER")]//*[@class="Calendar-weekday"]',
           locateStrategy: "xpath",
         },
         bolusEntry: {
-          selector:
-            '//div[contains(@class,"Calendar-day--boluses")]//*[name()="circle"]',
+          selector: '//div[contains(@class,"Calendar-day--boluses")]//*[name()="circle"]',
           locateStrategy: "xpath",
         },
       },
@@ -215,8 +206,7 @@ module.exports = {
         filledTubingDay: 'div[class*="Change--tubing"]',
         siteChangeDay: ".SiteChange",
         dayHover: {
-          selector:
-            '//div[contains(@class,"Calendar-day--HOVER")]//*[@class="Calendar-weekday"]',
+          selector: '//div[contains(@class,"Calendar-day--HOVER")]//*[@class="Calendar-weekday"]',
           locateStrategy: "xpath",
         },
       },
@@ -250,13 +240,11 @@ module.exports = {
           locateStrategy: "xpath",
         },
         mostRecentDay: {
-          selector:
-            '//div[contains(@class,"Calendar-day--basals") and contains(@class, "Calendar-day-most-recent")]',
+          selector: '//div[contains(@class,"Calendar-day--basals") and contains(@class, "Calendar-day-most-recent")]',
           locateStrategy: "xpath",
         },
         dayHover: {
-          selector:
-            '//div[contains(@class,"Calendar-day--HOVER")]//*[@class="Calendar-weekday"]',
+          selector: '//div[contains(@class,"Calendar-day--HOVER")]//*[@class="Calendar-weekday"]',
           locateStrategy: "xpath",
         },
       },
@@ -273,13 +261,11 @@ module.exports = {
         },
         timeInRange: "#Stat--timeInRange",
         timeInRangeTitle: {
-          selector:
-            '//div[@id="Stat--timeInRange"]//div[contains(@class,"chartTitle")]',
+          selector: '//div[@id="Stat--timeInRange"]//div[contains(@class,"chartTitle")]',
           locateStrategy: "xpath",
         },
         timeInRangeTooltip: {
-          selector:
-            '//div[@id="Stat--timeInRange"]//img[@alt="Hover for more info"]',
+          selector: '//div[@id="Stat--timeInRange"]//img[@alt="Hover for more info"]',
           locateStrategy: "xpath",
         },
         timeInRangeTooltipMessage: {
@@ -287,39 +273,32 @@ module.exports = {
           locateStrategy: "xpath",
         },
         timeVeryAboveRangeBar: {
-          selector:
-            '//div[@id="Stat--timeInRange"]//*[name()="g" and contains(@class, "HoverBar")][5]',
+          selector: '//div[@id="Stat--timeInRange"]//*[name()="g" and contains(@class, "HoverBar")][5]',
           locateStrategy: "xpath",
         },
         timeAboveRangeBar: {
-          selector:
-            '//div[@id="Stat--timeInRange"]//*[name()="g" and contains(@class, "HoverBar")][4]',
+          selector: '//div[@id="Stat--timeInRange"]//*[name()="g" and contains(@class, "HoverBar")][4]',
           locateStrategy: "xpath",
         },
         timeInRangeBar: {
-          selector:
-            '//div[@id="Stat--timeInRange"]//*[name()="g" and contains(@class, "HoverBar")][3]',
+          selector: '//div[@id="Stat--timeInRange"]//*[name()="g" and contains(@class, "HoverBar")][3]',
           locateStrategy: "xpath",
         },
         timeBelowRangeBar: {
-          selector:
-            '//div[@id="Stat--timeInRange"]//*[name()="g" and contains(@class, "HoverBar")][2]',
+          selector: '//div[@id="Stat--timeInRange"]//*[name()="g" and contains(@class, "HoverBar")][2]',
           locateStrategy: "xpath",
         },
         timeVeryBelowRangeBar: {
-          selector:
-            '//div[@id="Stat--timeInRange"]//*[name()="g" and contains(@class, "HoverBar")][1]',
+          selector: '//div[@id="Stat--timeInRange"]//*[name()="g" and contains(@class, "HoverBar")][1]',
           locateStrategy: "xpath",
         },
         readingsInRange: "#Stat--readingsInRange",
         readingsInRangeTitle: {
-          selector:
-            '//div[@id="Stat--readingsInRange"]//div[contains(@class,"chartTitle")]',
+          selector: '//div[@id="Stat--readingsInRange"]//div[contains(@class,"chartTitle")]',
           locateStrategy: "xpath",
         },
         readingsInRangeTooltip: {
-          selector:
-            '//div[@id="Stat--readingsInRange"]//img[@alt="Hover for more info"]',
+          selector: '//div[@id="Stat--readingsInRange"]//img[@alt="Hover for more info"]',
           locateStrategy: "xpath",
         },
         readingsInRangeTooltipMessage: {
@@ -327,34 +306,28 @@ module.exports = {
           locateStrategy: "xpath",
         },
         readingsVeryAboveRangeBar: {
-          selector:
-            '//div[@id="Stat--readingsInRange"]//*[name()="g" and contains(@class, "HoverBar")][5]',
+          selector: '//div[@id="Stat--readingsInRange"]//*[name()="g" and contains(@class, "HoverBar")][5]',
           locateStrategy: "xpath",
         },
         readingsAboveRangeBar: {
-          selector:
-            '//div[@id="Stat--readingsInRange"]//*[name()="g" and contains(@class, "HoverBar")][4]',
+          selector: '//div[@id="Stat--readingsInRange"]//*[name()="g" and contains(@class, "HoverBar")][4]',
           locateStrategy: "xpath",
         },
         readingsInRangeBar: {
-          selector:
-            '//div[@id="Stat--readingsInRange"]//*[name()="g" and contains(@class, "HoverBar")][3]',
+          selector: '//div[@id="Stat--readingsInRange"]//*[name()="g" and contains(@class, "HoverBar")][3]',
           locateStrategy: "xpath",
         },
         readingsBelowRangeBar: {
-          selector:
-            '//div[@id="Stat--readingsInRange"]//*[name()="g" and contains(@class, "HoverBar")][2]',
+          selector: '//div[@id="Stat--readingsInRange"]//*[name()="g" and contains(@class, "HoverBar")][2]',
           locateStrategy: "xpath",
         },
         readingsVeryBelowRangeBar: {
-          selector:
-            '//div[@id="Stat--readingsInRange"]//*[name()="g" and contains(@class, "HoverBar")][1]',
+          selector: '//div[@id="Stat--readingsInRange"]//*[name()="g" and contains(@class, "HoverBar")][1]',
           locateStrategy: "xpath",
         },
         averageGlucose: "#Stat--averageGlucose",
         averageGlucoseTooltip: {
-          selector:
-            '//div[@id="Stat--averageGlucose"]//img[@alt="Hover for more info"]',
+          selector: '//div[@id="Stat--averageGlucose"]//img[@alt="Hover for more info"]',
           locateStrategy: "xpath",
         },
         averageGlucoseTooltipMessage: {
@@ -363,8 +336,7 @@ module.exports = {
         },
         sensorUsage: "#Stat--sensorUsage",
         sensorUsageTooltip: {
-          selector:
-            '//div[@id="Stat--sensorUsage"]//img[@alt="Hover for more info"]',
+          selector: '//div[@id="Stat--sensorUsage"]//img[@alt="Hover for more info"]',
           locateStrategy: "xpath",
         },
         sensorUsageTooltipMessage: {
@@ -373,23 +345,19 @@ module.exports = {
         },
         totalInsulin: "#Stat--totalInsulin",
         totalInsulinTitle: {
-          selector:
-            '//div[@id="Stat--totalInsulin"]//div[contains(@class,"chartTitle")]',
+          selector: '//div[@id="Stat--totalInsulin"]//div[contains(@class,"chartTitle")]',
           locateStrategy: "xpath",
         },
         basalInsulinBar: {
-          selector:
-            '//div[@id="Stat--totalInsulin"]//*[name()="g" and contains(@class, "HoverBar")][2]',
+          selector: '//div[@id="Stat--totalInsulin"]//*[name()="g" and contains(@class, "HoverBar")][2]',
           locateStrategy: "xpath",
         },
         bolusInsulinBar: {
-          selector:
-            '//div[@id="Stat--totalInsulin"]//*[name()="g" and contains(@class, "HoverBar")][1]',
+          selector: '//div[@id="Stat--totalInsulin"]//*[name()="g" and contains(@class, "HoverBar")][1]',
           locateStrategy: "xpath",
         },
         totalInsulinTooltip: {
-          selector:
-            '//div[@id="Stat--totalInsulin"]//img[@alt="Hover for more info"]',
+          selector: '//div[@id="Stat--totalInsulin"]//img[@alt="Hover for more info"]',
           locateStrategy: "xpath",
         },
         totalInsulinTooltipMessage: {
@@ -398,8 +366,7 @@ module.exports = {
         },
         averageDailyDose: "#Stat--averageDailyDose",
         averageDailyDoseTooltip: {
-          selector:
-            '//div[@id="Stat--averageDailyDose"]//img[@alt="Hover for more info"]',
+          selector: '//div[@id="Stat--averageDailyDose"]//img[@alt="Hover for more info"]',
           locateStrategy: "xpath",
         },
         averageDailyDoseTooltipMessage: {
@@ -419,8 +386,7 @@ module.exports = {
         },
         gmi: "#Stat--glucoseManagementIndicator",
         gmiTooltip: {
-          selector:
-            '//div[@id="Stat--glucoseManagementIndicator"]//img[@alt="Hover for more info"]',
+          selector: '//div[@id="Stat--glucoseManagementIndicator"]//img[@alt="Hover for more info"]',
           locateStrategy: "xpath",
         },
         gmiTooltipMessage: {
@@ -429,8 +395,7 @@ module.exports = {
         },
         cv: "#Stat--coefficientOfVariation",
         cvTooltip: {
-          selector:
-            '//div[@id="Stat--coefficientOfVariation"]//img[@alt="Hover for more info"]',
+          selector: '//div[@id="Stat--coefficientOfVariation"]//img[@alt="Hover for more info"]',
           locateStrategy: "xpath",
         },
         cvTooltipMessage: {

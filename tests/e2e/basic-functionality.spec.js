@@ -15,9 +15,7 @@ test.describe("Patient Data Navigation and Visualization", () => {
     });
   });
 
-  test("should display daily chart when selecting a date from basics page", async ({
-    page,
-  }) => {
+  test("should display daily chart when selecting a date from basics page", async ({ page }) => {
     const basicsPage = new PatientDataBasicsPage(page);
     const dailyPage = new PatientDataDailyPage(page);
 
@@ -30,13 +28,11 @@ test.describe("Patient Data Navigation and Visualization", () => {
     });
 
     await test.step("When the user clicks on the most recent day", async () => {
-      const recentDayElement =
-        basicsPage.bgReadingsSection.dayMostRecentBgReading;
+      const recentDayElement = basicsPage.bgReadingsSection.dayMostRecentBgReading;
       await recentDayElement.waitFor({ state: "visible" });
       await recentDayElement.hover();
 
-      selectedDateText =
-        await basicsPage.bgReadingsSection.calendarDayhover.text();
+      selectedDateText = await basicsPage.bgReadingsSection.calendarDayhover.text();
       await basicsPage.bgReadingsSection.calendarDayhover.el.click();
     });
 
@@ -45,18 +41,14 @@ test.describe("Patient Data Navigation and Visualization", () => {
       await chartContainer.waitFor({ state: "visible" });
 
       // Verify the selected date matches the displayed date
-      await expect(dailyPage.navigationSubMenu.currentDate).toContainText(
-        selectedDateText,
-      );
+      await expect(dailyPage.navigationSubMenu.currentDate).toContainText(selectedDateText);
 
       // Capture chart screenshot for visual regression
       await expect(chartContainer).toHaveScreenshot("daily-chart.png");
     });
   });
 
-  test("should display bolus dashboard when selecting a date from basics page", async ({
-    page,
-  }) => {
+  test("should display bolus dashboard when selecting a date from basics page", async ({ page }) => {
     const basicsPage = new PatientDataBasicsPage(page);
     const dailyPage = new PatientDataDailyPage(page);
     let selectedDateText;
@@ -68,13 +60,11 @@ test.describe("Patient Data Navigation and Visualization", () => {
     });
 
     await test.step("When the user clicks on the most recent day", async () => {
-      const recentDayElement =
-        basicsPage.bolusingSection.dayMostRecentBgReading;
+      const recentDayElement = basicsPage.bolusingSection.dayMostRecentBgReading;
       await recentDayElement.waitFor({ state: "visible" });
       await recentDayElement.hover();
 
-      selectedDateText =
-        await basicsPage.bolusingSection.calendarDayhover.text();
+      selectedDateText = await basicsPage.bolusingSection.calendarDayhover.text();
       await basicsPage.bolusingSection.calendarDayhover.el.click();
     });
 
@@ -83,18 +73,14 @@ test.describe("Patient Data Navigation and Visualization", () => {
       await chartContainer.waitFor({ state: "visible" });
 
       // Verify the selected date matches the displayed date
-      await expect(dailyPage.navigationSubMenu.currentDate).toContainText(
-        selectedDateText,
-      );
+      await expect(dailyPage.navigationSubMenu.currentDate).toContainText(selectedDateText);
 
       // Capture chart screenshot for visual regression
       await expect(chartContainer).toHaveScreenshot("daily-chart.png");
     });
   });
 
-  test("should display Infusion site changes dashboard when selecting a date from basics page", async ({
-    page,
-  }) => {
+  test("should display Infusion site changes dashboard when selecting a date from basics page", async ({ page }) => {
     const basicsPage = new PatientDataBasicsPage(page);
     const dailyPage = new PatientDataDailyPage(page);
     let selectedDateText;
@@ -110,12 +96,8 @@ test.describe("Patient Data Navigation and Visualization", () => {
     await test.step("When testing Fill Cannula functionality", async () => {
       // Verify radio button options
       await basicsPage.tubingPrimeSection.settings.click();
-      await expect(
-        basicsPage.tubingPrimeSection.settingsOption.fillCannula,
-      ).toBeVisible();
-      await expect(
-        basicsPage.tubingPrimeSection.settingsOption.fillTubing,
-      ).toBeVisible();
+      await expect(basicsPage.tubingPrimeSection.settingsOption.fillCannula).toBeVisible();
+      await expect(basicsPage.tubingPrimeSection.settingsOption.fillTubing).toBeVisible();
 
       // Select Fill Cannula and verify highlighted days
       await basicsPage.tubingPrimeSection.settingsOption.fillCannula.click();
@@ -127,24 +109,19 @@ test.describe("Patient Data Navigation and Visualization", () => {
 
       // Verify cannula icons are visible and tubing icons are not
       await expect(basicsPage.tubingPrimeSection.cannulaIcons).toBeAttached();
-      await expect(
-        basicsPage.tubingPrimeSection.tubingIcons,
-      ).not.toBeAttached();
+      await expect(basicsPage.tubingPrimeSection.tubingIcons).not.toBeAttached();
 
       // Select a highlighted day
       const highlightedDay = basicsPage.tubingPrimeSection.filledDay;
       await highlightedDay.hover();
-      selectedDateText =
-        await basicsPage.tubingPrimeSection.calendarDayhover.text();
+      selectedDateText = await basicsPage.tubingPrimeSection.calendarDayhover.text();
       await basicsPage.tubingPrimeSection.calendarDayhover.el.click();
     });
 
     await test.step("Then the daily chart shows correct cannula fill date", async () => {
       const chartContainer = dailyPage.dailyChart.container;
       await chartContainer.waitFor({ state: "visible" });
-      await expect(dailyPage.navigationSubMenu.currentDate).toContainText(
-        selectedDateText,
-      );
+      await expect(dailyPage.navigationSubMenu.currentDate).toContainText(selectedDateText);
       await expect(chartContainer).toHaveScreenshot("daily-chart-cannula.png");
     });
 
@@ -162,31 +139,24 @@ test.describe("Patient Data Navigation and Visualization", () => {
 
       // Verify filled tubing day is visible and cannula day is not
       await expect(basicsPage.tubingPrimeSection.tubingIcons).toBeAttached();
-      await expect(
-        basicsPage.tubingPrimeSection.cannulaIcons,
-      ).not.toBeAttached();
+      await expect(basicsPage.tubingPrimeSection.cannulaIcons).not.toBeAttached();
 
       // Click on the most recent day with tubing fill
       const tubingDay = basicsPage.tubingPrimeSection.filledDay;
       await tubingDay.hover();
-      selectedDateText =
-        await basicsPage.tubingPrimeSection.calendarDayhover.text();
+      selectedDateText = await basicsPage.tubingPrimeSection.calendarDayhover.text();
       await basicsPage.tubingPrimeSection.calendarDayhover.el.click();
     });
 
     await test.step("Then the daily chart shows correct tubing fill date", async () => {
       const chartContainer = dailyPage.dailyChart.container;
       await chartContainer.waitFor({ state: "visible" });
-      await expect(dailyPage.navigationSubMenu.currentDate).toContainText(
-        selectedDateText,
-      );
+      await expect(dailyPage.navigationSubMenu.currentDate).toContainText(selectedDateText);
       await expect(chartContainer).toHaveScreenshot("daily-chart-tubing.png");
     });
   });
   // TODO: Previous test doesn't test values. Should we? :)
-  test("Avg. Daily Readings In Range shows correct values", async ({
-    page,
-  }) => {
+  test("Avg. Daily Readings In Range shows correct values", async ({ page }) => {
     const expectedHeaders = [
       { header: "Reading Below Range", value: 3 },
       { header: "Reading Below Range", value: 0 },
@@ -212,15 +182,11 @@ test.describe("Patient Data Navigation and Visualization", () => {
       });
 
       await test.step("Then the correct header is visible", async () => {
-        await expect(basicsPage.stats.header).toContainText(
-          expectedHeaders[i].header,
-        );
+        await expect(basicsPage.stats.header).toContainText(expectedHeaders[i].header);
       });
 
       await test.step("Then the correct value is visible", async () => {
-        await expect(barLabel).toContainText(
-          expectedHeaders[i].value.toString(),
-        );
+        await expect(barLabel).toContainText(expectedHeaders[i].value.toString());
       });
     }
   });

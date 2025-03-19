@@ -17,10 +17,7 @@ module.exports = {
     navBar.expect.element("@privateWorkspace").to.be.visible;
     navBar.expect.element("@accountSettings").to.be.visible;
     navBar.expect.element("@logout").to.be.visible;
-    navBar.assert.screenshotIdenticalToBaseline(
-      "@loginDropdownMenu",
-      "login dropdown menu",
-    );
+    navBar.assert.screenshotIdenticalToBaseline("@loginDropdownMenu", "login dropdown menu");
     navBar.click("@privateWorkspace");
   },
   "verify private workspace elements present"(browser) {

@@ -43,10 +43,7 @@ module.exports = {
             return this.waitForElementPresent("@emailInput")
               .setValue("@emailInput", this.api.globals.gmailUsername)
               .click("@usernameNextButton")
-              .waitForElementPresent(
-                "@passwordInput",
-                this.api.globals.elementTimeout,
-              )
+              .waitForElementPresent("@passwordInput", this.api.globals.elementTimeout)
               .setValue("@passwordInput", this.api.globals.gmailPassword)
               .click("@passwordNextButton")
               .waitForElementPresent("@otpInput")
@@ -54,19 +51,12 @@ module.exports = {
               .click("@otpNextButton");
           },
           submitValidOTP() {
-            this.waitForElementVisible(
-              "#guser",
-              this.api.globals.elementTimeout,
-              false,
-              (result) => {
-                if (result.state !== "success") {
-                  this.clearValue("@otpInput")
-                    .setValue("@otpInput", getToken())
-                    .click("@otpNextButton");
-                }
-                return this;
-              },
-            );
+            this.waitForElementVisible("#guser", this.api.globals.elementTimeout, false, (result) => {
+              if (result.state !== "success") {
+                this.clearValue("@otpInput").setValue("@otpInput", getToken()).click("@otpNextButton");
+              }
+              return this;
+            });
           },
           accessResetEmail() {
             return this.click("@passwordResetEmail")
@@ -95,10 +85,7 @@ module.exports = {
             });
           },
           loadPage() {
-            return this.waitForElementVisible(
-              "@changePasswordTitle",
-              this.api.globals.elementTimeout,
-            );
+            return this.waitForElementVisible("@changePasswordTitle", this.api.globals.elementTimeout);
           },
         },
       ],
