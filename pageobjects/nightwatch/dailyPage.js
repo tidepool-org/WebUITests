@@ -4,16 +4,14 @@ module.exports = {
   },
   sections: {
     dailyViewDay: {
-      selector: '#app',
+      selector: "#app",
       elements: {
-        bgChart: '#poolBG',
-        allCharts: '#tidelinePools',
-        chartsContainer: '#tidelineMain',
+        bgChart: "#poolBG",
+        allCharts: "#tidelinePools",
+        chartsContainer: "#tidelineMain",
       },
-      commands: [{
-      }],
+      commands: [{}],
     },
   },
-  commands: [{
-  }],
+  commands: [{}],
 };
