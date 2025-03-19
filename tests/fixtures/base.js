@@ -33,9 +33,7 @@ export const test = base.extend({
 
       if (errors.length > 0) {
         await test.info.attach("frontend-exceptions", {
-          body: errors
-            .map((error) => `${error.message}\n${error.stack}`)
-            .join("\n---------\n"),
+          body: errors.map((error) => `${error.message}\n${error.stack}`).join("\n---------\n"),
         });
 
         throw new Error("Some frontend exceptions occurred");

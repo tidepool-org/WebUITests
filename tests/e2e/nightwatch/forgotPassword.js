@@ -1,7 +1,4 @@
-const {
-  dsaUsernameTandem,
-  dsaPasswordTandem,
-} = require("../../../global.nightwatch");
+const { dsaUsernameTandem, dsaPasswordTandem } = require("../../../global.nightwatch");
 
 require("../../../utilities/nightwatch/seleniumKeepAlive");
 
@@ -16,11 +13,7 @@ module.exports = {
     loginPage.loadPage();
     loginForm.click("@forgotPasswordLink");
     resetForm.assert
-      .containsText(
-        "@forgotPasswordTitle",
-        "Forgot your password?",
-        "Successful Navigation to Password Reset Page",
-      )
+      .containsText("@forgotPasswordTitle", "Forgot your password?", "Successful Navigation to Password Reset Page")
       .setValue("@emailInput", dsaUsernameTandem)
       .click("@resetSubmitBtn")
       .assert.containsText("@forgotPasswordTitle", "Email sent!", "Email Sent");
@@ -38,20 +31,12 @@ module.exports = {
     newPasswordForm.switchTab();
     newPasswordForm.loadPage();
     newPasswordForm.assert
-      .containsText(
-        "@changePasswordTitle",
-        "Change your password",
-        "Successful Navigation to Change Password Form",
-      )
+      .containsText("@changePasswordTitle", "Change your password", "Successful Navigation to Change Password Form")
       .setValue("@emailInput", dsaUsernameTandem)
       .setValue("@passwordInput", dsaPasswordTandem)
       .setValue("@passwordConfirmInput", dsaPasswordTandem)
       .waitForElementVisible("@saveButton")
       .click("@saveButton")
-      .assert.containsText(
-        "@changePasswordTitle",
-        "Success!",
-        "Successsfully Changed Password",
-      );
+      .assert.containsText("@changePasswordTitle", "Success!", "Successsfully Changed Password");
   },
 };

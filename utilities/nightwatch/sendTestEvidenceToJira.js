@@ -24,14 +24,9 @@ async function uploadFileToJira(filePath) {
       },
     });
 
-    console.log(
-      `Uploaded ${path.basename(filePath)}: status ${response.status}`,
-    );
+    console.log(`Uploaded ${path.basename(filePath)}: status ${response.status}`);
   } catch (error) {
-    console.error(
-      `Error uploading ${path.basename(filePath)}: `,
-      error.response?.data || error.message,
-    );
+    console.error(`Error uploading ${path.basename(filePath)}: `, error.response?.data || error.message);
   }
 }
 

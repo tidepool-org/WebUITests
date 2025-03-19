@@ -208,34 +208,20 @@ module.exports = {
     );
     sidebar.moveToElement("@copyAsText", 0, 0);
     sidebar.toggleBGM();
-    sidebar.expect
-      .element("@readingsInRangeTitle")
-      .text.to.contain("Avg. Daily Readings In Range");
+    sidebar.expect.element("@readingsInRangeTitle").text.to.contain("Avg. Daily Readings In Range");
     sidebar.moveToElement("@readingsVeryAboveRangeBar", 0, 0);
-    sidebar.expect
-      .element("@readingsInRangeTitle")
-      .text.to.contain("Readings Above Range");
+    sidebar.expect.element("@readingsInRangeTitle").text.to.contain("Readings Above Range");
     sidebar.moveToElement("@readingsAboveRangeBar", 0, 0);
-    sidebar.expect
-      .element("@readingsInRangeTitle")
-      .text.to.contain("Readings Above Range");
+    sidebar.expect.element("@readingsInRangeTitle").text.to.contain("Readings Above Range");
     sidebar.moveToElement("@readingsInRangeBar", 0, 0);
-    sidebar.expect
-      .element("@readingsInRangeTitle")
-      .text.to.contain("Readings In Range");
+    sidebar.expect.element("@readingsInRangeTitle").text.to.contain("Readings In Range");
     sidebar.moveToElement("@readingsBelowRangeBar", 0, 0);
-    sidebar.expect
-      .element("@readingsInRangeTitle")
-      .text.to.contain("Readings Below Range");
+    sidebar.expect.element("@readingsInRangeTitle").text.to.contain("Readings Below Range");
     sidebar.moveToElement("@readingsVeryBelowRangeBar", 0, 0);
-    sidebar.expect
-      .element("@readingsInRangeTitle")
-      .text.to.contain("Readings Below Range");
+    sidebar.expect.element("@readingsInRangeTitle").text.to.contain("Readings Below Range");
     sidebar.moveToElement("@readingsInRangeTitle", 0, 0);
     sidebar.moveToElement("@readingsInRangeTooltip", 0, 0);
-    sidebar.expect
-      .element("@readingsInRangeTooltipMessage")
-      .text.to.contain("Readings In Range");
+    sidebar.expect.element("@readingsInRangeTooltipMessage").text.to.contain("Readings In Range");
   },
   "Other BGM tooltip functionality"(browser) {
     const basics = browser.page.basicsPage();
@@ -246,17 +232,11 @@ module.exports = {
     );
     sidebar.toggleBGM();
     sidebar.moveToElement("@averageGlucoseTooltip", 0, 0);
-    sidebar.expect
-      .element("@averageGlucoseTooltipMessage")
-      .text.to.contain("Avg. Glucose (BGM)");
+    sidebar.expect.element("@averageGlucoseTooltipMessage").text.to.contain("Avg. Glucose (BGM)");
     sidebar.moveToElement("@averageCarbsTooltip", 0, 0);
-    sidebar.expect
-      .element("@averageCarbsTooltipMessage")
-      .text.to.contain("Avg. Daily Carbs");
+    sidebar.expect.element("@averageCarbsTooltipMessage").text.to.contain("Avg. Daily Carbs");
     sidebar.moveToElement("@cvTooltip", 0, 0);
-    sidebar.expect
-      .element("@cvTooltipMessage")
-      .text.to.contain("CV (Coefficient of Variation)");
+    sidebar.expect.element("@cvTooltipMessage").text.to.contain("CV (Coefficient of Variation)");
   },
   "Time in range functionality"(browser) {
     const basics = browser.page.basicsPage();
@@ -267,34 +247,20 @@ module.exports = {
     );
     sidebar.moveToElement("@copyAsText", 0, 0);
     sidebar.toggleCGM();
-    sidebar.expect
-      .element("@timeInRangeTitle")
-      .text.to.contain("Avg. Daily Time In Range");
+    sidebar.expect.element("@timeInRangeTitle").text.to.contain("Avg. Daily Time In Range");
     sidebar.moveToElement("@timeVeryAboveRangeBar", 0, 0);
-    sidebar.expect
-      .element("@timeInRangeTitle")
-      .text.to.contain("Time Above Range");
+    sidebar.expect.element("@timeInRangeTitle").text.to.contain("Time Above Range");
     sidebar.moveToElement("@timeAboveRangeBar", 0, 0);
-    sidebar.expect
-      .element("@timeInRangeTitle")
-      .text.to.contain("Time Above Range");
+    sidebar.expect.element("@timeInRangeTitle").text.to.contain("Time Above Range");
     sidebar.moveToElement("@timeInRangeBar", 0, 0);
-    sidebar.expect
-      .element("@timeInRangeTitle")
-      .text.to.contain("Time In Range");
+    sidebar.expect.element("@timeInRangeTitle").text.to.contain("Time In Range");
     sidebar.moveToElement("@timeBelowRangeBar", 0, 0);
-    sidebar.expect
-      .element("@timeInRangeTitle")
-      .text.to.contain("Time Below Range");
+    sidebar.expect.element("@timeInRangeTitle").text.to.contain("Time Below Range");
     sidebar.moveToElement("@timeVeryBelowRangeBar", 0, 0);
-    sidebar.expect
-      .element("@timeInRangeTitle")
-      .text.to.contain("Time Below Range");
+    sidebar.expect.element("@timeInRangeTitle").text.to.contain("Time Below Range");
     sidebar.moveToElement("@timeInRangeTitle", 0, 0);
     sidebar.moveToElement("@timeInRangeTooltip", 0, 0);
-    sidebar.expect
-      .element("@timeInRangeTooltipMessage")
-      .text.to.contain("Time In Range");
+    sidebar.expect.element("@timeInRangeTooltipMessage").text.to.contain("Time In Range");
   },
   "Other CGM tooltip functionality"(browser) {
     const basics = browser.page.basicsPage();
@@ -305,25 +271,15 @@ module.exports = {
     );
     sidebar.toggleCGM();
     sidebar.moveToElement("@averageGlucoseTooltip", 0, 0);
-    sidebar.expect
-      .element("@averageGlucoseTooltipMessage")
-      .text.to.contain("Avg. Glucose (CGM)");
+    sidebar.expect.element("@averageGlucoseTooltipMessage").text.to.contain("Avg. Glucose (CGM)");
     sidebar.moveToElement("@sensorUsageTooltip", 0, 0);
-    sidebar.expect
-      .element("@sensorUsageTooltipMessage")
-      .text.to.contain("Sensor Usage");
+    sidebar.expect.element("@sensorUsageTooltipMessage").text.to.contain("Sensor Usage");
     sidebar.moveToElement("@averageCarbsTooltip", 0, 0);
-    sidebar.expect
-      .element("@averageCarbsTooltipMessage")
-      .text.to.contain("Avg. Daily Carbs");
+    sidebar.expect.element("@averageCarbsTooltipMessage").text.to.contain("Avg. Daily Carbs");
     sidebar.moveToElement("@gmiTooltip", 0, 0);
-    sidebar.expect
-      .element("@gmiTooltipMessage")
-      .text.to.contain("GMI (Glucose Management Indicator)");
+    sidebar.expect.element("@gmiTooltipMessage").text.to.contain("GMI (Glucose Management Indicator)");
     sidebar.moveToElement("@cvTooltip", 0, 0);
-    sidebar.expect
-      .element("@cvTooltipMessage")
-      .text.to.contain("CV (Coefficient of Variation)");
+    sidebar.expect.element("@cvTooltipMessage").text.to.contain("CV (Coefficient of Variation)");
   },
   "Avg daily insulin functionality"(browser) {
     const basics = browser.page.basicsPage();
@@ -333,26 +289,16 @@ module.exports = {
       browser.globals.elementTimeout
     );
     sidebar.moveToElement("@filterDevices", 0, 0);
-    sidebar.expect
-      .element("@totalInsulinTitle")
-      .text.to.contain("Avg. Daily Insulin Ratio");
+    sidebar.expect.element("@totalInsulinTitle").text.to.contain("Avg. Daily Insulin Ratio");
     sidebar.moveToElement("@basalInsulinBar", 0, 0);
-    sidebar.expect
-      .element("@totalInsulinTitle")
-      .text.to.contain("Basal Insulin");
+    sidebar.expect.element("@totalInsulinTitle").text.to.contain("Basal Insulin");
     sidebar.moveToElement("@bolusInsulinBar", 0, 0);
-    sidebar.expect
-      .element("@totalInsulinTitle")
-      .text.to.contain("Bolus Insulin");
+    sidebar.expect.element("@totalInsulinTitle").text.to.contain("Bolus Insulin");
     sidebar.moveToElement("@totalInsulinTitle", 0, 0);
     sidebar.moveToElement("@totalInsulinTooltip", 0, 0);
-    sidebar.expect
-      .element("@totalInsulinTooltipMessage")
-      .text.to.contain("Total Insulin");
+    sidebar.expect.element("@totalInsulinTooltipMessage").text.to.contain("Total Insulin");
     sidebar.moveToElement("@averageDailyDoseTooltip", 0, 0);
-    sidebar.expect
-      .element("@averageDailyDoseTooltipMessage")
-      .text.to.contain("Avg. Daily Insulin");
+    sidebar.expect.element("@averageDailyDoseTooltipMessage").text.to.contain("Avg. Daily Insulin");
   },
   "Filter devices functionality"(browser) {
     const basics = browser.page.basicsPage();
@@ -399,9 +345,7 @@ module.exports = {
     dateRangeSelector.getAttribute("@dateRangeStart", "value", (result) => {
       const twentyOneDayStartDate = result.value;
       dateRangeSelector.click("@apply");
-      patientData.expect
-        .element("@date")
-        .text.to.contain(twentyOneDayStartDate);
+      patientData.expect.element("@date").text.to.contain(twentyOneDayStartDate);
     });
     dateRangeSelector.click("@customDateIcon");
     dateRangeSelector.waitForElementVisible(

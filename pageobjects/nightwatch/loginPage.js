@@ -55,16 +55,10 @@ module.exports = {
     {
       // Add other commands/actions related to the login form here
       userLogin(username, password) {
-        this.waitForElementVisible(
-          "@usernameInput",
-          this.api.globals.elementTimeout,
-        );
+        this.waitForElementVisible("@usernameInput", this.api.globals.elementTimeout);
         this.setValue("@usernameInput", username);
         this.click("@nextBtn");
-        this.waitForElementVisible(
-          "@passwordInput",
-          this.api.globals.elementTimeout,
-        );
+        this.waitForElementVisible("@passwordInput", this.api.globals.elementTimeout);
         this.setValue("@passwordInput", password);
         return this.click("@submitBtn");
       },
@@ -72,11 +66,7 @@ module.exports = {
       loadPage() {
         this.navigate();
         this.api.window.maximize();
-        return this.waitForElementVisible(
-          "#kc-page-title",
-          this.api.globals.elementTimeout,
-          "page loaded",
-        );
+        return this.waitForElementVisible("#kc-page-title", this.api.globals.elementTimeout, "page loaded");
       },
     },
   ],

@@ -20,10 +20,7 @@ export default class WorkspacesPage {
   }
 
   async visitFirstClinic() {
-    await this.page
-      .getByRole("button", { name: "Go To Workspace" })
-      .first()
-      .click();
+    await this.page.getByRole("button", { name: "Go To Workspace" }).first().click();
   }
 
   /**
@@ -33,13 +30,8 @@ export default class WorkspacesPage {
   async visitClinic(clinicName) {
     // find child element with text and filter by parent element with class
     const child = this.page.getByText(clinicName);
-    const parent = this.page
-      .locator(".workspace-item-clinic")
-      .filter({ has: child });
+    const parent = this.page.locator(".workspace-item-clinic").filter({ has: child });
 
-    await parent
-      .getByRole("button", { name: "Go To Workspace" })
-      .first()
-      .click();
+    await parent.getByRole("button", { name: "Go To Workspace" }).first().click();
   }
 }

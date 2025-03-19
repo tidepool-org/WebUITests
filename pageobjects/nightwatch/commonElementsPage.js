@@ -64,10 +64,7 @@ module.exports = {
            * @param {string} view One of the available data views: basics, daily, bgLog, or trends
            */
           loadView(view) {
-            this.waitForElementVisible(
-              `@${view}`,
-              this.api.globals.elementTimeout,
-            );
+            this.waitForElementVisible(`@${view}`, this.api.globals.elementTimeout);
             return this.click(`@${view}`);
           },
         },

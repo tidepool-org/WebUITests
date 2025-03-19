@@ -19,55 +19,27 @@ module.exports = {
   commands: [
     {
       loadWidget() {
-        this.waitForElementVisible(
-          "#launcher",
-          this.api.globals.elementTimeout,
-        );
+        this.waitForElementVisible("#launcher", this.api.globals.elementTimeout);
       },
       accessHelpWidget() {
         this.api.frame(1);
-        this.waitForElementVisible(
-          "@helpButton",
-          this.api.globals.elementTimeout,
-          "helpWidget loaded",
-        );
+        this.waitForElementVisible("@helpButton", this.api.globals.elementTimeout, "helpWidget loaded");
         this.click("@helpButton");
         this.api.frameParent().frame(2);
-        return this.waitForElementVisible(
-          "@searchBar",
-          this.api.globals.elementTimeout,
-          "help widget expanded",
-        );
+        return this.waitForElementVisible("@searchBar", this.api.globals.elementTimeout, "help widget expanded");
       },
       searchArticles(searchTerm) {
-        this.setValue("@searchBar", searchTerm).setValue(
-          "@searchBar",
-          "\ue007",
-        );
-        return this.assert.visible(
-          "@supportArticleLink",
-          "support articles showing",
-        );
+        this.setValue("@searchBar", searchTerm).setValue("@searchBar", "\ue007");
+        return this.assert.visible("@supportArticleLink", "support articles showing");
       },
       contactSupport() {
         this.click("@contactUsBtn");
-        this.waitForElementVisible(
-          "@nameInput",
-          this.api.globals.elementTimeout,
-          '"contact us" form displayed',
-        )
+        this.waitForElementVisible("@nameInput", this.api.globals.elementTimeout, '"contact us" form displayed')
           .setValue("@nameInput", "Automated UI Testing")
           .setValue("@emailInput", "webuiautomation@tidepool.org")
-          .setValue(
-            "@descriptionTextbox",
-            "Automated UI Testing via Nightwatch",
-          )
+          .setValue("@descriptionTextbox", "Automated UI Testing via Nightwatch")
           .click("@contactFormSubmitBtn");
-        return this.assert.containsText(
-          "@widgetTitle",
-          "Message sent",
-          "message to support sent successfully",
-        );
+        return this.assert.containsText("@widgetTitle", "Message sent", "message to support sent successfully");
       },
     },
   ],
