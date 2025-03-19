@@ -1,39 +1,39 @@
-require('../../../utilities/nightwatch/seleniumKeepAlive');
+require("../../../utilities/nightwatch/seleniumKeepAlive");
 
 module.exports = {
-  '@tags': ['parallel'],
-  'Verify nav elements present'(browser) {
+  "@tags": ["parallel"],
+  "Verify nav elements present"(browser) {
     const loginPage = browser.page.loginPage();
     loginPage.loadPage();
     loginPage.waitForElementVisible(
-      '@signupLink',
+      "@signupLink",
       browser.globals.elementTimeout,
     );
-    loginPage.expect.element('@logo').to.be.visible;
+    loginPage.expect.element("@logo").to.be.visible;
   },
 
-  'Verify Login Form elements present'(browser) {
+  "Verify Login Form elements present"(browser) {
     const loginPage = browser.page.loginPage();
     loginPage.loadPage();
     loginPage.waitForElementVisible(
-      '@usernameInput',
+      "@usernameInput",
       browser.globals.elementTimeout,
     );
-    loginPage.expect.element('@rememberChk').to.be.visible;
-    loginPage.expect.element('@nextBtn').to.be.visible;
+    loginPage.expect.element("@rememberChk").to.be.visible;
+    loginPage.expect.element("@nextBtn").to.be.visible;
   },
 
-  'Verify footer elements present'(browser) {
+  "Verify footer elements present"(browser) {
     const loginPage = browser.page.loginPage();
     loginPage.loadPage();
     loginPage.waitForElementVisible(
-      '@twitterLogo',
+      "@twitterLogo",
       browser.globals.elementTimeout,
     );
-    loginPage.expect.element('@facebookLogo').to.be.visible;
-    loginPage.expect.element('@mobileLink').to.be.visible;
-    loginPage.expect.element('@supportLink').to.be.visible;
-    loginPage.expect.element('@termsLink').to.be.visible;
-    loginPage.expect.element('@jdrfLink').to.be.visible;
+    loginPage.expect.element("@facebookLogo").to.be.visible;
+    loginPage.expect.element("@mobileLink").to.be.visible;
+    loginPage.expect.element("@supportLink").to.be.visible;
+    loginPage.expect.element("@termsLink").to.be.visible;
+    loginPage.expect.element("@jdrfLink").to.be.visible;
   },
 };

@@ -3,7 +3,7 @@ module.exports = {
     return this.api.launch_url;
   },
   elements: {
-    navBar: '.App-navbar',
+    navBar: ".App-navbar",
   },
   commands: [{}],
 };
