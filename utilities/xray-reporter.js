@@ -1,5 +1,5 @@
 import fs from "fs";
-import env from "./env"
+import env from "./env";
 
 /**
  * Reporter class for uploading test results to Xray
@@ -36,24 +36,24 @@ class XRayReporter {
             client_id: env.XRAY_CLIENT_ID,
             client_secret: env.XRAY_CLIENT_SECRET,
           }),
-        }
+        },
       );
 
       if (!response.ok) {
         throw new Error(
-          `HTTP error! status: ${response.status}, ${response.body}`
+          `HTTP error! status: ${response.status}, ${response.body}`,
         );
       }
 
       const data = await response.json();
       console.log(
-        `${this.styles.success} Successfully authenticated with Xray`
+        `${this.styles.success} Successfully authenticated with Xray`,
       );
       return data.token;
     } catch (error) {
       console.error(
         `${this.styles.error} Failed to authenticate with Xray:`,
-        error
+        error,
       );
       throw error;
     }
@@ -78,23 +78,23 @@ class XRayReporter {
             Authorization: `Bearer ${token}`,
           },
           body: xmlContent,
-        }
+        },
       );
 
       if (!response.ok) {
         const errorText = await response.text();
         throw new Error(
-          `HTTP error! status: ${response.status}, Response: ${errorText}`
+          `HTTP error! status: ${response.status}, Response: ${errorText}`,
         );
       }
 
       console.log(
-        `${this.styles.success} Successfully uploaded test results to Xray`
+        `${this.styles.success} Successfully uploaded test results to Xray`,
       );
     } catch (error) {
       console.error(
         `${this.styles.error} Failed to upload test results to Xray:`,
-        error
+        error,
       );
       throw error;
     }
@@ -110,7 +110,7 @@ class XRayReporter {
     console.log(
       `${this.styles.test} Starting test run with ${
         suite.allTests().length
-      } tests`
+      } tests`,
     );
     console.log(this.styles.separator + "\n");
   }
@@ -145,14 +145,14 @@ class XRayReporter {
     console.log(
       `Status: ${
         result.status === "passed" ? this.styles.success : this.styles.error
-      } ${result.status}`
+      } ${result.status}`,
     );
     console.log(`Duration: ${result.duration}ms`);
     console.log(this.styles.separator + "\n");
 
     if (!(env.XRAY_CLIENT_ID || env.XRAY_CLIENT_SECRET)) {
       console.log(
-        `${this.styles.warning} No Xray client ID or secret found, skipping upload to JIRA Xray`
+        `${this.styles.warning} No Xray client ID or secret found, skipping upload to JIRA Xray`,
       );
       return;
     }
@@ -161,18 +161,18 @@ class XRayReporter {
       console.log(`${this.styles.info} Reading test results file...`);
       const testResults = fs.readFileSync(
         "./test-results/test-results.xml",
-        "utf8"
+        "utf8",
       );
 
       const token = await this.authenticateWithXray();
       await this.uploadTestResults(token, testResults);
       console.log(
-        `${this.styles.upload} Successfully uploaded test results to Xray`
+        `${this.styles.upload} Successfully uploaded test results to Xray`,
       );
     } catch (error) {
       console.error(
         `${this.styles.error} Failed to process test results:`,
-        error
+        error,
       );
     }
     console.log(this.styles.separator + "\n");

@@ -5,21 +5,20 @@ module.exports = {
   },
   sections: {
     clinicWorkspace: {
-      selector: '#app',
+      selector: "#app",
       elements: {
-        chartDateRangeModal: '#ChartDateRangePicker',
+        chartDateRangeModal: "#ChartDateRangePicker",
         title: {
           selector: '//*[text()="Welcome To Tidepool"]',
-          locateStrategy: 'xpath',
+          locateStrategy: "xpath",
         },
         goToWorkspace: {
-          selector: '//*[text()="MD Clinic"]/ancestor::div[contains(@class,"workspace-item-clinic")][1]//button//*[text()="Go To Workspace"]',
-          locateStrategy: 'xpath',
+          selector:
+            '//*[text()="MD Clinic"]/ancestor::div[contains(@class,"workspace-item-clinic")][1]//button//*[text()="Go To Workspace"]',
+          locateStrategy: "xpath",
         },
-
       },
-      commands: [{
-      }],
+      commands: [{}],
     },
   },
 };

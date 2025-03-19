@@ -1,6 +1,6 @@
-const otplib = require('otplib');
-require('dotenv').config();
-const path = require('path');
+const otplib = require("otplib");
+require("dotenv").config();
+const path = require("path");
 
 function getToken() {
   const secret = process.env.OTP_SECRET;
@@ -16,5 +16,6 @@ function generateScreenshotFilePath(nightwatchClient, basePath, fileName) {
 }
 
 module.exports = {
-  getToken, generateScreenshotFilePath,
+  getToken,
+  generateScreenshotFilePath,
 };

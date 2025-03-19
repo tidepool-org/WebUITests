@@ -3,6 +3,8 @@
  * @typedef {import('@playwright/test').Locator} Locator
  */
 
+// import { step } from '../../tests/fixtures/base';
+
 /**
  * @class
  * @property {Page} page
@@ -37,6 +39,7 @@ export default class LoginPage {
    * @param {string} password
    * @returns {Promise<void>}
    */
+  // @step("When the user logs in to the application")
   async login(email, password) {
     await this.emailInput.fill(email);
     await this.nextButton.click();

@@ -5,7 +5,7 @@ export default class NavigationSubMenu {
   constructor(page) {
     this.page = page;
     this.container = page.locator("div.patient-data-subnav-inner");
-    
+
     this.links = {
       basics: this.container.getByRole("link", { name: "Basics" }),
       daily: this.container.getByRole("link", { name: "Daily" }),
@@ -13,13 +13,15 @@ export default class NavigationSubMenu {
       trends: this.container.getByRole("link", { name: "Trends" }),
       devices: this.container.getByRole("link", { name: "Devices" }),
 
-
-
       print: this.container.getByRole("link", { name: "Print" }),
-      calendarButton: this.container.getByLabel("Choose custom date range")
-    }
+      calendarButton: this.container.getByLabel("Choose custom date range"),
+    };
 
-    this.currentDate = this.container.locator(".js-date.patient-data-subnav-text.patient-data-subnav-dates-daily > span").first();
+    this.currentDate = this.container
+      .locator(
+        ".js-date.patient-data-subnav-text.patient-data-subnav-dates-daily > span",
+      )
+      .first();
   }
 
   async open() {
