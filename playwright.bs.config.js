@@ -1,6 +1,6 @@
 // @ts-check
 // @eslint-disable no-extraneous-dependencies
-import { defineConfig, devices } from "@playwright/test";
+import { defineConfig } from "@playwright/test";
 import env from "./utilities/env";
 
 // JUnit reporter config for Xray
@@ -69,13 +69,17 @@ export default defineConfig({
   projects: [
     {
       name: "setup",
-      testMatch: /.*\.setup\.js/,
-    },
-
-    {
-      name: "chromium",
+      testMatch: "**/auth.setup.js",
       use: {
-        ...devices["Desktop Chrome"],
+        browserName: "chromium",
+        channel: "chrome",
+      },
+    },
+    {
+      name: "chrome",
+      use: {
+        browserName: "chromium",
+        channel: "chrome",
         storageState: "playwright/.auth/user.json",
       },
       dependencies: ["setup"],

@@ -18,7 +18,8 @@
     "eslint": "eslint .",
     "eslint:fix": "eslint . --fix",
     "playwright": "playwright test -- basic-functionality.spec.js",
-    "playwright:ci": "browserstack-node-sdk playwright test basic-functionality.spec.js"
+    "playwright:ci": "browserstack-node-sdk playwright test --config=./playwright.bs.config.js",
+    "format": "prettier --write ."
   },
   "scriptsComments": {
     "testParallel": "Executes tests that are able to run in parallel on all environments",
@@ -45,6 +46,7 @@
     "form-data": "4.0.0",
     "nightwatch-vrt": "github:tidepool-org/nightwatch-vrt#master",
     "otplib": "12.0.1",
+    "prettier": "^3.5.3",
     "request": "2.88.2",
     "zod": "^3.24.2"
   },

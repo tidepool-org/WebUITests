@@ -17,3 +17,4 @@ test_evidence
 
 playwright-browserstack-sdk*
 log/
+playwright/.auth/
