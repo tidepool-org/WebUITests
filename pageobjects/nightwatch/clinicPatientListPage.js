@@ -21,8 +21,7 @@ module.exports = {
           locateStrategy: "xpath",
         },
         GMI: {
-          selector:
-            '//*[@id="peopleTable-header-cgm-glucoseManagementIndicator"]//span',
+          selector: '//*[@id="peopleTable-header-cgm-glucoseManagementIndicator"]//span',
           locateStrategy: "xpath",
         },
         timeInRange: {
@@ -30,23 +29,19 @@ module.exports = {
           locateStrategy: "xpath",
         },
         avgGlucose: {
-          selector:
-            '//*[@id="peopleTable-header-bgm-averageGlucoseMmol"]//span',
+          selector: '//*[@id="peopleTable-header-bgm-averageGlucoseMmol"]//span',
           locateStrategy: "xpath",
         },
         lows: {
-          selector:
-            '//*[@id="peopleTable-header-bgm-timeInVeryLowRecords"]//span',
+          selector: '//*[@id="peopleTable-header-bgm-timeInVeryLowRecords"]//span',
           locateStrategy: "xpath",
         },
         highs: {
-          selector:
-            '//*[@id="peopleTable-header-bgm-timeInVeryHighRecords"]//span',
+          selector: '//*[@id="peopleTable-header-bgm-timeInVeryHighRecords"]//span',
           locateStrategy: "xpath",
         },
         showAll: {
-          selector:
-            '//*[contains(@class,"peopletable-names-showall") and text()="Show All"]',
+          selector: '//*[contains(@class,"peopletable-names-showall") and text()="Show All"]',
           locateStrategy: "xpath",
         },
         lastUploadDesc: {

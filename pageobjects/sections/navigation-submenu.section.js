@@ -18,9 +18,7 @@ export default class NavigationSubMenu {
     };
 
     this.currentDate = this.container
-      .locator(
-        ".js-date.patient-data-subnav-text.patient-data-subnav-dates-daily > span",
-      )
+      .locator(".js-date.patient-data-subnav-text.patient-data-subnav-dates-daily > span")
       .first();
   }
 

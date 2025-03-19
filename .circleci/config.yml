@@ -114,8 +114,7 @@ jobs:
       - unless:
           condition:
             and:
-              - equal:
-                  ["testParallel", << pipeline.parameters.testEnvironment >>]
+              - equal: ["testParallel", << pipeline.parameters.testEnvironment >>]
           steps:
             - run:
                 name: Gather Test Evidence

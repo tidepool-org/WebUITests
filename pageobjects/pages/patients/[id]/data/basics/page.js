@@ -2,8 +2,7 @@ import NavigationSubMenu from "../../../../../sections/navigation-submenu.sectio
 import NavigationSection from "../../../../../sections/navigation.section";
 
 function createSection(classObj, page, selector) {
-  const parsedSelector =
-    selector === "tubing-primes" ? "siteChanges" : selector;
+  const parsedSelector = selector === "tubing-primes" ? "siteChanges" : selector;
   const container = page.locator(`.Calendar-container-${parsedSelector}`);
 
   return {
@@ -12,10 +11,7 @@ function createSection(classObj, page, selector) {
     calendarDayhover: {
       el: container.locator(".Calendar-day--HOVER"),
       async text() {
-        return await container
-          .locator(".Calendar-day--HOVER")
-          .locator(".Calendar-weekday")
-          .textContent();
+        return await container.locator(".Calendar-day--HOVER").locator(".Calendar-weekday").textContent();
       },
     },
   };

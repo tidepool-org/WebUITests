@@ -57,10 +57,7 @@ function getSessionData(hashedId) {
     .then((response) => {
       response.data.forEach((session) => {
         const videoUrl = session.automation_session.video_url;
-        downloadVideo(
-          videoUrl,
-          `${hashedId}-${session.automation_session.name}.mp4`,
-        );
+        downloadVideo(videoUrl, `${hashedId}-${session.automation_session.name}.mp4`);
       });
     })
     .catch((error) => console.error(error));
@@ -68,9 +65,7 @@ function getSessionData(hashedId) {
 
 function processBuilds(data) {
   data
-    .filter((build) =>
-      build.automation_build.name.includes(process.env.TEST_EXECUTION_KEY),
-    )
+    .filter((build) => build.automation_build.name.includes(process.env.TEST_EXECUTION_KEY))
     .forEach((build) => {
       const hashedId = build.automation_build.hashed_id;
       getSessionData(hashedId);
