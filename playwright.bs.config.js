@@ -73,13 +73,15 @@ export default defineConfig({
       name: "setup",
       testMatch: /.*\.setup\.js/,
       use: {
-        ...devices["Desktop Chrome"],
+        browserName: "chromium",
+        channel: "chrome",
       },
     },
     {
       name: "chrome",
       use: {
-        ...devices["Desktop Chrome"],
+        browserName: "chromium",
+        channel: "chrome",
         storageState: "playwright/.auth/user.json",
       },
       dependencies: ["setup"],
@@ -91,8 +93,8 @@ export default defineConfig({
     // },
 
     {
-      name: 'webkit',
-      use: { ...devices['Desktop Safari'] },
+      name: "webkit",
+      use: { ...devices["Desktop Safari"] },
     },
 
     /* Test against mobile viewports. */
