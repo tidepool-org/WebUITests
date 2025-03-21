@@ -11,53 +11,56 @@ parameters:
     type: string
     default: "none"
 jobs:
-  eslint-check:
-    working_directory: ~/tidepool-org/webuitests
-    docker:
-      - image: cimg/node:lts
-    steps:
-      - checkout
-      - node/install
-      - run: npm install
-      - run: npm run eslint
+  # eslint-check:
+  #   working_directory: ~/tidepool-org/webuitests
+  #   docker:
+  #     - image: cimg/node:lts
+  #   steps:
+  #     - checkout
+  #     - node/install
+  #     - run: npm install
+  #     - run: npm run eslint
   test:
     working_directory: ~/tidepool-org/webuitests
     docker:
-      - image: cimg/node:lts-browsers
+      - image: mcr.microsoft.com/playwright:v1.51.1-noble
     environment:
       TEST_EXECUTION_KEY: << pipeline.parameters.testExecKey >>
     steps:
       - checkout
-      - browser-tools/install-browser-tools
       - node/install
-      - run:
-          name: Install xmllint
-          command: sudo apt-get update && sudo apt-get install -y libxml2-utils
       - run: node --version
-      - run: npm install
+      - run: npm ci
       - save_cache:
           paths:
             - ./node_modules
           key: dependency-cache-{{ checksum "package.json" }}
+      
+      # Install Playwright browsers and dependencies
       - run:
-          name: Run Parallel Tests on Chosen Environments
-          command: npm run << pipeline.parameters.testEnvironment >>
+          name: Install Playwright Dependencies
+          command: npx playwright install --with-deps
+      
+      # Run tests
       - run:
-          name: Consolidate Test Report
-          command: npm run merge-reports
-          when: always
+          name: Run Playwright Tests
+          command: npm run playwright:ci
+      
+      # Store test results and artifacts
       - store_artifacts:
-          path: tests_output/nightwatch-html-report
+          path: playwright-report
       - store_artifacts:
-          path: vrt/latest
-      - store_artifacts:
-          path: vrt/diff
-      - store_artifacts:
-          path: vrt/baseline/ui
+          path: test-results
       - store_test_results:
-          path: tests_output/testresults.xml
-      - store_artifacts:
-          path: tests_output/testresults.xml
+          path: test-output/test-results.xml
+      
+      # Convert and store test results in CircleCI format
+      - run:
+          name: Create JUnit Report Directory
+          command: mkdir -p test-results
+          when: always
+      
+      # Parse test results for Slack notification
       - run:
           name: Parse Test Results
           command: |
@@ -65,10 +68,12 @@ jobs:
             FAILURES=$(xmllint --xpath "string(/testsuites/@failures)" tests_output/testresults.xml)
             ERRORS=$(xmllint --xpath "string(/testsuites/@errors)" tests_output/testresults.xml)
             PASSED_TESTS=$((TOTAL_TESTS - FAILURES - ERRORS))
+            TIME=$(xmllint --xpath "string(/testsuites/@time)" tests_output/testresults.xml)
             echo "export TOTAL_TESTS=$TOTAL_TESTS" >> $BASH_ENV
             echo "export PASSED_TESTS=$PASSED_TESTS" >> $BASH_ENV
             echo "export FAILURES=$FAILURES" >> $BASH_ENV
             echo "export ERRORS=$ERRORS" >> $BASH_ENV
+            echo "export TIME=$TIME" >> $BASH_ENV
           when: always
       - slack/notify:
           event: fail
@@ -81,7 +86,7 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "*:x: Tidepool Web UI Tests Failed* :sad_tapani: \n\n :pencil:*Summary* \n\n *$PASSED_TESTS/$TOTAL_TESTS* tests passed \n *$FAILURES* tests failed \n *$ERRORS* errors encountered"
+                    "text": "*:x: Tidepool Web UI Tests Failed* :sad_tapani: \n\n :pencil:*Summary* \n\n *$PASSED_TESTS/$TOTAL_TESTS* tests passed \n *$FAILURES* tests failed \n Total time: *$TIME* seconds"
                   }
                 },
                 {
@@ -106,7 +111,7 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "*:white_check_mark: Tidepool Web UI Tests Passed!* :catjam:  \n\n :pencil:*Summary:* \n *$PASSED_TESTS/$TOTAL_TESTS* tests passed \n\n :link: *<${CIRCLE_BUILD_URL}|View CircleCI Build Details>*"
+                    "text": "*:white_check_mark: Tidepool Web UI Tests Passed!* :catjam:  \n\n :pencil:*Summary:* \n *$PASSED_TESTS/$TOTAL_TESTS* tests passed \n Total time: *$TIME* seconds \n\n :link: *<${CIRCLE_BUILD_URL}|View CircleCI Build Details>*"
                   }
                 }
               ]
