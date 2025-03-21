@@ -7,6 +7,10 @@ import PatientDataDailyPage from "../../pageobjects/pages/patients/[id]/data/dai
 // use the auth file to login from auth.setup.js
 test.use({ storageState: "playwright/.auth/user.json" });
 
+console.log("=======================");
+console.log("👉 Running basic-functionality.spec.js");
+console.log("=======================");
+
 test.describe("Patient Data Navigation and Visualization", () => {
   test.beforeEach(async ({ page }) => {
     await test.step("Given user has been logged in", async () => {
@@ -156,14 +160,16 @@ test.describe("Patient Data Navigation and Visualization", () => {
     });
   });
   // TODO: Previous test doesn't test values. Should we? :)
-  test("Avg. Daily Readings In Range shows correct values", async ({ page }) => {
-    const expectedHeaders = [
-      { header: "Reading Below Range", value: 3 },
-      { header: "Reading Below Range", value: 0 },
-      { header: "Reading In Range", value: 71 },
-      { header: "Reading Above Range", value: 24 },
-      { header: "Reading Above Range", value: 2 },
+  test("The hover over elements in sidebar shows correct values", async ({ page }) => {
+    // Stats for BGM
+    const expectedHeadersReadingInRange = [
+      { header: "Readings Below Range", value: 3 },
+      { header: "Readings Below Range", value: 0 },
+      { header: "Readings In Range", value: 71 },
+      { header: "Readings Above Range", value: 24 },
+      { header: "Readings Above Range", value: 2 },
     ];
+
     const basicsPage = new PatientDataBasicsPage(page);
 
     await test.step("When the navigation bar is visible", async () => {
@@ -172,21 +178,51 @@ test.describe("Patient Data Navigation and Visualization", () => {
       });
     });
 
-    const countOfBars = await basicsPage.stats.hoverBar.count();
-    for (let i = 0; i < countOfBars; i++) {
-      const bar = basicsPage.stats.hoverBar.nth(i);
-      const barLabel = basicsPage.stats.hoverBarLabel.nth(i);
+    await basicsPage.statsSidebar.toggleTo("BGM");
+    for (let i = 0; i < 5; i++) {
+      const bar = basicsPage.statsSidebar.readingsInRange.hoverBar.nth(i);
+      const barLabel = basicsPage.statsSidebar.readingsInRange.hoverBarLabel.nth(i);
 
       await test.step("When the user hovers over the Avg. Daily Readings In Range chart", async () => {
         await bar.hover();
       });
 
       await test.step("Then the correct header is visible", async () => {
-        await expect(basicsPage.stats.header).toContainText(expectedHeaders[i].header);
+        await expect
+          .soft(basicsPage.statsSidebar.readingsInRange.header)
+          .toContainText(expectedHeadersReadingInRange[i].header);
       });
 
       await test.step("Then the correct value is visible", async () => {
-        await expect(barLabel).toContainText(expectedHeaders[i].value.toString());
+        await expect.soft(barLabel).toContainText(expectedHeadersReadingInRange[i].value.toString());
+      });
+    }
+
+    // Stats for CGM
+    const expectedHeadersTimeInRange = [
+      { header: "Time Below Range", value: 0.1 },
+      { header: "Time Below Range", value: 1 },
+      { header: "Time In Range", value: 90 },
+      { header: "Time Above Range", value: 9 },
+      { header: "Time Above Range", value: 0.3 },
+    ];
+    await basicsPage.statsSidebar.toggleTo("CGM");
+    for (let i = 0; i < 5; i++) {
+      const bar = basicsPage.statsSidebar.timeInRange.hoverBar.nth(i);
+      const barLabel = basicsPage.statsSidebar.timeInRange.hoverBarLabel.nth(i);
+
+      await test.step("When the user hovers over the Avg. Daily Time In Range chart", async () => {
+        await bar.hover();
+      });
+
+      await test.step("Then the correct header is visible", async () => {
+        await expect
+          .soft(basicsPage.statsSidebar.timeInRange.header)
+          .toContainText(expectedHeadersTimeInRange[i].header);
+      });
+
+      await test.step("Then the correct value is visible", async () => {
+        await expect.soft(barLabel).toContainText(expectedHeadersTimeInRange[i].value.toString());
       });
     }
   });

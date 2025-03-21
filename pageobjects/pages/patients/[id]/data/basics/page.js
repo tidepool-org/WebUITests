@@ -17,6 +17,58 @@ function createSection(classObj, page, selector) {
   };
 }
 
+/**
+ * @typedef {Object} Stat
+ * @property {import('@playwright/test').Locator} container
+ * @property {import('@playwright/test').Locator} header
+ * @property {import('@playwright/test').Locator} hoverBar
+ * @property {import('@playwright/test').Locator} hoverBarLabel
+ */
+
+/**
+ * helper function to create a stat object with locators for the container, header, hoverBar, and hoverBarLabel
+ * @param {import('@playwright/test').Page} page
+ * @param {string} selector
+ * @returns {Stat}
+ */
+function createStat(page, selector) {
+  const container = page.locator(`#Stat--${selector}`);
+  return {
+    container,
+    header: container.locator('[class^="Stat--chartTitleText"]'),
+    hoverBar: container.locator(".HoverBar"),
+    hoverBarLabel: container.locator(".HoverBarLabel"),
+  };
+}
+
+// list of sections in the stats sidebar
+const statsSideBarSection = [
+  "timeInRange",
+  "readingsInRange",
+  "averageGlucose",
+  "totalInsulin",
+  "carbs",
+  "standardDev",
+  "coefficientOfVariation",
+  "sensorUsage",
+  "glucoseManagementIndicator",
+];
+
+/**
+ * @typedef {Object} StatsSidebar
+ * @property {import('@playwright/test').Locator} toggleContainer
+ * @property {function("BGM"|"CGM"): Promise<void>} toggleTo
+ * @property {Stat} timeInRange
+ * @property {Stat} readingsInRange
+ * @property {Stat} averageGlucose
+ * @property {Stat} totalInsulin
+ * @property {Stat} carbs
+ * @property {Stat} standardDev
+ * @property {Stat} coefficientOfVariation
+ * @property {Stat} sensorUsage
+ * @property {Stat} glucoseManagementIndicator
+ */
+
 export default class PatientDataBasicsPage {
   /**
    * @param {import('@playwright/test').Page} page
@@ -29,11 +81,23 @@ export default class PatientDataBasicsPage {
     this.headerBgReading = page.getByRole("heading", { name: "BG readings" });
     this.headerBolusing = page.getByRole("heading", { name: "Bolusing" });
 
-    this.stats = {
-      avgDailyReadingsInRangeContainer: page.locator("#Stat--readingsInRange"),
-      header: page.locator('[class^="Stat--chartTitleText"]'),
-      hoverBar: page.locator(".HoverBar"),
-      hoverBarLabel: page.locator(".HoverBar-label"),
+    /** @type {StatsSidebar} */
+    this.statsSidebar = {
+      toggleContainer: page.locator(".toggle-container"),
+      /**
+       * @param {"BGM" | "CGM"} toState - "BGM" or "CGM"
+       */
+      toggleTo: async function (toState) {
+        const activeToggleState = await page
+          .locator(".toggle-container span[class*='TwoOptionToggle--active']")
+          .innerText();
+        if (activeToggleState === "BGM" && toState === "CGM") {
+          await this.toggleContainer.click();
+        } else if (activeToggleState === "CGM" && toState === "BGM") {
+          await this.toggleContainer.click();
+        }
+      },
+      ...Object.fromEntries(statsSideBarSection.map((stat) => [stat, createStat(page, stat)])),
     };
 
     // charts
