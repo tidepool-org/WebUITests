@@ -48,7 +48,7 @@ test.describe("Patient Data Navigation and Visualization", () => {
       await expect(dailyPage.navigationSubMenu.currentDate).toContainText(selectedDateText);
 
       // Capture chart screenshot for visual regression
-      await expect(chartContainer).toHaveScreenshot("daily-chart.png");
+      await expect(chartContainer).toHaveScreenshot("daily-chart-1.png");
     });
   });
 
@@ -80,7 +80,7 @@ test.describe("Patient Data Navigation and Visualization", () => {
       await expect(dailyPage.navigationSubMenu.currentDate).toContainText(selectedDateText);
 
       // Capture chart screenshot for visual regression
-      await expect(chartContainer).toHaveScreenshot("daily-chart.png");
+      await expect(chartContainer).toHaveScreenshot("daily-chart-2.png");
     });
   });
 
