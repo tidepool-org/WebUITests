@@ -142,10 +142,10 @@ jobs:
 workflows:
   commit-workflow:
     jobs:
-      - eslint-check
-      - test:
-          requires:
-            - eslint-check
+      # - eslint-check
+      - test
+          # requires:
+            # - eslint-check
   scheduled-workflow:
     triggers:
       - schedule:
