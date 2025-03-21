@@ -1,8 +1,12 @@
 import { test as base } from "@playwright/test";
 
+
 /** @type {import('@playwright/test').TestType<import('@playwright/test').PlaywrightTestArgs & import('@playwright/test').PlaywrightTestOptions, import('@playwright/test').PlaywrightWorkerArgs & import('@playwright/test').PlaywrightWorkerOptions>}  */
 export const test = base.extend({
-  page: async ({ page }, use) => {
+  page: async ({ page }, use, testInfo) => {
+    testInfo.snapshotSuffix = '';
+    testInfo.snapshotPath = (name) => `${testInfo.file}-snapshots/${name}`;
+
     await use(page);
   },
   timeLogger: [
