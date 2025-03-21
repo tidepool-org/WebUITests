@@ -21,7 +21,62 @@ export const test = base.extend({
     },
     { auto: true },
   ],
+  timeStepLogger: [
+    async ({ page }, use, testInfo) => {
+      const startTime = Date.now();
+      console.time(`test: ${testInfo.title}`);
 
+      await use(page);
+
+      console.timeEnd(`test: ${testInfo.title}`);
+      const endTime = Date.now();
+      const duration = endTime - startTime;
+
+      test.info().annotations.push({
+        type: "Duration",
+        description: `${duration}ms`,
+      });
+      test.info().annotations.push({
+        type: "End",
+        description: new Date().toISOString(),
+      });
+    },
+    { auto: true },
+  ],
+  stepTimer: [
+    async ({ page }, use) => {
+      const originalStep = test.step;
+      const stepTimings = new Map();
+
+      // Override test.step to include timing
+      test.step = function (name, fn) {
+        return originalStep.call(this, name, async () => {
+          const startTime = Date.now();
+          console.time(`step: ${name}`);
+
+          const result = await fn();
+
+          console.timeEnd(`step: ${name}`);
+          const endTime = Date.now();
+          const duration = endTime - startTime;
+
+          stepTimings.set(name, duration);
+          test.info().annotations.push({
+            type: `Step Duration: ${name}`,
+            description: `${duration}ms`,
+          });
+
+          return result;
+        });
+      };
+
+      await use(page);
+
+      // Restore original test.step
+      test.step = originalStep;
+    },
+    { auto: true },
+  ],
   exceptionLogger: [
     async ({ page }, use) => {
       const errors = [];
