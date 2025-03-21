@@ -62,11 +62,11 @@ jobs:
       - run:
           name: Parse Test Results
           command: |
-            TOTAL_TESTS=$(xmllint --xpath "string(/testsuites/@tests)" tests_output/testresults.xml)
-            FAILURES=$(xmllint --xpath "string(/testsuites/@failures)" tests_output/testresults.xml)
-            ERRORS=$(xmllint --xpath "string(/testsuites/@errors)" tests_output/testresults.xml)
+            TOTAL_TESTS=$(xmllint --xpath "string(/testsuites/@tests)" test-output/test-results.xml)
+            FAILURES=$(xmllint --xpath "string(/testsuites/@failures)" test-output/test-results.xml)
+            ERRORS=$(xmllint --xpath "string(/testsuites/@errors)" test-output/test-results.xml)
             PASSED_TESTS=$((TOTAL_TESTS - FAILURES - ERRORS))
-            TIME=$(xmllint --xpath "string(/testsuites/@time)" tests_output/testresults.xml)
+            TIME=$(xmllint --xpath "string(/testsuites/@time)" test-output/test-results.xml)
             echo "export TOTAL_TESTS=$TOTAL_TESTS" >> $BASH_ENV
             echo "export PASSED_TESTS=$PASSED_TESTS" >> $BASH_ENV
             echo "export FAILURES=$FAILURES" >> $BASH_ENV
