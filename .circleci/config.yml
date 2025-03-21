@@ -54,12 +54,10 @@ jobs:
       - store_test_results:
           path: test-output/test-results.xml
       
-      # Convert and store test results in CircleCI format
       - run:
-          name: Create JUnit Report Directory
-          command: mkdir -p test-results
-          when: always
-      
+          name: Install xmllint
+          command: sudo apt-get update && sudo apt-get install -y libxml2-utils
+
       # Parse test results for Slack notification
       - run:
           name: Parse Test Results
