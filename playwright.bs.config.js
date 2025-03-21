@@ -1,6 +1,6 @@
 // @ts-check
 // @eslint-disable no-extraneous-dependencies
-import { defineConfig } from "@playwright/test";
+import { defineConfig, devices } from "@playwright/test";
 import env from "./utilities/env";
 
 // JUnit reporter config for Xray
@@ -17,7 +17,7 @@ const xrayOptions = {
   embedAttachmentsAsProperty: "testrun_evidence",
 
   // Where to put the report.
-  outputFile: "test-results/test-results.xml",
+  outputFile: "test-output/test-results.xml",
 };
 
 /**
@@ -27,6 +27,8 @@ const xrayOptions = {
 // import dotenv from 'dotenv';
 // import path from 'path';
 // dotenv.config({ path: path.resolve(__dirname, '.env') });
+
+console.log("🚀 Running playwright.bs.config.js");
 
 /**
  * @see https://playwright.dev/docs/test-configuration
@@ -55,7 +57,7 @@ export default defineConfig({
     ["junit", xrayOptions],
     // ["./utilities/xray-reporter.js"],
   ],
-  timeout: 180000,
+  timeout: 30000,
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     /* Base URL to use in actions like `await page.goto('/')`. */
@@ -69,17 +71,15 @@ export default defineConfig({
   projects: [
     {
       name: "setup",
-      testMatch: "**/auth.setup.js",
+      testMatch: /.*\.setup\.js/,
       use: {
-        browserName: "chromium",
-        channel: "chrome",
+        ...devices["Desktop Chrome"],
       },
     },
     {
       name: "chrome",
       use: {
-        browserName: "chromium",
-        channel: "chrome",
+        ...devices["Desktop Chrome"],
         storageState: "playwright/.auth/user.json",
       },
       dependencies: ["setup"],
@@ -90,10 +90,10 @@ export default defineConfig({
     //   use: { ...devices['Desktop Firefox'] },
     // },
 
-    // {
-    //   name: 'webkit',
-    //   use: { ...devices['Desktop Safari'] },
-    // },
+    {
+      name: 'webkit',
+      use: { ...devices['Desktop Safari'] },
+    },
 
     /* Test against mobile viewports. */
     // {

@@ -18,7 +18,7 @@
     "eslint": "eslint .",
     "eslint:fix": "eslint . --fix",
     "playwright": "playwright test -- basic-functionality.spec.js",
-    "playwright:ci": "browserstack-node-sdk playwright test --config=./playwright.bs.config.js",
+    "playwright:ci": "browserstack-node-sdk playwright test --config=./playwright.bs.config.js basic-functionality.spec.js",
     "format": "prettier --write ."
   },
   "scriptsComments": {
@@ -38,7 +38,7 @@
   "homepage": "https://github.com/tidepool-org/nightwatchtests#readme",
   "dependencies": {
     "axios": "1.6.7",
-    "browserstack-node-sdk": "^1.34.44",
+    "browserstack-node-sdk": "^1.34.45",
     "dayjs": "1.11.10",
     "dotenv": "16.4.5",
     "eslint-config-airbnb": "19.0.4",

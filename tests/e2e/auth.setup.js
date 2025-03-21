@@ -8,7 +8,9 @@ import env from "../../utilities/env";
 const authFile = path.join(process.cwd(), "playwright", ".auth", "user.json");
 
 setup("authenticate", async ({ page }) => {
-  console.log("👉 Authenticating user");
+  console.log("=======================");
+  console.log("👉 Authenticating user [auth.setup.js]");
+  console.log("=======================");
   const loginPage = new LoginPage(page);
   const basicsPage = new PatientDataBasicsPage(page);
 

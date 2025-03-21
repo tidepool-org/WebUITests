@@ -17,7 +17,7 @@ const xrayOptions = {
   embedAttachmentsAsProperty: "testrun_evidence",
 
   // Where to put the report.
-  outputFile: "test-results/test-results.xml",
+  outputFile: "test-output/test-results.xml",
 };
 
 /**
