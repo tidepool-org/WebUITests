@@ -1,8 +1,8 @@
 // @ts-check
-import { expect, test } from "../fixtures/base";
+import { expect, test } from "@fixtures/base";
 
-import PatientDataBasicsPage from "../../pageobjects/pages/patients/[id]/data/basics/page";
-import PatientDataDailyPage from "../../pageobjects/pages/patients/[id]/data/daily/page";
+import PatientDataBasicsPage from "@pom/pages/patients/[id]/data/basics/page";
+import PatientDataDailyPage from "@pom/pages/patients/[id]/data/daily/page";
 
 // use the auth file to login from auth.setup.js
 test.use({ storageState: "playwright/.auth/user.json" });
@@ -23,7 +23,7 @@ test.describe("Patient Data Navigation and Visualization", () => {
     const basicsPage = new PatientDataBasicsPage(page);
     const dailyPage = new PatientDataDailyPage(page);
 
-    let selectedDateText;
+    let selectedDateText: string | null;
 
     await test.step("When the navigation bar is visible", async () => {
       await basicsPage.navigationBar.buttons.viewData.waitFor({
@@ -44,6 +44,10 @@ test.describe("Patient Data Navigation and Visualization", () => {
       const chartContainer = dailyPage.dailyChart.container;
       await chartContainer.waitFor({ state: "visible" });
 
+      if (!selectedDateText) {
+        throw new Error("Selected date text is null");
+      }
+
       // Verify the selected date matches the displayed date
       await expect(dailyPage.navigationSubMenu.currentDate).toContainText(selectedDateText);
 
@@ -55,7 +59,7 @@ test.describe("Patient Data Navigation and Visualization", () => {
   test("should display bolus dashboard when selecting a date from basics page", async ({ page }) => {
     const basicsPage = new PatientDataBasicsPage(page);
     const dailyPage = new PatientDataDailyPage(page);
-    let selectedDateText;
+    let selectedDateText: string | null;
 
     await test.step("When the navigation bar is visible", async () => {
       await basicsPage.navigationBar.buttons.viewData.waitFor({
@@ -76,6 +80,10 @@ test.describe("Patient Data Navigation and Visualization", () => {
       const chartContainer = dailyPage.dailyChart.container;
       await chartContainer.waitFor({ state: "visible" });
 
+      if (!selectedDateText) {
+        throw new Error("Selected date text is null");
+      }
+
       // Verify the selected date matches the displayed date
       await expect(dailyPage.navigationSubMenu.currentDate).toContainText(selectedDateText);
 
@@ -87,7 +95,7 @@ test.describe("Patient Data Navigation and Visualization", () => {
   test("should display Infusion site changes dashboard when selecting a date from basics page", async ({ page }) => {
     const basicsPage = new PatientDataBasicsPage(page);
     const dailyPage = new PatientDataDailyPage(page);
-    let selectedDateText;
+    let selectedDateText: string | null;
 
     await test.step("When the infusion site changes dashboard is visible", async () => {
       // Verify dashboard title and initial state
@@ -125,6 +133,9 @@ test.describe("Patient Data Navigation and Visualization", () => {
     await test.step("Then the daily chart shows correct cannula fill date", async () => {
       const chartContainer = dailyPage.dailyChart.container;
       await chartContainer.waitFor({ state: "visible" });
+      if (!selectedDateText) {
+        throw new Error("Selected date text is null");
+      }
       await expect(dailyPage.navigationSubMenu.currentDate).toContainText(selectedDateText);
       await expect(chartContainer).toHaveScreenshot("daily-chart-cannula.png");
     });
@@ -155,6 +166,9 @@ test.describe("Patient Data Navigation and Visualization", () => {
     await test.step("Then the daily chart shows correct tubing fill date", async () => {
       const chartContainer = dailyPage.dailyChart.container;
       await chartContainer.waitFor({ state: "visible" });
+      if (!selectedDateText) {
+        throw new Error("Selected date text is null");
+      }
       await expect(dailyPage.navigationSubMenu.currentDate).toContainText(selectedDateText);
       await expect(chartContainer).toHaveScreenshot("daily-chart-tubing.png");
     });

@@ -1,7 +1,18 @@
-import NavigationSubMenu from "../../../../../sections/navigation-submenu.section";
-import NavigationSection from "../../../../../sections/navigation.section";
+import { step } from "@fixtures/base";
+import { Locator, Page } from "@playwright/test";
+import NavigationSubMenu from "@sections/navigation-submenu.section";
+import NavigationSection from "@sections/navigation.section";
 
-function createSection(classObj, page, selector) {
+interface CalendarSection {
+  container: Locator;
+  dayMostRecentBgReading: Locator;
+  calendarDayhover: {
+    el: Locator;
+    text(): Promise<string | null>;
+  };
+}
+
+function createSection(page: Page, selector: string): CalendarSection {
   const parsedSelector = selector === "tubing-primes" ? "siteChanges" : selector;
   const container = page.locator(`.Calendar-container-${parsedSelector}`);
 
@@ -17,21 +28,17 @@ function createSection(classObj, page, selector) {
   };
 }
 
-/**
- * @typedef {Object} Stat
- * @property {import('@playwright/test').Locator} container
- * @property {import('@playwright/test').Locator} header
- * @property {import('@playwright/test').Locator} hoverBar
- * @property {import('@playwright/test').Locator} hoverBarLabel
- */
+interface Stat {
+  container: Locator;
+  header: Locator;
+  hoverBar: Locator;
+  hoverBarLabel: Locator;
+}
 
 /**
  * helper function to create a stat object with locators for the container, header, hoverBar, and hoverBarLabel
- * @param {import('@playwright/test').Page} page
- * @param {string} selector
- * @returns {Stat}
  */
-function createStat(page, selector) {
+function createStat(page: Page, selector: string): Stat {
   const container = page.locator(`#Stat--${selector}`);
   return {
     container,
@@ -52,42 +59,61 @@ const statsSideBarSection = [
   "coefficientOfVariation",
   "sensorUsage",
   "glucoseManagementIndicator",
-];
+] as const;
 
-/**
- * @typedef {Object} StatsSidebar
- * @property {import('@playwright/test').Locator} toggleContainer
- * @property {function("BGM"|"CGM"): Promise<void>} toggleTo
- * @property {Stat} timeInRange
- * @property {Stat} readingsInRange
- * @property {Stat} averageGlucose
- * @property {Stat} totalInsulin
- * @property {Stat} carbs
- * @property {Stat} standardDev
- * @property {Stat} coefficientOfVariation
- * @property {Stat} sensorUsage
- * @property {Stat} glucoseManagementIndicator
- */
+type StatName = (typeof statsSideBarSection)[number];
+
+interface StatsSidebar {
+  toggleContainer: Locator;
+  toggleTo(toState: "BGM" | "CGM"): Promise<void>;
+  timeInRange: Stat;
+  readingsInRange: Stat;
+  averageGlucose: Stat;
+  totalInsulin: Stat;
+  carbs: Stat;
+  standardDev: Stat;
+  coefficientOfVariation: Stat;
+  sensorUsage: Stat;
+  glucoseManagementIndicator: Stat;
+}
+
+interface TubingPrimeSection extends CalendarSection {
+  settings: Locator;
+  settingsOption: {
+    fillTubing: Locator;
+    fillCannula: Locator;
+  };
+  tubingIcons: Locator;
+  cannulaIcons: Locator;
+  filledDay: Locator;
+}
 
 export default class PatientDataBasicsPage {
-  /**
-   * @param {import('@playwright/test').Page} page
-   */
-  constructor(page) {
+  page: Page;
+  url: string;
+  emailInput: Locator;
+  navigationBar: NavigationSection;
+  navigationSubMenu: NavigationSubMenu;
+  headerBgReading: Locator;
+  headerBolusing: Locator;
+  statsSidebar: StatsSidebar;
+  bgReadingsSection: CalendarSection;
+  bolusingSection: CalendarSection;
+  tubingPrimeSection: TubingPrimeSection;
+  basalsSection: CalendarSection;
+
+  constructor(page: Page) {
     this.page = page;
+    this.url = "/patients/data/basics";
     this.emailInput = page.getByRole("textbox", { name: "Email" });
     this.navigationBar = new NavigationSection(page);
     this.navigationSubMenu = new NavigationSubMenu(page);
     this.headerBgReading = page.getByRole("heading", { name: "BG readings" });
     this.headerBolusing = page.getByRole("heading", { name: "Bolusing" });
 
-    /** @type {StatsSidebar} */
     this.statsSidebar = {
       toggleContainer: page.locator(".toggle-container"),
-      /**
-       * @param {"BGM" | "CGM"} toState - "BGM" or "CGM"
-       */
-      toggleTo: async function (toState) {
+      toggleTo: async function (toState: "BGM" | "CGM") {
         const activeToggleState = await page
           .locator(".toggle-container span[class*='TwoOptionToggle--active']")
           .innerText();
@@ -98,13 +124,13 @@ export default class PatientDataBasicsPage {
         }
       },
       ...Object.fromEntries(statsSideBarSection.map((stat) => [stat, createStat(page, stat)])),
-    };
+    } as StatsSidebar;
 
     // charts
-    this.bgReadingsSection = createSection(this, page, "fingersticks");
-    this.bolusingSection = createSection(this, page, "boluses");
+    this.bgReadingsSection = createSection(page, "fingersticks");
+    this.bolusingSection = createSection(page, "boluses");
     this.tubingPrimeSection = {
-      ...createSection(this, page, "tubing-primes"),
+      ...createSection(page, "tubing-primes"),
       settings: page.locator(".icon-settings"),
       settingsOption: {
         fillTubing: page.getByLabel("Fill Tubing"),
@@ -112,15 +138,16 @@ export default class PatientDataBasicsPage {
       },
       tubingIcons: page.locator(".Change--tubing").first(),
       cannulaIcons: page.locator(".Change--cannula").first(),
-      filledDay: createSection(this, page, "tubing-primes")
+      filledDay: createSection(page, "tubing-primes")
         .container.locator(".Calendar-day")
         .filter({ has: page.locator(".Change-daysSince-text") })
         .first(),
-    };
-    this.basalsSection = createSection(this, page, "basals");
+    } as TubingPrimeSection;
+    this.basalsSection = createSection(page, "basals");
   }
 
-  async goto() {
+  @step("Navigate to the basics page")
+  async goto(): Promise<void> {
     await this.page.goto(this.url);
   }
 }
