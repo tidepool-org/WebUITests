@@ -1,6 +1,7 @@
 // @ts-check
 // @eslint-disable no-extraneous-dependencies
 import { defineConfig, devices } from "@playwright/test";
+import { resolve } from "path";
 import env from "./utilities/env";
 
 // JUnit reporter config for Xray
@@ -31,6 +32,16 @@ const xrayOptions = {
 /**
  * @see https://playwright.dev/docs/test-configuration
  */
+
+// Convert tsconfig paths to absolute paths
+const pathsToModuleNameMapper = (paths: Record<string, string[]>, baseUrl: string) => {
+  const moduleNameMapper: Record<string, string> = {};
+  Object.entries(paths).forEach(([alias, [path]]) => {
+    moduleNameMapper[alias.replace("/*", "")] = resolve(baseUrl, path.replace("/*", ""));
+  });
+  return moduleNameMapper;
+};
+
 export default defineConfig({
   testDir: "./tests/e2e",
   /* Run tests in files in parallel */
@@ -55,7 +66,7 @@ export default defineConfig({
     ["junit", xrayOptions],
     // ["./utilities/xray-reporter.js"],
   ],
-  timeout: 180000,
+  timeout: 60000,
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     /* Base URL to use in actions like `await page.goto('/')`. */
@@ -63,13 +74,19 @@ export default defineConfig({
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: "on-first-retry",
+
+    /* Capture screenshot on test failure */
+    screenshot: "only-on-failure",
+
+    /* Record video on test failure */
+    video: "retain-on-failure",
   },
 
   /* Configure projects for major browsers */
   projects: [
     {
       name: "setup",
-      testMatch: /.*\.setup\.js/,
+      testMatch: /.*\.setup\.ts/,
     },
 
     {
@@ -77,6 +94,15 @@ export default defineConfig({
       use: {
         ...devices["Desktop Chrome"],
         storageState: "playwright/.auth/user.json",
+      },
+      dependencies: ["setup"],
+    },
+
+    {
+      name: "chromium-clinician",
+      use: {
+        ...devices["Desktop Chrome"],
+        storageState: "playwright/.auth/clinician.json",
       },
       dependencies: ["setup"],
     },
@@ -118,4 +144,7 @@ export default defineConfig({
   //   url: 'http://127.0.0.1:3000',
   //   reuseExistingServer: !process.env.CI,
   // },
+
+  // // Add TypeScript path aliases
+  // moduleNameMapper: pathsToModuleNameMapper(tsconfig.compilerOptions.paths, tsconfig.compilerOptions.baseUrl),
 });

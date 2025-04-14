@@ -17,8 +17,8 @@
     "testqa2ChromeTag": "nightwatch --env qa2chrome --tag clinician",
     "eslint": "eslint .",
     "eslint:fix": "eslint . --fix",
-    "playwright": "playwright test -- basic-functionality.spec.js",
-    "playwright:ci": "browserstack-node-sdk playwright test --config=./playwright.bs.config.js basic-functionality.spec.js",
+    "playwright": "playwright test -- login.spec.ts",
+    "playwright:ci": "browserstack-node-sdk playwright test --config=./playwright.bs.config.js basic-functionality.spec.ts",
     "format": "prettier --write ."
   },
   "scriptsComments": {
@@ -37,12 +37,13 @@
   },
   "homepage": "https://github.com/tidepool-org/nightwatchtests#readme",
   "dependencies": {
-    "axios": "1.6.7",
-    "browserstack-node-sdk": "^1.34.45",
+    "@playwright/mcp": "^0.0.10",
+    "axios": "^1.8.4",
+    "browserstack-node-sdk": "^1.34.49",
     "dayjs": "1.11.10",
     "dotenv": "16.4.5",
     "eslint-config-airbnb": "19.0.4",
-    "fast-xml-parser": "4.3.5",
+    "fast-xml-parser": "^4.5.3",
     "form-data": "4.0.0",
     "nightwatch-vrt": "github:tidepool-org/nightwatch-vrt#master",
     "otplib": "12.0.1",
@@ -51,13 +52,13 @@
     "zod": "^3.24.2"
   },
   "devDependencies": {
-    "@playwright/test": "^1.51.0",
+    "@playwright/test": "^1.51.1",
     "@types/node": "^22.13.10",
     "eslint": "8.57.0",
     "eslint-config-airbnb-base": "15.0.0",
     "eslint-plugin-chai-friendly": "0.7.4",
     "eslint-plugin-import": "2.29.1",
     "junit-report-merger": "6.0.3",
-    "nightwatch": "3.4.1"
+    "nightwatch": "^3.12.1"
   }
 }

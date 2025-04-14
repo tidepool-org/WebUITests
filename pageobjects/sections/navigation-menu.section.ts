@@ -1,8 +1,18 @@
+import { Locator, Page } from "@playwright/test";
+
 export default class NavigationMenu {
-  /**
-   * @param {import('@playwright/test').Page} page
-   */
-  constructor(page) {
+  page: Page;
+  container: Locator;
+  buttons: {
+    trigger: Locator;
+    menu: {
+      privateWorkspace: Locator;
+      accountSettings: Locator;
+      logout: Locator;
+    };
+  };
+
+  constructor(page: Page) {
     this.page = page;
     this.container = page.locator("div#navigation-menu");
 
@@ -20,11 +30,11 @@ export default class NavigationMenu {
     };
   }
 
-  async open() {
+  async open(): Promise<void> {
     await this.buttons.trigger.click();
   }
 
-  async close() {
+  async close(): Promise<void> {
     await this.buttons.trigger.click();
   }
 }

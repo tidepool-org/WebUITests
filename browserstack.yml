@@ -34,7 +34,7 @@ platforms:
     playwrightConfigOptions:
       setup:
         - name: "setup"
-          testMatch: "**/*.setup.js"
+          testMatch: "**/*.setup.ts"
 #   # - os: OS X
   #   osVersion: Ventura
   #   browserName: playwright-webkit
