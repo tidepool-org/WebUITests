@@ -1,11 +1,19 @@
 import { TestInfo } from "@playwright/test";
 
 /**
- * Add test annotations to the test info for JIRA integration
- * @param {TestInfo} testInfo
- * @param {{testKey: string, testSummary: string, requirements: string, testDescription: string}} annotations
+ * Interface for test annotations used in JIRA integration
  */
-export function addTestAnnotations(testInfo, annotations) {
+interface TestAnnotations {
+  testKey: string;
+  testSummary: string;
+  requirements: string;
+  testDescription: string;
+}
+
+/**
+ * Add test annotations to the test info for JIRA integration
+ */
+export function addTestAnnotations(testInfo: TestInfo, annotations: TestAnnotations): void {
   testInfo.annotations.push({
     type: "test_key",
     description: annotations.testKey,

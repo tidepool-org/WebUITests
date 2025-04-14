@@ -1,10 +1,14 @@
+import { Locator, Page } from "@playwright/test";
+
 export default class WorkspacesPage {
-  /**
-   * @param {import('@playwright/test').Page} page
-   */
-  constructor(page) {
+  page: Page;
+  url: string = "/workspaces";
+  header: Locator;
+  subHeader: Locator;
+  createClinicButton: Locator;
+
+  constructor(page: Page) {
     this.page = page;
-    this.url = "/workspaces";
     this.header = page.getByRole("heading", { name: "Clinic Workspace" });
     this.subHeader = page.getByRole("paragraph", {
       name: "View, share and manage patient data",
@@ -15,19 +19,19 @@ export default class WorkspacesPage {
     });
   }
 
-  async goto() {
+  async goto(): Promise<void> {
     await this.page.goto(this.url);
   }
 
-  async visitFirstClinic() {
+  async visitFirstClinic(): Promise<void> {
     await this.page.getByRole("button", { name: "Go To Workspace" }).first().click();
   }
 
   /**
    * Visit a clinic by name
-   * @param {string} clinicName
+   * @param clinicName - The name of the clinic to visit
    */
-  async visitClinic(clinicName) {
+  async visitClinic(clinicName: string): Promise<void> {
     // find child element with text and filter by parent element with class
     const child = this.page.getByText(clinicName);
     const parent = this.page.locator(".workspace-item-clinic").filter({ has: child });
