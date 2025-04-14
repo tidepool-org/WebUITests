@@ -1,8 +1,4 @@
-/**
- * @typedef {import('@playwright/test').Page} Page
- * @typedef {import('@playwright/test').Locator} Locator
- */
-
+import { Locator, Page } from "@playwright/test";
 // import { step } from '../../tests/fixtures/base';
 
 /**
@@ -14,10 +10,16 @@
  * @property {Locator} loginButton
  */
 export default class LoginPage {
+  page: Page;
+  emailInput: Locator;
+  nextButton: Locator;
+  passwordInput: Locator;
+  loginButton: Locator;
+
   /**
    * @param {Page} page
    */
-  constructor(page) {
+  constructor(page: Page) {
     this.page = page;
     this.emailInput = page.getByRole("textbox", { name: "Email" });
     this.nextButton = page.getByRole("button", { name: "Next" });
@@ -29,18 +31,18 @@ export default class LoginPage {
    * Navigate to the login page
    * @returns {Promise<void>}
    */
-  async goto() {
+  async goto(): Promise<void> {
     await this.page.goto(`/`);
   }
 
   /**
    * Login to the application
-   * @param {string} email
-   * @param {string} password
+   * @param {string} email - User's email
+   * @param {string} password - User's password
    * @returns {Promise<void>}
    */
   // @step("When the user logs in to the application")
-  async login(email, password) {
+  async login(email: string, password: string): Promise<void> {
     await this.emailInput.fill(email);
     await this.nextButton.click();
     await this.passwordInput.fill(password);

@@ -1,10 +1,18 @@
+import { Locator, Page } from "@playwright/test";
 import NavigationMenu from "./navigation-menu.section";
 
 export default class NavigationSection {
-  /**
-   * @param {import('@playwright/test').Page} page
-   */
-  constructor(page) {
+  page: Page;
+  container: Locator;
+  menu: NavigationMenu;
+  buttons: {
+    viewData: Locator;
+    patientProfile: Locator;
+    share: Locator;
+    uploadData: Locator;
+  };
+
+  constructor(page: Page) {
     this.page = page;
     this.container = page.locator("div#navPatientHeader");
 

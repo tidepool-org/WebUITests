@@ -1,8 +1,20 @@
+import { Locator, Page } from "@playwright/test";
+
 export default class NavigationSubMenu {
-  /**
-   * @param {import('@playwright/test').Page} page
-   */
-  constructor(page) {
+  page: Page;
+  container: Locator;
+  links: {
+    basics: Locator;
+    daily: Locator;
+    bgLog: Locator;
+    trends: Locator;
+    devices: Locator;
+    print: Locator;
+    calendarButton: Locator;
+  };
+  currentDate: Locator;
+
+  constructor(page: Page) {
     this.page = page;
     this.container = page.locator("div.patient-data-subnav-inner");
 
@@ -12,7 +24,6 @@ export default class NavigationSubMenu {
       bgLog: this.container.getByRole("link", { name: "BG Log" }),
       trends: this.container.getByRole("link", { name: "Trends" }),
       devices: this.container.getByRole("link", { name: "Devices" }),
-
       print: this.container.getByRole("link", { name: "Print" }),
       calendarButton: this.container.getByLabel("Choose custom date range"),
     };
@@ -22,11 +33,11 @@ export default class NavigationSubMenu {
       .first();
   }
 
-  async open() {
-    await this.buttons.trigger.click();
-  }
+  // async open(): Promise<void> {
+  //   await this.buttons.trigger.click();
+  // }
 
-  async close() {
-    await this.buttons.trigger.click();
-  }
+  // async close(): Promise<void> {
+  //   await this.buttons.trigger.click();
+  // }
 }
