@@ -1,436 +1,467 @@
+/* eslint-disable spaced-comment */
+/* eslint-disable quotes */
 module.exports = {
   url: function useEnvironmentUrl() {
     return this.api.launch_url;
   },
   sections: {
     dateRangeSelector: {
-      selector: '#app',
+      selector: "#app",
       elements: {
         customDateIcon: 'span[aria-label="Choose custom date range"]',
-        chartDateRangeModal: '#ChartDateRangePicker',
+        chartDateRangeModal: "#ChartDateRangePicker",
         modalTitle: {
           selector: '//h3[text()="Chart Date Range"]',
-          locateStrategy: 'xpath',
+          locateStrategy: "xpath",
         },
         modalDismiss: {
-          selector: '//*[@id="ChartDateRangePicker"]//button[@aria-label="close dialog"]',
-          locateStrategy: 'xpath',
+          selector:
+            '//*[@id="ChartDateRangePicker"]//button[@aria-label="close dialog"]',
+          locateStrategy: "xpath",
         },
         daysOptions: {
           selector: '//div[@id="days-chart"]',
-          locateStrategy: 'xpath',
+          locateStrategy: "xpath",
         },
         fourteenDays: {
           selector: '//button[@id="days-chart-0"]',
-          locateStrategy: 'xpath',
+          locateStrategy: "xpath",
         },
         twentyOneDays: {
           selector: '//button[@id="days-chart-1"]',
-          locateStrategy: 'xpath',
+          locateStrategy: "xpath",
         },
         thirtyDays: {
           selector: '//button[@id="days-chart-2"]',
-          locateStrategy: 'xpath',
+          locateStrategy: "xpath",
         },
         dateRangeStart: {
           selector: '//input[@id="chart-start-date"]',
-          locateStrategy: 'xpath',
+          locateStrategy: "xpath",
         },
         dateRangeEnd: {
           selector: '//input[@id="chart-end-date"]',
-          locateStrategy: 'xpath',
+          locateStrategy: "xpath",
         },
         datePicker: {
           selector: '//div[@aria-roledescription="datepicker"]',
-          locateStrategy: 'xpath',
+          locateStrategy: "xpath",
         },
         cancel: {
           selector: '//*[@id="ChartDateRangePicker"]//*[text()="Cancel"]',
-          locateStrategy: 'xpath',
+          locateStrategy: "xpath",
         },
         apply: {
           selector: '//*[@id="ChartDateRangePicker"]//*[text()="Apply"]',
-          locateStrategy: 'xpath',
+          locateStrategy: "xpath",
         },
       },
-      commands: [{
-      }],
+      commands: [{}],
     },
     bgDashboard: {
-      selector: '#tidelineContainer',
+      selector: "#tidelineContainer",
       elements: {
         title: {
           selector: '//h3[text()="BG readings"]',
-          locateStrategy: 'xpath',
+          locateStrategy: "xpath",
         },
         bgCalendar: {
           selector: '//h3[text()="BG readings"]/parent::*',
-          locateStrategy: 'xpath',
+          locateStrategy: "xpath",
         },
         bottomOfDashboard: {
           selector: '//h3[text()="Bolusing"]',
-          locateStrategy: 'xpath',
+          locateStrategy: "xpath",
         },
         averagePerDay: {
-          selector: '//div[contains(@class,"Calendar-container-fingersticks")]//span[text()="Avg per day"]',
-          locateStrategy: 'xpath',
+          selector:
+            '//div[contains(@class,"Calendar-container-fingersticks")]//span[text()="Avg per day"]',
+          locateStrategy: "xpath",
         },
         meter: {
           selector: '//span[text()="Meter"]',
-          locateStrategy: 'xpath',
+          locateStrategy: "xpath",
         },
         manual: {
           selector: '//span[text()="Manual"]',
-          locateStrategy: 'xpath',
+          locateStrategy: "xpath",
         },
         below: {
           selector: '//span[contains(text(),"Below")]',
-          locateStrategy: 'xpath',
+          locateStrategy: "xpath",
         },
         above: {
           selector: '//span[contains(text(),"Above")]',
-          locateStrategy: 'xpath',
+          locateStrategy: "xpath",
         },
         mostRecentDay: {
-          selector: '//div[contains(@class,"Calendar-day--fingersticks") and contains(@class, "Calendar-day-most-recent")]',
-          locateStrategy: 'xpath',
+          selector:
+            '//div[contains(@class,"Calendar-day--fingersticks") and contains(@class, "Calendar-day-most-recent")]',
+          locateStrategy: "xpath",
         },
         dayHover: {
-          selector: '//div[contains(@class,"Calendar-day--HOVER")]//*[@class="Calendar-weekday"]',
-          locateStrategy: 'xpath',
+          selector:
+            '//div[contains(@class,"Calendar-day--HOVER")]//*[@class="Calendar-weekday"]',
+          locateStrategy: "xpath",
         },
         bgReading: {
-          selector: '//div[contains(@class,"Calendar-day--fingersticks")]//*[name()="circle"]',
-          locateStrategy: 'xpath',
+          selector:
+            '//div[contains(@class,"Calendar-day--fingersticks")]//*[name()="circle"]',
+          locateStrategy: "xpath",
         },
       },
-      commands: [{
-        resetHoverState() {
-          this.isPresent('@dayHover', (result) => {
-            if (result.value) {
-              this
-                .moveToElement('@mostRecentDay', 0, 0)
-                .perform(() => {
+      commands: [
+        {
+          resetHoverState() {
+            this.isPresent("@dayHover", (result) => {
+              if (result.value) {
+                this.moveToElement("@mostRecentDay", 0, 0).perform(() => {
                   const actions = this.api.actions({ async: true });
 
-                  return actions
-                    .move({
-                      duration: 1000,
-                    });
+                  return actions.move({
+                    duration: 1000,
+                  });
                 });
-            }
-          });
+              }
+            });
+          },
         },
-      }],
+      ],
     },
     bolusDashboard: {
-      selector: '#tidelineContainer',
+      selector: "#tidelineContainer",
       elements: {
         title: {
           selector: '//h3[text()="Bolusing"]',
-          locateStrategy: 'xpath',
+          locateStrategy: "xpath",
         },
         bolusesCalendar: {
-          selector: '//h3[text()="Bolusing"]/parent::*[@class="DashboardSection"]',
-          locateStrategy: 'xpath',
+          selector:
+            '//h3[text()="Bolusing"]/parent::*[@class="DashboardSection"]',
+          locateStrategy: "xpath",
         },
         bottomOfDashboard: {
-          selector: '//h3[text()="Infusion site changes"]',
-          locateStrategy: 'xpath',
+          selector: '//h3[text()="Site Changes"]',
+          locateStrategy: "xpath",
         },
         averagePerDay: {
-          selector: '//div[contains(@class,"Calendar-container-boluses")]//span[text()="Avg per day"]',
-          locateStrategy: 'xpath',
+          selector:
+            '//div[contains(@class,"Calendar-container-boluses")]//span[text()="Avg per day"]',
+          locateStrategy: "xpath",
         },
         calculator: {
           selector: '//span[text()="Calculator"]',
-          locateStrategy: 'xpath',
+          locateStrategy: "xpath",
         },
         correction: {
           selector: '//span[text()="Correction"]',
-          locateStrategy: 'xpath',
+          locateStrategy: "xpath",
         },
         override: {
           selector: '//span[text()="Override"]',
-          locateStrategy: 'xpath',
+          locateStrategy: "xpath",
         },
         extended: {
           selector: '//span[text()="Extended"]',
-          locateStrategy: 'xpath',
+          locateStrategy: "xpath",
         },
         interrupted: {
           selector: '//span[text()="Interrupted"]',
-          locateStrategy: 'xpath',
+          locateStrategy: "xpath",
         },
         underride: {
           selector: '//span[text()="Underride"]',
-          locateStrategy: 'xpath',
+          locateStrategy: "xpath",
         },
         mostRecentDay: {
-          selector: '//div[contains(@class,"Calendar-day--boluses") and contains(@class, "Calendar-day-most-recent")]',
-          locateStrategy: 'xpath',
+          selector:
+            '//div[contains(@class,"Calendar-day--boluses") and contains(@class, "Calendar-day-most-recent")]',
+          locateStrategy: "xpath",
         },
         dayHover: {
-          selector: '//div[contains(@class,"Calendar-day--HOVER")]//*[@class="Calendar-weekday"]',
-          locateStrategy: 'xpath',
+          selector:
+            '//div[contains(@class,"Calendar-day--HOVER")]//*[@class="Calendar-weekday"]',
+          locateStrategy: "xpath",
         },
         bolusEntry: {
-          selector: '//div[contains(@class,"Calendar-day--boluses")]//*[name()="circle"]',
-          locateStrategy: 'xpath',
+          selector:
+            '//div[contains(@class,"Calendar-day--boluses")]//*[name()="circle"]',
+          locateStrategy: "xpath",
         },
       },
-      commands: [{
-      }],
+      commands: [{}],
     },
-    infusionSiteChanges: {
-      selector: '#tidelineContainer',
+    SiteChanges: {
+      selector: "#tidelineContainer",
       elements: {
         title: {
-          selector: '//h3[text()="Infusion site changes"]',
-          locateStrategy: 'xpath',
+          selector: '//h3[text()="Site Changes"]',
+          locateStrategy: "xpath",
         },
         siteChangesCalendar: {
-          selector: '//h3[text()="Infusion site changes"]/parent::*',
-          locateStrategy: 'xpath',
+          selector: '//h3[text()="Site Changes"]/parent::*',
+          locateStrategy: "xpath",
         },
         bottomOfDashboard: {
           selector: '//h3[text()="Basals"]',
-          locateStrategy: 'xpath',
+          locateStrategy: "xpath",
         },
-        settingsToggle: {
-          selector: '//i[contains(@class, "icon--toggle")]',
-          locateStrategy: 'xpath',
-        },
-        siteChangeSelector: '.SiteChangeSelector',
+        siteChangeSelector: ".SiteChangeSelector",
         fillCannulaOption: 'input[value="cannulaPrime"]',
         fillTubingOption: 'input[value="tubingPrime"]',
         filledCannulaDay: 'div[class*="Change--cannula"]',
         filledTubingDay: 'div[class*="Change--tubing"]',
-        siteChangeDay: '.SiteChange',
+        siteChangeDay: ".SiteChange",
         dayHover: {
-          selector: '//div[contains(@class,"Calendar-day--HOVER")]//*[@class="Calendar-weekday"]',
-          locateStrategy: 'xpath',
+          selector:
+            '//div[contains(@class,"Calendar-day--HOVER")]//*[@class="Calendar-weekday"]',
+          locateStrategy: "xpath",
         },
       },
-      commands: [{
-      }],
+      commands: [{}],
     },
     basalsDashboard: {
-      selector: '#tidelineContainer',
+      selector: "#tidelineContainer",
       elements: {
         title: {
           selector: '//h3[text()="Basals"]',
-          locateStrategy: 'xpath',
+          locateStrategy: "xpath",
         },
         basalsCalendar: {
           selector: '//h3[text()="Basals"]/parent::*',
-          locateStrategy: 'xpath',
+          locateStrategy: "xpath",
         },
         bottomOfDashboard: {
           selector: '//*[contains(@class,"refresh")]',
-          locateStrategy: 'xpath',
+          locateStrategy: "xpath",
         },
         basalEvents: {
           selector: '//span[text()="Basal Events"]',
-          locateStrategy: 'xpath',
+          locateStrategy: "xpath",
         },
         tempBasals: {
           selector: '//span[text()="Temp Basals"]',
-          locateStrategy: 'xpath',
+          locateStrategy: "xpath",
         },
         suspends: {
           selector: '//span[text()="Suspends"]',
-          locateStrategy: 'xpath',
+          locateStrategy: "xpath",
         },
         mostRecentDay: {
-          selector: '//div[contains(@class,"Calendar-day--basals") and contains(@class, "Calendar-day-most-recent")]',
-          locateStrategy: 'xpath',
+          selector:
+            '//div[contains(@class,"Calendar-day--basals") and contains(@class, "Calendar-day-most-recent")]',
+          locateStrategy: "xpath",
         },
         dayHover: {
-          selector: '//div[contains(@class,"Calendar-day--HOVER")]//*[@class="Calendar-weekday"]',
-          locateStrategy: 'xpath',
+          selector:
+            '//div[contains(@class,"Calendar-day--HOVER")]//*[@class="Calendar-weekday"]',
+          locateStrategy: "xpath",
         },
       },
-      commands: [{
-      }],
+      commands: [{}],
     },
     sidebar: {
-      selector: '#tidelineMain',
+      selector: "#tidelineMain",
       elements: {
         copyAsText: 'button[title="For email or notes"]',
         bgmCgmToggle: 'div[class*="TwoOptionToggle--toggle"]',
         activeToggle: {
           selector: '//span[contains(@class,"TwoOptionToggle--active")]',
-          locateStrategy: 'xpath',
+          locateStrategy: "xpath",
         },
-        timeInRange: '#Stat--timeInRange',
+        timeInRange: "#Stat--timeInRange",
         timeInRangeTitle: {
-          selector: '//div[@id="Stat--timeInRange"]//div[contains(@class,"chartTitle")]',
-          locateStrategy: 'xpath',
+          selector:
+            '//div[@id="Stat--timeInRange"]//div[contains(@class,"chartTitle")]',
+          locateStrategy: "xpath",
         },
         timeInRangeTooltip: {
-          selector: '//div[@id="Stat--timeInRange"]//img[@alt="Hover for more info"]',
-          locateStrategy: 'xpath',
+          selector:
+            '//div[@id="Stat--timeInRange"]//img[@alt="Hover for more info"]',
+          locateStrategy: "xpath",
         },
         timeInRangeTooltipMessage: {
           selector: '//div[contains(@class,"StatTooltip--message")]/p',
-          locateStrategy: 'xpath',
+          locateStrategy: "xpath",
         },
         timeVeryAboveRangeBar: {
-          selector: '//div[@id="Stat--timeInRange"]//*[name()="g" and contains(@class, "HoverBar")][5]',
-          locateStrategy: 'xpath',
+          selector:
+            '//div[@id="Stat--timeInRange"]//*[name()="g" and contains(@class, "HoverBar")][5]',
+          locateStrategy: "xpath",
         },
         timeAboveRangeBar: {
-          selector: '//div[@id="Stat--timeInRange"]//*[name()="g" and contains(@class, "HoverBar")][4]',
-          locateStrategy: 'xpath',
+          selector:
+            '//div[@id="Stat--timeInRange"]//*[name()="g" and contains(@class, "HoverBar")][4]',
+          locateStrategy: "xpath",
         },
         timeInRangeBar: {
-          selector: '//div[@id="Stat--timeInRange"]//*[name()="g" and contains(@class, "HoverBar")][3]',
-          locateStrategy: 'xpath',
+          selector:
+            '//div[@id="Stat--timeInRange"]//*[name()="g" and contains(@class, "HoverBar")][3]',
+          locateStrategy: "xpath",
         },
         timeBelowRangeBar: {
-          selector: '//div[@id="Stat--timeInRange"]//*[name()="g" and contains(@class, "HoverBar")][2]',
-          locateStrategy: 'xpath',
+          selector:
+            '//div[@id="Stat--timeInRange"]//*[name()="g" and contains(@class, "HoverBar")][2]',
+          locateStrategy: "xpath",
         },
         timeVeryBelowRangeBar: {
-          selector: '//div[@id="Stat--timeInRange"]//*[name()="g" and contains(@class, "HoverBar")][1]',
-          locateStrategy: 'xpath',
+          selector:
+            '//div[@id="Stat--timeInRange"]//*[name()="g" and contains(@class, "HoverBar")][1]',
+          locateStrategy: "xpath",
         },
-        readingsInRange: '#Stat--readingsInRange',
+        readingsInRange: "#Stat--readingsInRange",
         readingsInRangeTitle: {
-          selector: '//div[@id="Stat--readingsInRange"]//div[contains(@class,"chartTitle")]',
-          locateStrategy: 'xpath',
+          selector:
+            '//div[@id="Stat--readingsInRange"]//div[contains(@class,"chartTitle")]',
+          locateStrategy: "xpath",
         },
         readingsInRangeTooltip: {
-          selector: '//div[@id="Stat--readingsInRange"]//img[@alt="Hover for more info"]',
-          locateStrategy: 'xpath',
+          selector:
+            '//div[@id="Stat--readingsInRange"]//img[@alt="Hover for more info"]',
+          locateStrategy: "xpath",
         },
         readingsInRangeTooltipMessage: {
           selector: '//div[contains(@class,"StatTooltip--message")]/p',
-          locateStrategy: 'xpath',
+          locateStrategy: "xpath",
         },
         readingsVeryAboveRangeBar: {
-          selector: '//div[@id="Stat--readingsInRange"]//*[name()="g" and contains(@class, "HoverBar")][5]',
-          locateStrategy: 'xpath',
+          selector:
+            '//div[@id="Stat--readingsInRange"]//*[name()="g" and contains(@class, "HoverBar")][5]',
+          locateStrategy: "xpath",
         },
         readingsAboveRangeBar: {
-          selector: '//div[@id="Stat--readingsInRange"]//*[name()="g" and contains(@class, "HoverBar")][4]',
-          locateStrategy: 'xpath',
+          selector:
+            '//div[@id="Stat--readingsInRange"]//*[name()="g" and contains(@class, "HoverBar")][4]',
+          locateStrategy: "xpath",
         },
         readingsInRangeBar: {
-          selector: '//div[@id="Stat--readingsInRange"]//*[name()="g" and contains(@class, "HoverBar")][3]',
-          locateStrategy: 'xpath',
+          selector:
+            '//div[@id="Stat--readingsInRange"]//*[name()="g" and contains(@class, "HoverBar")][3]',
+          locateStrategy: "xpath",
         },
         readingsBelowRangeBar: {
-          selector: '//div[@id="Stat--readingsInRange"]//*[name()="g" and contains(@class, "HoverBar")][2]',
-          locateStrategy: 'xpath',
+          selector:
+            '//div[@id="Stat--readingsInRange"]//*[name()="g" and contains(@class, "HoverBar")][2]',
+          locateStrategy: "xpath",
         },
         readingsVeryBelowRangeBar: {
-          selector: '//div[@id="Stat--readingsInRange"]//*[name()="g" and contains(@class, "HoverBar")][1]',
-          locateStrategy: 'xpath',
+          selector:
+            '//div[@id="Stat--readingsInRange"]//*[name()="g" and contains(@class, "HoverBar")][1]',
+          locateStrategy: "xpath",
         },
-        averageGlucose: '#Stat--averageGlucose',
+        averageGlucose: "#Stat--averageGlucose",
         averageGlucoseTooltip: {
-          selector: '//div[@id="Stat--averageGlucose"]//img[@alt="Hover for more info"]',
-          locateStrategy: 'xpath',
+          selector:
+            '//div[@id="Stat--averageGlucose"]//img[@alt="Hover for more info"]',
+          locateStrategy: "xpath",
         },
         averageGlucoseTooltipMessage: {
           selector: '//div[contains(@class,"StatTooltip--message")]/p',
-          locateStrategy: 'xpath',
+          locateStrategy: "xpath",
         },
-        sensorUsage: '#Stat--sensorUsage',
+        sensorUsage: "#Stat--sensorUsage",
         sensorUsageTooltip: {
-          selector: '//div[@id="Stat--sensorUsage"]//img[@alt="Hover for more info"]',
-          locateStrategy: 'xpath',
+          selector:
+            '//div[@id="Stat--sensorUsage"]//img[@alt="Hover for more info"]',
+          locateStrategy: "xpath",
         },
         sensorUsageTooltipMessage: {
           selector: '//div[contains(@class,"StatTooltip--message")]/p',
-          locateStrategy: 'xpath',
+          locateStrategy: "xpath",
         },
-        totalInsulin: '#Stat--totalInsulin',
+        totalInsulin: "#Stat--totalInsulin",
         totalInsulinTitle: {
-          selector: '//div[@id="Stat--totalInsulin"]//div[contains(@class,"chartTitle")]',
-          locateStrategy: 'xpath',
+          selector:
+            '//div[@id="Stat--totalInsulin"]//div[contains(@class,"chartTitle")]',
+          locateStrategy: "xpath",
         },
         basalInsulinBar: {
-          selector: '//div[@id="Stat--totalInsulin"]//*[name()="g" and contains(@class, "HoverBar")][2]',
-          locateStrategy: 'xpath',
+          selector:
+            '//div[@id="Stat--totalInsulin"]//*[name()="g" and contains(@class, "HoverBar")][2]',
+          locateStrategy: "xpath",
         },
         bolusInsulinBar: {
-          selector: '//div[@id="Stat--totalInsulin"]//*[name()="g" and contains(@class, "HoverBar")][1]',
-          locateStrategy: 'xpath',
+          selector:
+            '//div[@id="Stat--totalInsulin"]//*[name()="g" and contains(@class, "HoverBar")][1]',
+          locateStrategy: "xpath",
         },
         totalInsulinTooltip: {
-          selector: '//div[@id="Stat--totalInsulin"]//img[@alt="Hover for more info"]',
-          locateStrategy: 'xpath',
+          selector:
+            '//div[@id="Stat--totalInsulin"]//img[@alt="Hover for more info"]',
+          locateStrategy: "xpath",
         },
         totalInsulinTooltipMessage: {
           selector: '//div[contains(@class,"StatTooltip--message")]/p',
-          locateStrategy: 'xpath',
+          locateStrategy: "xpath",
         },
-        averageDailyDose: '#Stat--averageDailyDose',
+        averageDailyDose: "#Stat--averageDailyDose",
         averageDailyDoseTooltip: {
-          selector: '//div[@id="Stat--averageDailyDose"]//img[@alt="Hover for more info"]',
-          locateStrategy: 'xpath',
+          selector:
+            '//div[@id="Stat--averageDailyDose"]//img[@alt="Hover for more info"]',
+          locateStrategy: "xpath",
         },
         averageDailyDoseTooltipMessage: {
           selector: '//div[contains(@class,"StatTooltip--message")]/p',
-          locateStrategy: 'xpath',
+          locateStrategy: "xpath",
         },
-        weight: '#weight',
-        units: '#units',
-        averageCarbs: '#Stat--carbs',
+        weight: "#weight",
+        units: "#units",
+        averageCarbs: "#Stat--carbs",
         averageCarbsTooltip: {
           selector: '//div[@id="Stat--carbs"]//img[@alt="Hover for more info"]',
-          locateStrategy: 'xpath',
+          locateStrategy: "xpath",
         },
         averageCarbsTooltipMessage: {
           selector: '//div[contains(@class,"StatTooltip--message")]/p',
-          locateStrategy: 'xpath',
+          locateStrategy: "xpath",
         },
-        gmi: '#Stat--glucoseManagementIndicator',
+        gmi: "#Stat--glucoseManagementIndicator",
         gmiTooltip: {
-          selector: '//div[@id="Stat--glucoseManagementIndicator"]//img[@alt="Hover for more info"]',
-          locateStrategy: 'xpath',
+          selector:
+            '//div[@id="Stat--glucoseManagementIndicator"]//img[@alt="Hover for more info"]',
+          locateStrategy: "xpath",
         },
         gmiTooltipMessage: {
           selector: '//div[contains(@class,"StatTooltip--message")]/p',
-          locateStrategy: 'xpath',
+          locateStrategy: "xpath",
         },
-        cv: '#Stat--coefficientOfVariation',
+        cv: "#Stat--coefficientOfVariation",
         cvTooltip: {
-          selector: '//div[@id="Stat--coefficientOfVariation"]//img[@alt="Hover for more info"]',
-          locateStrategy: 'xpath',
+          selector:
+            '//div[@id="Stat--coefficientOfVariation"]//img[@alt="Hover for more info"]',
+          locateStrategy: "xpath",
         },
         cvTooltipMessage: {
           selector: '//div[contains(@class,"StatTooltip--message")]/p',
-          locateStrategy: 'xpath',
+          locateStrategy: "xpath",
         },
         tooltipMessage: 'div[class*="StatTooltip--message"]',
-        filterDevices: '#deviceSelection-header',
+        filterDevices: "#deviceSelection-header",
         deviceCheckbox: {
           selector: '//div[@id="deviceSelection-content"]//label',
-          locateStrategy: 'xpath',
+          locateStrategy: "xpath",
         },
       },
-      commands: [{
-        toggleBGM() {
-          this.getText('@activeToggle', (result) => {
-            if (result.value === 'CGM') {
-              this.click('@bgmCgmToggle');
-            }
-            return this;
-          });
+      commands: [
+        {
+          toggleBGM() {
+            this.getText("@activeToggle", (result) => {
+              if (result.value === "CGM") {
+                this.click("@bgmCgmToggle");
+              }
+              return this;
+            });
+          },
+          toggleCGM() {
+            this.getText("@activeToggle", (result) => {
+              if (result.value === "BGM") {
+                this.click("@bgmCgmToggle");
+              }
+              return this;
+            });
+          },
         },
-        toggleCGM() {
-          this.getText('@activeToggle', (result) => {
-            if (result.value === 'BGM') {
-              this.click('@bgmCgmToggle');
-            }
-            return this;
-          });
-        },
-      }],
+      ],
     },
   },
 };
