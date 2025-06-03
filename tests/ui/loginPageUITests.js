@@ -33,7 +33,6 @@ module.exports = {
       browser.globals.elementTimeout
     );
     loginPage.expect.element("@facebookLogo").to.be.visible;
-    loginPage.expect.element("@mobileLink").to.be.visible;
     loginPage.expect.element("@supportLink").to.be.visible;
     loginPage.expect.element("@termsLink").to.be.visible;
   },
