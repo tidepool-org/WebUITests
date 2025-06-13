@@ -47,6 +47,7 @@ module.exports = {
     patientData.click("@basics");
     bgDashboard.waitForElementVisible("@title", browser.globals.elementTimeout);
   },
+  // mapped to basic-functionality.spec.ts
   "Bolus dashboard functionality"(browser) {
     const basics = browser.page.basicsPage();
     console.log("Bolus fails");
@@ -199,6 +200,7 @@ module.exports = {
       browser.globals.elementTimeout
     );
   },
+  // mapped to basic-functionality.spec.ts
   "Readings in range functionality"(browser) {
     const basics = browser.page.basicsPage();
     const sidebar = basics.section.sidebar;
@@ -223,6 +225,7 @@ module.exports = {
     sidebar.moveToElement("@readingsInRangeTooltip", 0, 0);
     sidebar.expect.element("@readingsInRangeTooltipMessage").text.to.contain("Readings In Range");
   },
+  // mapped to basic-functionality.spec.ts
   "Other BGM tooltip functionality"(browser) {
     const basics = browser.page.basicsPage();
     const sidebar = basics.section.sidebar;
@@ -238,6 +241,7 @@ module.exports = {
     sidebar.moveToElement("@cvTooltip", 0, 0);
     sidebar.expect.element("@cvTooltipMessage").text.to.contain("CV (Coefficient of Variation)");
   },
+  // mapped to basic-functionality.spec.ts
   "Time in range functionality"(browser) {
     const basics = browser.page.basicsPage();
     const sidebar = basics.section.sidebar;
@@ -262,6 +266,10 @@ module.exports = {
     sidebar.moveToElement("@timeInRangeTooltip", 0, 0);
     sidebar.expect.element("@timeInRangeTooltipMessage").text.to.contain("Time In Range");
   },
+
+  // QUESTION: Do we need test each tooltip individually
+  // is this priority? 
+  // mapped to basic-functionality.spec.ts
   "Other CGM tooltip functionality"(browser) {
     const basics = browser.page.basicsPage();
     const sidebar = basics.section.sidebar;
