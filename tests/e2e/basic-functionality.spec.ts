@@ -16,9 +16,11 @@ test.describe("Patient Data Navigation and Visualization", () => {
     await test.step("Given user has been logged in", async () => {
       page.setViewportSize({ width: 1920, height: 1080 });
       await page.goto("/");
+      // await page.getByText("Loading").waitFor({ state: "detached", timeout: 10000 });
     });
   });
 
+  // BG readings dashboard functionality
   test("should display daily chart when selecting a date from basics page", async ({ page }) => {
     const basicsPage = new PatientDataBasicsPage(page);
     const dailyPage = new PatientDataDailyPage(page);
@@ -56,6 +58,7 @@ test.describe("Patient Data Navigation and Visualization", () => {
     });
   });
 
+  // Bolus dashboard functionality
   test("should display bolus dashboard when selecting a date from basics page", async ({ page }) => {
     const basicsPage = new PatientDataBasicsPage(page);
     const dailyPage = new PatientDataDailyPage(page);
@@ -92,6 +95,7 @@ test.describe("Patient Data Navigation and Visualization", () => {
     });
   });
 
+  // Infusion Site Changes dashboard functionality
   test("should display Infusion site changes dashboard when selecting a date from basics page", async ({ page }) => {
     const basicsPage = new PatientDataBasicsPage(page);
     const dailyPage = new PatientDataDailyPage(page);
@@ -107,7 +111,8 @@ test.describe("Patient Data Navigation and Visualization", () => {
 
     await test.step("When testing Fill Cannula functionality", async () => {
       // Verify radio button options
-      await basicsPage.tubingPrimeSection.settings.click();
+      await basicsPage.tubingPrimeSection.settingsOption.fillCannula.waitFor({ state: "visible", timeout: 60000 });
+
       await expect(basicsPage.tubingPrimeSection.settingsOption.fillCannula).toBeVisible();
       await expect(basicsPage.tubingPrimeSection.settingsOption.fillTubing).toBeVisible();
 
@@ -143,6 +148,11 @@ test.describe("Patient Data Navigation and Visualization", () => {
     // Return to basics page and test Fill Tubing Option
     await test.step("When testing Fill Tubing functionality", async () => {
       // Navigate back to basics
+      await test.step("When the navigation bar is visible", async () => {
+        await basicsPage.navigationBar.buttons.viewData.waitFor({
+          state: "visible",
+        });
+      });
       await basicsPage.navigationSubMenu.links.basics.click();
       await basicsPage.tubingPrimeSection.settings.waitFor({
         state: "visible",
@@ -174,6 +184,7 @@ test.describe("Patient Data Navigation and Visualization", () => {
     });
   });
   // TODO: Previous test doesn't test values. Should we? :)
+  // Readings in range functionality
   test("The hover over elements in sidebar shows correct values", async ({ page }) => {
     // Stats for BGM
     const expectedHeadersReadingInRange = [
@@ -192,6 +203,7 @@ test.describe("Patient Data Navigation and Visualization", () => {
       });
     });
 
+    // Other BGM tooltip functionality
     await basicsPage.statsSidebar.toggleTo("BGM");
     for (let i = 0; i < 5; i++) {
       const bar = basicsPage.statsSidebar.readingsInRange.hoverBar.nth(i);
@@ -213,6 +225,7 @@ test.describe("Patient Data Navigation and Visualization", () => {
     }
 
     // Stats for CGM
+    // Time in range functionality
     const expectedHeadersTimeInRange = [
       { header: "Time Below Range", value: 0.1 },
       { header: "Time Below Range", value: 1 },
@@ -221,11 +234,41 @@ test.describe("Patient Data Navigation and Visualization", () => {
       { header: "Time Above Range", value: 0.3 },
     ];
     await basicsPage.statsSidebar.toggleTo("CGM");
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < expectedHeadersTimeInRange.length; i++) {
       const bar = basicsPage.statsSidebar.timeInRange.hoverBar.nth(i);
       const barLabel = basicsPage.statsSidebar.timeInRange.hoverBarLabel.nth(i);
 
       await test.step("When the user hovers over the Avg. Daily Time In Range chart", async () => {
+        await bar.hover();
+      });
+
+      await test.step("Then the correct header is visible", async () => {
+        await expect
+          .soft(basicsPage.statsSidebar.timeInRange.header)
+          .toContainText(expectedHeadersTimeInRange[i].header);
+      });
+
+      await test.step("Then the correct value is visible", async () => {
+        await expect.soft(barLabel).toContainText(expectedHeadersTimeInRange[i].value.toString());
+      });
+    }
+  });
+
+  // Other CGM tooltip functionality
+  test("other CGM tooltip functionality", async ({ page }) => {
+    const basicsPage = new PatientDataBasicsPage(page);
+    await basicsPage.statsSidebar.toggleTo("CGM");
+
+    const expectedHeadersTimeInRange = [
+      { header: "Basal Insulin", value: 14.7, percentage: 44 },
+      { header: "Bolus Insulin", value: 18.8, percentage: 56 },
+    ];
+
+    for (let i = 0; i < expectedHeadersTimeInRange.length; i++) {
+      const bar = basicsPage.statsSidebar.totalInsulin.hoverBar.nth(i);
+      const barLabel = basicsPage.statsSidebar.totalInsulin.hoverBarLabel.nth(i);
+
+      await test.step("When the user hovers over the Avg. Daily Total Insulin chart", async () => {
         await bar.hover();
       });
 

@@ -17,7 +17,7 @@
     "testqa2ChromeTag": "nightwatch --env qa2chrome --tag clinician",
     "eslint": "eslint .",
     "eslint:fix": "eslint . --fix",
-    "playwright": "playwright test -- login.spec.ts",
+    "playwright": "playwright test",
     "playwright:ci": "browserstack-node-sdk playwright test --config=./playwright.bs.config.js basic-functionality.spec.ts",
     "format": "prettier --write ."
   },

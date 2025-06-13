@@ -59,6 +59,8 @@ const statsSideBarSection = [
   "coefficientOfVariation",
   "sensorUsage",
   "glucoseManagementIndicator",
+  "totalInsulin",
+  "averageDailyDose"
 ] as const;
 
 type StatName = (typeof statsSideBarSection)[number];
@@ -75,6 +77,7 @@ interface StatsSidebar {
   coefficientOfVariation: Stat;
   sensorUsage: Stat;
   glucoseManagementIndicator: Stat;
+  averageDailyDose: Stat;
 }
 
 interface TubingPrimeSection extends CalendarSection {
@@ -131,10 +134,10 @@ export default class PatientDataBasicsPage {
     this.bolusingSection = createSection(page, "boluses");
     this.tubingPrimeSection = {
       ...createSection(page, "tubing-primes"),
-      settings: page.locator(".icon-settings"),
+      settings: page.locator(".SiteChangeSelector-option").first(),
       settingsOption: {
-        fillTubing: page.getByLabel("Fill Tubing"),
-        fillCannula: page.getByLabel("Fill Cannula"),
+        fillTubing: page.getByLabel("Tubing Fill"),
+        fillCannula: page.getByLabel("Cannula Fill"),
       },
       tubingIcons: page.locator(".Change--tubing").first(),
       cannulaIcons: page.locator(".Change--cannula").first(),
