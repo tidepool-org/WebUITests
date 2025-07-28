@@ -5,16 +5,6 @@
   "main": "index.js",
   "scripts": {
     "merge-reports": "jrm tests_output/testresults.xml \"tests_output/e2e/*.xml\" \"tests_output/ui/*.xml\"",
-    "testParallel": "nightwatch --tag parallel --env qa2chrome,prdchrome",
-    "testqa2Chrome": "nightwatch --env qa2chrome --tag only",
-    "testqa2Edge": "nightwatch --env qa2edge",
-    "testqa1Edge": "nightwatch --env qa1edge",
-    "testqa1Chrome": "nightwatch --env qa1chrome",
-    "testprdChrome": "nightwatch --env prdchrome",
-    "testprdEdge": "nightwatch --env prdedge",
-    "testintChrome": "nightwatch --env intchrome",
-    "testdev1Chrome": "nightwatch --env dev1chrome",
-    "testqa2ChromeTag": "nightwatch --env qa2chrome --tag clinician",
     "eslint": "eslint .",
     "eslint:fix": "eslint . --fix",
     "playwright": "playwright test",
@@ -39,13 +29,12 @@
   "dependencies": {
     "@playwright/mcp": "^0.0.10",
     "axios": "^1.8.4",
-    "browserstack-node-sdk": "^1.34.49",
+    "browserstack-node-sdk": "1.34.49",
     "dayjs": "1.11.10",
     "dotenv": "16.4.5",
     "eslint-config-airbnb": "19.0.4",
     "fast-xml-parser": "^4.5.3",
     "form-data": "4.0.0",
-    "nightwatch-vrt": "github:tidepool-org/nightwatch-vrt#master",
     "otplib": "12.0.1",
     "prettier": "^3.5.3",
     "request": "2.88.2",
@@ -58,7 +47,6 @@
     "eslint-config-airbnb-base": "15.0.0",
     "eslint-plugin-chai-friendly": "0.7.4",
     "eslint-plugin-import": "2.29.1",
-    "junit-report-merger": "6.0.3",
-    "nightwatch": "^3.12.1"
+    "junit-report-merger": "6.0.3"
   }
 }
