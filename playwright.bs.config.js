@@ -24,9 +24,9 @@ const xrayOptions = {
  * Read environment variables from file.
  * https://github.com/motdotla/dotenv
  */
-// import dotenv from 'dotenv';
-// import path from 'path';
-// dotenv.config({ path: path.resolve(__dirname, '.env') });
+import dotenv from 'dotenv';
+import path from 'path';
+dotenv.config({ path: path.resolve(__dirname, '.env') });
 
 console.log("🚀 Running playwright.bs.config.js");
 
@@ -41,7 +41,7 @@ export default defineConfig({
   /* Fail the build on CI if you accidentally left test.only in the source code. */
   forbidOnly: !!process.env.CI,
   /* Retry on CI only */
-  retries: 2,
+  retries: 0,
   /* Opt out of parallel tests on CI. */
   workers: process.env.CI ? 1 : undefined,
   expect: {
@@ -78,11 +78,20 @@ export default defineConfig({
       },
     },
     {
-      name: "chrome",
+      name: "chrome-patient",
       use: {
         browserName: "chromium",
         channel: "chrome",
         storageState: "playwright/.auth/user.json",
+      },
+      dependencies: ["setup"],
+    },
+    {
+      name: "chrome-clinician",
+      use: {
+        browserName: "chromium",
+        channel: "chrome",
+        storageState: "playwright/.auth/clinician.json",
       },
       dependencies: ["setup"],
     },
@@ -92,10 +101,10 @@ export default defineConfig({
     //   use: { ...devices['Desktop Firefox'] },
     // },
 
-    {
-      name: "webkit",
-      use: { ...devices["Desktop Safari"] },
-    },
+   // {
+   //   name: "webkit",
+   //   use: { ...devices["Desktop Safari"] },
+   //  },
 
     /* Test against mobile viewports. */
     // {
