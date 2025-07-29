@@ -5,26 +5,11 @@
   "main": "index.js",
   "scripts": {
     "merge-reports": "jrm tests_output/testresults.xml \"tests_output/e2e/*.xml\" \"tests_output/ui/*.xml\"",
-    "testParallel": "nightwatch --tag parallel --env qa2chrome,prdchrome",
-    "testqa2Chrome": "nightwatch --env qa2chrome --tag only",
-    "testqa2Edge": "nightwatch --env qa2edge",
-    "testqa1Edge": "nightwatch --env qa1edge",
-    "testqa1Chrome": "nightwatch --env qa1chrome",
-    "testprdChrome": "nightwatch --env prdchrome",
-    "testprdEdge": "nightwatch --env prdedge",
-    "testintChrome": "nightwatch --env intchrome",
-    "testdev1Chrome": "nightwatch --env dev1chrome",
-    "testqa2ChromeTag": "nightwatch --env qa2chrome --tag clinician",
     "eslint": "eslint .",
     "eslint:fix": "eslint . --fix",
     "playwright": "playwright test",
     "playwright:ci": "browserstack-node-sdk playwright test --config=./playwright.bs.config.js basic-functionality.spec.ts",
     "format": "prettier --write ."
-  },
-  "scriptsComments": {
-    "testParallel": "Executes tests that are able to run in parallel on all environments",
-    "testXSeq": "Executes tests that must be run sequentially, and not in conjuction with other environments",
-    "testXAll": "Executes ALL tests on 1 environment"
   },
   "repository": {
     "type": "git",
@@ -45,20 +30,18 @@
     "eslint-config-airbnb": "19.0.4",
     "fast-xml-parser": "^4.5.3",
     "form-data": "4.0.0",
-    "nightwatch-vrt": "github:tidepool-org/nightwatch-vrt#master",
     "otplib": "12.0.1",
     "prettier": "^3.5.3",
     "request": "2.88.2",
     "zod": "^3.24.2"
   },
   "devDependencies": {
-    "@playwright/test": "^1.51.1",
+    "@playwright/test": "^1.54.1",
     "@types/node": "^22.13.10",
     "eslint": "8.57.0",
     "eslint-config-airbnb-base": "15.0.0",
     "eslint-plugin-chai-friendly": "0.7.4",
     "eslint-plugin-import": "2.29.1",
-    "junit-report-merger": "6.0.3",
-    "nightwatch": "^3.12.1"
+    "junit-report-merger": "6.0.3"
   }
 }
