@@ -90,7 +90,7 @@ export default defineConfig({
     },
 
     {
-      name: "chromium-patient",
+      name: "chromium",
       use: {
         ...devices["Desktop Chrome"],
         storageState: "playwright/.auth/user.json",
