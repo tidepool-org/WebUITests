@@ -2,8 +2,6 @@ import { expect, test } from "@fixtures/base";
 import ClinicWorkspacePage from "@pom/pages/clinic-workspace/page";
 import WorkspacesPage from "@pom/pages/workspaces/page";
 
-test.use({ storageState: "playwright/.auth/clinician.json" });
-
 test.describe("Add new patient", () => {
   // Use a unique patient name for each test run to avoid collisions
   const patientName = `Test Patient Playwright ${Date.now()}`;

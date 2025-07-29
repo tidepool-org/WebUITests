@@ -30,10 +30,10 @@ class ClinicWorkspacePage {
     this.patientListTable = page.getByRole("table", { name: "peopletablelabel" });
 
     // Add Patient Dialog locators
-    this.addPatientDialog = page.getByRole("heading", { name: "Add New Patient Account" });
-    this.addPatientDialog_fullNameInput = page.getByPlaceholder("Full Name");
-    this.addPatientDialog_birthdateInput = page.getByPlaceholder("mm/dd/yyyy");
-    this.addPatientDialog_addButton = page.getByRole('button', { name: /submit/i });
+    this.addPatientDialog = page.getByRole("dialog", { name: /Add New Patient Account/i });
+    this.addPatientDialog_fullNameInput = this.addPatientDialog.getByRole("textbox", { name: "Full Name" });
+    this.addPatientDialog_birthdateInput = this.addPatientDialog.getByRole("textbox", { name: "Birthdate" });
+    this.addPatientDialog_addButton = this.addPatientDialog.getByRole("button", { name: "Add Patient" });
 
     // Bring Data Dialog locators
     this.bringDataDialog = page.getByRole("dialog", { name: /Bring Data into Tidepool/i });
