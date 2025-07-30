@@ -15,6 +15,7 @@ test_evidence
 /playwright-report/
 /blob-report/
 /playwright/.cache/
+tests/.auth/
 
 playwright-browserstack-sdk*
 log/
