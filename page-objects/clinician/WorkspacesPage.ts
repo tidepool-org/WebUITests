@@ -1,11 +1,11 @@
 import { Locator, Page } from "@playwright/test";
 
 export default class WorkspacesPage {
-  page: Page;
-  url: string = "/workspaces";
-  header: Locator;
-  subHeader: Locator;
-  createClinicButton: Locator;
+  readonly page: Page;
+  readonly url: string = "/";
+  readonly header: Locator;
+  readonly subHeader: Locator;
+  readonly createClinicButton: Locator;
 
   constructor(page: Page) {
     this.page = page;

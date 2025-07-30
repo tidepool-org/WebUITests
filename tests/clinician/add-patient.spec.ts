@@ -1,6 +1,6 @@
 import { expect, test } from "@fixtures/base";
-import ClinicWorkspacePage from "page-objects/pages/clinic-workspace/page";
-import WorkspacesPage from "page-objects/pages/workspaces/page";
+import ClinicianDashboardPage from "@pom/clinician/ClinicianDashboardPage";
+import WorkspacesPage from "@pom/clinician/WorkspacesPage";
 
 
 test.describe("Add new patient", () => {
@@ -10,16 +10,15 @@ test.describe("Add new patient", () => {
 
   test.beforeEach(async ({ page }) => {
     await test.step("Given user has been logged in and navigated to base URL", async () => {
-      await page.goto("/"); // Navigate after setting viewport if needed
     });
   });
 
   test("should successfully add a new patient", async ({ page }) => {
     const workspacesPage = new WorkspacesPage(page);
-    const clinicWorkspacePage = new ClinicWorkspacePage(page);
+    const clinicWorkspacePage = new ClinicianDashboardPage(page);
 
     await test.step("Given the user is on the workspaces page", async () => {
-      await page.waitForURL(workspacesPage.url);
+      await workspacesPage.goto();
       await workspacesPage.header.waitFor({ state: "visible" });
     });
 

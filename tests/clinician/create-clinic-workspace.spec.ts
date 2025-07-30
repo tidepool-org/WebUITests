@@ -1,11 +1,8 @@
 import { expect, test } from "@fixtures/base";
-import ClinicCreationPage from "page-objects/pages/clinic-creation/page";
+import ClinicCreationPage from "@pom/clinician/ClinicCreationPage";
 import LoginPage from "page-objects/LoginPage";
-import WorkspacesPage from "page-objects/pages/workspaces/page";
+import WorkspacesPage from "@pom/clinician/WorkspacesPage";
 import { randomUUID } from "crypto";
-
-// Use clinician storage state for login
-test.use({ storageState: "playwright/.auth/clinician.json" });
 
 test.describe("Create clinic workspace", () => {
   const uniqueSuffix = randomUUID().substring(0, 8);
