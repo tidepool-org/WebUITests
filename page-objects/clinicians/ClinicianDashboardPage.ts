@@ -1,5 +1,5 @@
-import { step } from '@fixtures/base';
 import { Locator, Page } from '@playwright/test';
+import { step } from '../../tests/fixtures/base';
 
 class ClinicWorkspacePage {
   page: Page;

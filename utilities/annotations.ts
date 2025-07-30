@@ -1,4 +1,4 @@
-import { TestInfo } from "@playwright/test";
+import { TestInfo } from '@playwright/test';
 
 /**
  * Interface for test annotations used in JIRA integration
@@ -15,19 +15,19 @@ interface TestAnnotations {
  */
 export function addTestAnnotations(testInfo: TestInfo, annotations: TestAnnotations): void {
   testInfo.annotations.push({
-    type: "test_key",
+    type: 'test_key',
     description: annotations.testKey,
   });
   testInfo.annotations.push({
-    type: "test_summary",
+    type: 'test_summary',
     description: annotations.testSummary,
   });
   testInfo.annotations.push({
-    type: "requirements",
+    type: 'requirements',
     description: annotations.requirements,
   });
   testInfo.annotations.push({
-    type: "test_description",
+    type: 'test_description',
     description: annotations.testDescription,
   });
 }

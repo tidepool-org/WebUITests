@@ -1,25 +1,35 @@
-import { Locator, Page } from "@playwright/test";
+import { Locator, Page } from '@playwright/test';
 
 export default class ClinicCreationPage {
   page: Page;
-  url: string = "/clinic-details/new";
+
+  url = '/clinic-details/new';
 
   // Page header elements
   pageHeader: Locator;
+
   pageDescription: Locator;
 
   // Form input fields
   clinicNameInput: Locator;
+
   teamTypeDropdown: Locator;
+
   countryDropdown: Locator;
+
   stateDropdown: Locator;
+
   addressInput: Locator;
+
   cityInput: Locator;
+
   zipCodeInput: Locator;
+
   websiteInput: Locator;
 
   // Blood glucose units radio buttons
   mgdlRadio: Locator;
+
   mmolRadio: Locator;
 
   // Acknowledgement checkbox
@@ -27,37 +37,40 @@ export default class ClinicCreationPage {
 
   // Action buttons
   backButton: Locator;
+
   createWorkspaceButton: Locator;
 
   constructor(page: Page) {
     this.page = page;
 
     // Page header elements
-    this.pageHeader = page.getByText("Create your Clinic Workspace");
-    this.pageDescription = page.getByText("The information below will be displayed along with your name");
+    this.pageHeader = page.getByText('Create your Clinic Workspace');
+    this.pageDescription = page.getByText(
+      'The information below will be displayed along with your name',
+    );
 
     // Form input fields
-    this.clinicNameInput = page.getByLabel("Clinic Name");
-    this.teamTypeDropdown = page.getByRole("combobox", { name: "What best describes your team?" });
-    this.countryDropdown = page.getByRole("combobox", { name: "Country" });
-    this.stateDropdown = page.getByRole("combobox", { name: "State" });
-    this.addressInput = page.getByLabel("Address");
-    this.cityInput = page.getByLabel("City");
-    this.zipCodeInput = page.getByLabel("Zip code");
-    this.websiteInput = page.getByLabel("Website (optional)");
+    this.clinicNameInput = page.getByLabel('Clinic Name');
+    this.teamTypeDropdown = page.getByRole('combobox', { name: 'What best describes your team?' });
+    this.countryDropdown = page.getByRole('combobox', { name: 'Country' });
+    this.stateDropdown = page.getByRole('combobox', { name: 'State' });
+    this.addressInput = page.getByLabel('Address');
+    this.cityInput = page.getByLabel('City');
+    this.zipCodeInput = page.getByLabel('Zip code');
+    this.websiteInput = page.getByLabel('Website (optional)');
 
     // Blood glucose units radio buttons
-    this.mgdlRadio = page.getByLabel("mg/dL");
-    this.mmolRadio = page.getByLabel("mmol/L");
+    this.mgdlRadio = page.getByLabel('mg/dL');
+    this.mmolRadio = page.getByLabel('mmol/L');
 
     // Acknowledgement checkbox
-    this.adminAcknowledgeCheckbox = page.getByRole("checkbox", {
-      name: "By creating this clinic, your Tidepool account will become the default administrator",
+    this.adminAcknowledgeCheckbox = page.getByRole('checkbox', {
+      name: 'By creating this clinic, your Tidepool account will become the default administrator',
     });
 
     // Action buttons
-    this.backButton = page.getByRole("button", { name: "Back" });
-    this.createWorkspaceButton = page.getByRole("button", { name: "Create Workspace" });
+    this.backButton = page.getByRole('button', { name: 'Back' });
+    this.createWorkspaceButton = page.getByRole('button', { name: 'Create Workspace' });
   }
 
   /**
@@ -79,12 +92,12 @@ export default class ClinicCreationPage {
    */
   async fillClinicForm({
     clinicName,
-    teamType = "Provider Practice",
-    state = "California",
-    address = "123 Test Street",
-    city = "Test City",
-    zipCode = "12345",
-    website = "",
+    teamType = 'Provider Practice',
+    state = 'California',
+    address = '123 Test Street',
+    city = 'Test City',
+    zipCode = '12345',
+    website = '',
   }: {
     clinicName: string;
     teamType?: string;
@@ -118,8 +131,8 @@ export default class ClinicCreationPage {
    * Select blood glucose units
    * @param unit - "mg/dL" or "mmol/L"
    */
-  async selectBloodGlucoseUnit(unit: "mg/dL" | "mmol/L"): Promise<void> {
-    if (unit === "mg/dL") {
+  async selectBloodGlucoseUnit(unit: 'mg/dL' | 'mmol/L'): Promise<void> {
+    if (unit === 'mg/dL') {
       await this.mgdlRadio.check();
     } else {
       await this.mmolRadio.check();
@@ -133,7 +146,7 @@ export default class ClinicCreationPage {
    */
   async createClinic(
     clinicName: string,
-    formData?: Omit<Parameters<typeof this.fillClinicForm>[0], "clinicName">,
+    formData?: Omit<Parameters<typeof this.fillClinicForm>[0], 'clinicName'>,
   ): Promise<void> {
     await this.fillClinicForm({ clinicName, ...formData });
     await this.createWorkspaceButton.click();

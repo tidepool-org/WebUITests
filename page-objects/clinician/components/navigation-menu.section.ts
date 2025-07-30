@@ -1,8 +1,10 @@
-import { Locator, Page } from "@playwright/test";
+import { Locator, Page } from '@playwright/test';
 
 export default class NavigationMenu {
   page: Page;
+
   container: Locator;
+
   buttons: {
     trigger: Locator;
     menu: {
@@ -14,18 +16,18 @@ export default class NavigationMenu {
 
   constructor(page: Page) {
     this.page = page;
-    this.container = page.locator("div#navigation-menu");
+    this.container = page.locator('div#navigation-menu');
 
     this.buttons = {
-      trigger: this.container.locator("#navigation-menu-trigger"),
+      trigger: this.container.locator('#navigation-menu-trigger'),
       menu: {
-        privateWorkspace: this.container.getByRole("button", {
-          name: "Private Workspace",
+        privateWorkspace: this.container.getByRole('button', {
+          name: 'Private Workspace',
         }),
-        accountSettings: this.container.getByRole("button", {
-          name: "Account Settings",
+        accountSettings: this.container.getByRole('button', {
+          name: 'Account Settings',
         }),
-        logout: this.container.getByRole("button", { name: "Logout" }),
+        logout: this.container.getByRole('button', { name: 'Logout' }),
       },
     };
   }

@@ -1,5 +1,5 @@
-import fs from "fs";
-import env from "./env";
+import fs from 'fs';
+import env from './env';
 
 /**
  * Reporter class for uploading test results to Xray
@@ -7,13 +7,13 @@ import env from "./env";
 class XRayReporter {
   constructor() {
     this.styles = {
-      success: "✅",
-      error: "❌",
-      info: "ℹ️",
-      warning: "⛔️",
-      upload: "🚀",
-      test: "🧪",
-      separator: "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━",
+      success: '✅',
+      error: '❌',
+      info: 'ℹ️',
+      warning: '⛔️',
+      upload: '🚀',
+      test: '🧪',
+      separator: '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
     };
   }
 
@@ -25,10 +25,10 @@ class XRayReporter {
   async authenticateWithXray() {
     try {
       console.log(`${this.styles.info} Authenticating with Xray...`);
-      const response = await fetch("https://xray.cloud.getxray.app/api/v1/authenticate", {
-        method: "POST",
+      const response = await fetch('https://xray.cloud.getxray.app/api/v1/authenticate', {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           client_id: env.XRAY_CLIENT_ID,
@@ -60,11 +60,11 @@ class XRayReporter {
     try {
       console.log(`${this.styles.info} Uploading test results to Xray...`);
       const response = await fetch(
-        "https://xray.cloud.getxray.app/api/v2/import/execution/junit?projectKey=XT&testPlanKey=XT-380",
+        'https://xray.cloud.getxray.app/api/v2/import/execution/junit?projectKey=XT&testPlanKey=XT-380',
         {
-          method: "POST",
+          method: 'POST',
           headers: {
-            "Content-Type": "text/xml",
+            'Content-Type': 'text/xml',
             Authorization: `Bearer ${token}`,
           },
           body: xmlContent,
@@ -89,9 +89,9 @@ class XRayReporter {
    * @param {Object} suite - Test suite object containing all tests
    */
   onBegin(config, suite) {
-    console.log("\n" + this.styles.separator);
+    console.log('\n' + this.styles.separator);
     console.log(`${this.styles.test} Starting test run with ${suite.allTests().length} tests`);
-    console.log(this.styles.separator + "\n");
+    console.log(this.styles.separator + '\n');
   }
 
   /**
@@ -109,7 +109,7 @@ class XRayReporter {
    * @param {Object} result - Test result object containing status and other details
    */
   onTestEnd(test, result) {
-    const statusEmoji = result.status === "passed" ? this.styles.success : this.styles.error;
+    const statusEmoji = result.status === 'passed' ? this.styles.success : this.styles.error;
     console.log(`${statusEmoji} Finished: ${test.title} (${result.status})`);
   }
 
@@ -118,20 +118,24 @@ class XRayReporter {
    * @param {Object} result - Full test run result object containing status and duration
    */
   async onEnd(result) {
-    console.log("\n" + this.styles.separator);
+    console.log('\n' + this.styles.separator);
     console.log(`${this.styles.info} Test Run Summary:`);
-    console.log(`Status: ${result.status === "passed" ? this.styles.success : this.styles.error} ${result.status}`);
+    console.log(
+      `Status: ${result.status === 'passed' ? this.styles.success : this.styles.error} ${result.status}`,
+    );
     console.log(`Duration: ${result.duration}ms`);
-    console.log(this.styles.separator + "\n");
+    console.log(this.styles.separator + '\n');
 
     if (!(env.XRAY_CLIENT_ID || env.XRAY_CLIENT_SECRET)) {
-      console.log(`${this.styles.warning} No Xray client ID or secret found, skipping upload to JIRA Xray`);
+      console.log(
+        `${this.styles.warning} No Xray client ID or secret found, skipping upload to JIRA Xray`,
+      );
       return;
     }
 
     try {
       console.log(`${this.styles.info} Reading test results file...`);
-      const testResults = fs.readFileSync("./test-results/test-results.xml", "utf8");
+      const testResults = fs.readFileSync('./test-results/test-results.xml', 'utf8');
 
       const token = await this.authenticateWithXray();
       await this.uploadTestResults(token, testResults);
@@ -139,7 +143,7 @@ class XRayReporter {
     } catch (error) {
       console.error(`${this.styles.error} Failed to process test results:`, error);
     }
-    console.log(this.styles.separator + "\n");
+    console.log(this.styles.separator + '\n');
   }
 }
 

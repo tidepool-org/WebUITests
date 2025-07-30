@@ -6,10 +6,10 @@ orbs:
 parameters:
   testEnvironment:
     type: string
-    default: "testParallel"
+    default: 'testParallel'
   testExecKey:
     type: string
-    default: "none"
+    default: 'none'
 jobs:
   # eslint-check:
   #   working_directory: ~/tidepool-org/webuitests
@@ -35,17 +35,17 @@ jobs:
           paths:
             - ./node_modules
           key: dependency-cache-{{ checksum "package.json" }}
-      
+
       # Install Playwright browsers and dependencies
       - run:
           name: Install Playwright Dependencies
           command: npx playwright install --with-deps
-      
+
       # Run tests
       - run:
           name: Run Playwright Tests
           command: npm run playwright:ci
-      
+
       # Store test results and artifacts
       - store_artifacts:
           path: playwright-report
@@ -53,7 +53,7 @@ jobs:
           path: test-results
       - store_test_results:
           path: test-output/test-results.xml
-      
+
       - run:
           name: Install xmllint
           command: apt-get update && apt-get install -y libxml2-utils
@@ -76,7 +76,7 @@ jobs:
       - slack/notify:
           event: fail
           branch_pattern: main
-          mentions: "<@UG56AQFK2>"
+          mentions: '<@UG56AQFK2>'
           custom: |
             {
               "blocks": [
@@ -117,7 +117,7 @@ jobs:
       - unless:
           condition:
             and:
-              - equal: ["testParallel", << pipeline.parameters.testEnvironment >>]
+              - equal: ['testParallel', << pipeline.parameters.testEnvironment >>]
           steps:
             - run:
                 name: Gather Test Evidence

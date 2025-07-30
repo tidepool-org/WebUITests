@@ -19,7 +19,7 @@ buildName: qa2-playwright
 # ${BUILD_NUMBER} (Default): Generates an incremental counter with every execution
 # ${DATE_TIME}: Generates a Timestamp with every execution. Eg. 05-Nov-19:30
 # Read more about buildIdentifiers here -> https://www.browserstack.com/docs/automate/selenium/organize-tests
-buildIdentifier: "#${BUILD_NUMBER}" # Supports strings along with either/both ${expression}
+buildIdentifier: '#${BUILD_NUMBER}' # Supports strings along with either/both ${expression}
 
 # =======================================
 # Platforms (Browsers / Devices to test)
@@ -33,16 +33,16 @@ platforms:
     browserVersion: latest
     playwrightConfigOptions:
       setup:
-        - name: "setup"
-          testMatch: "**/*.setup.ts"
+        - name: 'setup'
+          testMatch: '**/*.setup.ts'
 #   # - os: OS X
-  #   osVersion: Ventura
-  #   browserName: playwright-webkit
-  #   browserVersion: latest
-  # - os: Windows
-  #   osVersion: 11
-  #   browserName: playwright-firefox
-  #   browserVersion: latest
+#   osVersion: Ventura
+#   browserName: playwright-webkit
+#   browserVersion: latest
+# - os: Windows
+#   osVersion: 11
+#   browserName: playwright-firefox
+#   browserVersion: latest
 
 # =======================
 # Parallels per Platform
