@@ -1,7 +1,7 @@
 // @ts-check
 import { expect, test } from "@fixtures/base";
 import LoginPage from "page-objects/LoginPage";
-import WorkspacesPage from "page-objects/pages/workspaces/page";
+import WorkspacesPage from "@pom/clinician/WorkspacesPage";
 import env from "../../utilities/env";
 
 // make sure we don't have any cookies or origins

@@ -1,5 +1,4 @@
 import { Locator, Page } from "@playwright/test";
-// import { step } from '../../tests/fixtures/base';
 
 /**
  * @class

@@ -1,6 +1,6 @@
 import { expect, test } from "@fixtures/base";
-import ClinicAdminPage from "page-objects/pages/clinic-admin/page";
-import WorkspacesPage from "page-objects/pages/workspaces/page";
+import ClinicAdminPage from "@pom/clinician/WorkspaceSettingsPage";
+import WorkspacesPage from "@pom/clinician/WorkspacesPage";
 
 // Use clinician storage state for login
 test.use({ storageState: "playwright/.auth/clinician.json" });

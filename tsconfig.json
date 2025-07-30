@@ -2,7 +2,7 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "@sections/*": ["page-objects/sections/*"],
+      "@components/*": ["page-objects/clinician/components/*", "page-objects/patient/components/*"],
       "@pom/*": ["page-objects/*"],
       "@fixtures/*": ["tests/fixtures/*"]
     },

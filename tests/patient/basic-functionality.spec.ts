@@ -1,8 +1,8 @@
 // @ts-check
 import { expect, test } from "@fixtures/base";
 
-import PatientDataBasicsPage from "page-objects/pages/patients/[id]/data/basics/page";
-import PatientDataDailyPage from "page-objects/pages/patients/[id]/data/daily/page";
+import PatientDataBasicsPage from "@pom/patient/BasicsPage";
+import PatientDataDailyPage from "@pom/patient/DailyPage";
 
 // use the auth file to login from auth.setup.js
 test.use({ storageState: "playwright/.auth/user.json" });
