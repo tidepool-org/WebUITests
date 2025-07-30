@@ -1,6 +1,7 @@
 import { defineConfig, devices, FullConfig } from '@playwright/test';
 import { resolve } from 'node:path';
 import env from './utilities/env';
+import path from 'node:path';
 
 const xrayOptions = {
   embedAnnotationsAsProperties: true,
@@ -30,7 +31,7 @@ function buildBrowserStackEndpoint(testName: string) {
 
 export default defineConfig({
   testDir: './tests',
-  globalSetup: require.resolve('./tests/global-setup'),
+  globalSetup: require.resolve(path.join(__dirname, 'tests/global-setup')),
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
