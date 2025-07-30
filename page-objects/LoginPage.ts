@@ -47,5 +47,6 @@ export default class LoginPage {
     await this.nextButton.click();
     await this.passwordInput.fill(password);
     await this.loginButton.click();
+    await this.page.setViewportSize({ width: 1920, height: 1080 });
   }
 }

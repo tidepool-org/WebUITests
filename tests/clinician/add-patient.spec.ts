@@ -1,6 +1,7 @@
 import { expect, test } from "@fixtures/base";
-import ClinicWorkspacePage from "@pom/pages/clinic-workspace/page";
-import WorkspacesPage from "@pom/pages/workspaces/page";
+import ClinicWorkspacePage from "page-objects/pages/clinic-workspace/page";
+import WorkspacesPage from "page-objects/pages/workspaces/page";
+
 
 test.describe("Add new patient", () => {
   // Use a unique patient name for each test run to avoid collisions
@@ -9,8 +10,6 @@ test.describe("Add new patient", () => {
 
   test.beforeEach(async ({ page }) => {
     await test.step("Given user has been logged in and navigated to base URL", async () => {
-      // Assumes login via storageState and baseURL navigation are handled by config/project
-      page.setViewportSize({ width: 1920, height: 1080 });
       await page.goto("/"); // Navigate after setting viewport if needed
     });
   });

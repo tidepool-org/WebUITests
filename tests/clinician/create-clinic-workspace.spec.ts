@@ -1,7 +1,7 @@
 import { expect, test } from "@fixtures/base";
-import ClinicCreationPage from "@pom/pages/clinic-creation/page";
-import LoginPage from "@pom/pages/login.page";
-import WorkspacesPage from "@pom/pages/workspaces/page";
+import ClinicCreationPage from "page-objects/pages/clinic-creation/page";
+import LoginPage from "page-objects/LoginPage";
+import WorkspacesPage from "page-objects/pages/workspaces/page";
 import { randomUUID } from "crypto";
 
 // Use clinician storage state for login
