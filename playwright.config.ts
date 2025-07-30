@@ -1,150 +1,98 @@
-// @ts-check
-// @eslint-disable no-extraneous-dependencies
-import { defineConfig, devices } from "@playwright/test";
-import { resolve } from "path";
-import env from "./utilities/env";
+import { defineConfig, devices, FullConfig } from '@playwright/test';
+import { resolve } from 'path';
+import env from './utilities/env';
 
-// JUnit reporter config for Xray
 const xrayOptions = {
-  // Whether to add <properties> with all annotations; default is false
   embedAnnotationsAsProperties: true,
-
-  // By default, annotation is reported as <property name='' value=''>.
-  // These annotations are reported as <property name=''>value</property>.
-  textContentAnnotations: ["test_description", "testrun_comment"],
-
-  // This will create a "testrun_evidence" property that contains all attachments. Each attachment is added as an inner <item> element.
-  // Disables [[ATTACHMENT|path]] in the <system-out>.
-  embedAttachmentsAsProperty: "testrun_evidence",
-
-  // Where to put the report.
-  outputFile: "test-output/test-results.xml",
+  textContentAnnotations: ['test_description', 'testrun_comment'],
+  embedAttachmentsAsProperty: 'testrun_evidence',
+  outputFile: 'test-output/test-results.xml',
 };
 
-/**
- * Read environment variables from file.
- * https://github.com/motdotla/dotenv
- */
-// import dotenv from 'dotenv';
-// import path from 'path';
-// dotenv.config({ path: path.resolve(__dirname, '.env') });
 
-/**
- * @see https://playwright.dev/docs/test-configuration
- */
+// Helper to detect BrowserStack run
+const isBrowserStack = Boolean(process.env.BROWSERSTACK_USERNAME && process.env.BROWSERSTACK_ACCESS_KEY);
 
-// Convert tsconfig paths to absolute paths
-const pathsToModuleNameMapper = (paths: Record<string, string[]>, baseUrl: string) => {
-  const moduleNameMapper: Record<string, string> = {};
-  Object.entries(paths).forEach(([alias, [path]]) => {
-    moduleNameMapper[alias.replace("/*", "")] = resolve(baseUrl, path.replace("/*", ""));
-  });
-  return moduleNameMapper;
-};
+function buildBrowserStackEndpoint(testName: string) {
+  const caps = {
+    browser: 'chrome',
+    browser_version: 'latest',
+    os: 'os x',
+    os_version: 'catalina',
+    name: testName,
+    build: process.env.CI_BUILD_NUMBER || 'local-run',
+    'browserstack.username': process.env.BROWSERSTACK_USERNAME,
+    'browserstack.accessKey': process.env.BROWSERSTACK_ACCESS_KEY,
+  };
+  return `wss://cdp.browserstack.com/playwright?caps=${encodeURIComponent(JSON.stringify(caps))}`;
+}
 
 export default defineConfig({
-  testDir: "./tests/e2e",
-  /* Run tests in files in parallel */
+  testDir: './tests',
+  globalSetup: require.resolve('./tests/global-setup'),
   fullyParallel: true,
-
-  /* Fail the build on CI if you accidentally left test.only in the source code. */
   forbidOnly: !!process.env.CI,
-  /* Retry on CI only */
   retries: process.env.CI ? 2 : 0,
-  /* Opt out of parallel tests on CI. */
   workers: process.env.CI ? 1 : undefined,
+  timeout: 60_000,
+
   expect: {
-    toHaveScreenshot: {
-      // An acceptable ratio of pixels that are different to the
-      // total amount of pixels, between 0 and 1.
-      maxDiffPixelRatio: 0.2,
-    },
+    toHaveScreenshot: { maxDiffPixelRatio: 0.2 },
   },
-  /* Reporter to use. See https://playwright.dev/docs/test-reporters */
+
   reporter: [
-    ["html", { open: "never", outputFolder: "playwright-report/" }],
-    ["junit", xrayOptions],
-    // ["./utilities/xray-reporter.js"],
+    ['html', { open: 'never', outputFolder: 'playwright-report' }],
+    ['junit', xrayOptions],
   ],
-  timeout: 60000,
-  /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
+
   use: {
-    /* Base URL to use in actions like `await page.goto('/')`. */
-    baseURL: `https://${env.ENV}.development.tidepool.org`,
-
-    /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
-    trace: "on-first-retry",
-
-    /* Capture screenshot on test failure */
-    screenshot: "only-on-failure",
-
-    /* Record video on test failure */
-    video: "retain-on-failure",
+    baseURL: env.BASE_URL,
+    trace: 'on-first-retry',
+    screenshot: 'only-on-failure',
+    video: 'retain-on-failure',
   },
 
-  /* Configure projects for major browsers */
   projects: [
     {
-      name: "setup",
-      testMatch: /.*\.setup\.ts/,
+      name: 'chromium-patient',
+      testMatch: '**/patient/**/*.spec.ts',
+      use: {
+        ...devices['Desktop Chrome'],
+        storageState: 'tests/.auth/patient.json',
+        headless: false
+      },
     },
 
     {
-      name: "chromium",
+      name: 'chromium-clinician',
+      testMatch: '**/clinician/**/*.spec.ts',
       use: {
-        ...devices["Desktop Chrome"],
-        storageState: "playwright/.auth/user.json",
+        ...devices['Desktop Chrome'],
+        storageState: 'tests/.auth/clinician.json',
+        headless: false
       },
-      dependencies: ["setup"],
     },
 
-    {
-      name: "chromium-clinician",
-      use: {
-        ...devices["Desktop Chrome"],
-        storageState: "playwright/.auth/clinician.json",
-      },
-      dependencies: ["setup"],
-    },
+    ...(isBrowserStack
+      ? [
+          {
+            name: 'bs-chrome-patient',
+            testMatch: '**/patient/**/*.spec.ts',
+            use: {
+              storageState: 'tests/.auth/patient.json',
+              connectOptions: { wsEndpoint: buildBrowserStackEndpoint('Patient Tests') },
+            },
+          },
 
-    // {
-    //   name: 'firefox',
-    //   use: { ...devices['Desktop Firefox'] },
-    // },
-
-    // {
-    //   name: 'webkit',
-    //   use: { ...devices['Desktop Safari'] },
-    // },
-
-    /* Test against mobile viewports. */
-    // {
-    //   name: 'Mobile Chrome',
-    //   use: { ...devices['Pixel 5'] },
-    // },
-    // {
-    //   name: 'Mobile Safari',
-    //   use: { ...devices['iPhone 12'] },
-    // },
-
-    /* Test against branded browsers. */
-    // {
-    //   name: 'Microsoft Edge',
-    //   use: { ...devices['Desktop Edge'], channel: 'msedge' },
-    // },
-    // {
-    //   name: 'Google Chrome',
-    //   use: { ...devices['Desktop Chrome'], channel: 'chrome' },
-    // },
+          {
+            name: 'bs-chrome-clinician',
+            testMatch: '**/clinician/**/*.spec.ts',
+            use: {
+              storageState: 'tests/.auth/clinician.json',
+              connectOptions: { wsEndpoint: buildBrowserStackEndpoint('Clinician Tests') },
+            },
+          },
+        ]
+      : []),
   ],
-
-  /* Run your local dev server before starting the tests */
-  // webServer: {
-  //   command: 'npm run start',
-  //   url: 'http://127.0.0.1:3000',
-  //   reuseExistingServer: !process.env.CI,
-  // },
-
-  // // Add TypeScript path aliases
-  // moduleNameMapper: pathsToModuleNameMapper(tsconfig.compilerOptions.paths, tsconfig.compilerOptions.baseUrl),
 });
