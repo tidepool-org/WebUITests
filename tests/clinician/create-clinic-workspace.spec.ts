@@ -19,7 +19,7 @@ test.describe('Create clinic workspace', () => {
 
   test('should successfully create a new clinic workspace', async ({ page }) => {
     await test.step('Given user is on the workspaces page', async () => {
-      await page.goto('/workspaces');
+      await workspacesPage.goto();
       await expect(workspacesPage.header).toBeVisible();
       await expect(workspacesPage.createClinicButton).toBeVisible();
     });

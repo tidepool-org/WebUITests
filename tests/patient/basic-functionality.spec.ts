@@ -4,18 +4,11 @@ import { expect, test } from '@fixtures/base';
 import PatientDataBasicsPage from '@pom/patient/BasicsPage';
 import PatientDataDailyPage from '@pom/patient/DailyPage';
 
-// use the auth file to login from auth.setup.js
-test.use({ storageState: 'playwright/.auth/user.json' });
-
-console.log('=======================');
-console.log('👉 Running basic-functionality.spec.js');
-console.log('=======================');
-
 test.describe('Patient Data Navigation and Visualization', () => {
   test.beforeEach(async ({ page }) => {
     await test.step('Given user has been logged in', async () => {
-      page.setViewportSize({ width: 1920, height: 1080 });
-      await page.goto('/');
+      const basicsPage = new PatientDataBasicsPage(page);
+      await basicsPage.goto();
       // await page.getByText("Loading").waitFor({ state: "detached", timeout: 10000 });
     });
   });

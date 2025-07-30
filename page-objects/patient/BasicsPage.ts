@@ -1,7 +1,7 @@
 import { step } from '@fixtures/base';
 import { Locator, Page } from '@playwright/test';
 import NavigationSubMenu from '@components/navigation-submenu.section';
-import NavigationSection from 'page-objects/sections/navigation.section';
+import NavigationSection from '@components/navigation.section';
 
 interface CalendarSection {
   container: Locator;
