@@ -1,26 +1,26 @@
 {
-  "name": "nightwatchtests",
+  "name": "webuitests",
   "version": "1.0.0",
-  "description": "Tidepool UI Testing with nightwatch and browserstack",
+  "description": "Tidepool UI Testing with playwright and browserstack",
   "main": "index.js",
   "scripts": {
     "merge-reports": "jrm tests_output/testresults.xml \"tests_output/e2e/*.xml\" \"tests_output/ui/*.xml\"",
     "eslint": "eslint .",
     "eslint:fix": "eslint . --fix",
-    "playwright": "playwright test",
-    "playwright:ci": "browserstack-node-sdk playwright test --config=./playwright.bs.config.js basic-functionality.spec.ts",
+    "debug": "PWDEBUG=1 npx playwright test",
+    "test": "playwright test",
     "format": "prettier --write ."
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/tidepool-org/nightwatchtests.git"
+    "url": "git+https://github.com/tidepool-org/webuitests.git"
   },
   "author": "Ginny Yadav",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/tidepool-org/nightwatchtests/issues"
+    "url": "https://github.com/tidepool-org/webuitests/issues"
   },
-  "homepage": "https://github.com/tidepool-org/nightwatchtests#readme",
+  "homepage": "https://github.com/tidepool-org/webuitests#readme",
   "dependencies": {
     "@playwright/mcp": "^0.0.10",
     "axios": "^1.8.4",
