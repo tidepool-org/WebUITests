@@ -2,9 +2,6 @@ import { expect, test } from '@fixtures/base';
 import ClinicAdminPage from '@pom/clinician/WorkspaceSettingsPage';
 import WorkspacesPage from '@pom/clinician/WorkspacesPage';
 
-// Use clinician storage state for login
-test.use({ storageState: 'playwright/.auth/clinician.json' });
-
 test.describe('Edit clinic address', () => {
   const newAddress = `123 Test Street ${Date.now()}`; // Unique address for test run
   let clinicAdminPage: ClinicAdminPage;
@@ -15,7 +12,7 @@ test.describe('Edit clinic address', () => {
     workspacesPage = new WorkspacesPage(page);
 
     await test.step('Given user has navigated to the Clinic Admin page', async () => {
-      await page.goto('/');
+      await workspacesPage.goto();
       await workspacesPage.visitFirstClinic();
       await page.goto('/clinic-admin');
       await clinicAdminPage.waitForLoadState(); // Wait for clinic admin page elements

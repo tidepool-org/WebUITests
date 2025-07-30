@@ -1,5 +1,5 @@
 import { Locator, Page } from '@playwright/test';
-import NavigationMenu from '../clinician/components/navigation-menu.section';
+import NavigationMenu from './navigation-menu.section';
 
 export default class NavigationSection {
   page: Page;

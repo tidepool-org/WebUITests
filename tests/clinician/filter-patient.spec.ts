@@ -2,8 +2,6 @@ import { expect, test } from '@fixtures/base';
 import ClinicWorkspacePage from '@pom/clinician/ClinicianDashboardPage';
 import WorkspacesPage from '@pom/clinician/WorkspacesPage';
 
-test.use({ storageState: 'playwright/.auth/clinician.json' });
-
 test.describe('Filter patients in clinic', () => {
   // Use unique patient names for each test run
   const timestamp = Date.now();
@@ -19,9 +17,7 @@ test.describe('Filter patients in clinic', () => {
     clinicWorkspacePage = new ClinicWorkspacePage(page);
 
     await test.step('Given user has been logged in and navigated to base URL', async () => {
-      // Assumes login via storageState and baseURL navigation are handled by config/project
-      page.setViewportSize({ width: 1920, height: 1080 });
-      await page.goto('/'); // Navigate after setting viewport if needed
+      await workspacesPage.goto();
       await page.waitForURL(workspacesPage.url);
       await workspacesPage.header.waitFor({ state: 'visible' });
     });

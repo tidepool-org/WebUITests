@@ -7,8 +7,8 @@
     "merge-reports": "jrm tests_output/testresults.xml \"tests_output/e2e/*.xml\" \"tests_output/ui/*.xml\"",
     "lint": "eslint --ext .ts .",
     "lint:fix": "eslint --ext .ts . --fix",
-    "debug": "PWDEBUG=1 npx playwright test",
-    "test": "playwright test",
+    "debug": "TARGET_ENV=qa1 npx playwright test --debug ",
+    "test": "TARGET_ENV=qa1 playwright test",
     "format": "prettier --write ."
   },
   "repository": {
