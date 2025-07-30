@@ -2,8 +2,8 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "@sections/*": ["pageobjects/sections/*"],
-      "@pom/*": ["pageobjects/*"],
+      "@sections/*": ["page-objects/sections/*"],
+      "@pom/*": ["page-objects/*"],
       "@fixtures/*": ["tests/fixtures/*"]
     },
     "target": "ES2020",
