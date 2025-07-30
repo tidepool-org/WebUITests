@@ -11,15 +11,15 @@ async function loginUserType(role: 'patient' | 'clinician') {
     baseURL: process.env.BASE_URL,
   });
   const page = await context.newPage();
-
+  await page.goto(env.BASE_URL);
   const loginPage = new LoginPage(page);
-  await loginPage.goto();
 if (role === 'patient') {
     await loginPage.login(env.PATIENT_USERNAME, env.PATIENT_PASSWORD);
+    await page.waitForURL('**/data');
   } else {
     await loginPage.login(env.CLINICIAN_USERNAME, env.CLINICIAN_PASSWORD);
+    await page.waitForURL('**/workspaces');
   }
-  await page.waitForURL('**/workspaces');  await page.waitForURL('**/workspaces');
 
   const authDir = path.resolve(process.cwd(), 'tests', '.auth');
   fs.mkdirSync(authDir, { recursive: true });
