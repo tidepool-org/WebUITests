@@ -1,7 +1,7 @@
 import { Page } from "@playwright/test";
-import DailyChartSection from "@sections/daily-chart.js";
-import NavigationSubMenu from "@sections/navigation-submenu.section.js";
-import NavigationSection from "@sections/navigation.section.js";
+import DailyChartSection from "page-objects/sections/daily-chart.js";
+import NavigationSubMenu from "page-objects/sections/navigation-submenu.section.js";
+import NavigationSection from "page-objects/sections/navigation.section.js";
 
 export default class PatientDataDailyPage {
   page: Page;
