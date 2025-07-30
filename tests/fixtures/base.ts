@@ -9,7 +9,7 @@ import {
   TestInfo,
   TestStepInfo,
   TestType,
-} from "@playwright/test";
+} from '@playwright/test';
 
 // Define the custom fixtures interface
 interface CustomFixtures {
@@ -25,28 +25,28 @@ export const test: TestType<
   PlaywrightWorkerArgs & PlaywrightWorkerOptions
 > = base.extend({
   page: async ({ page }, use, testInfo) => {
-    testInfo.snapshotSuffix = "";
-    testInfo.snapshotPath = (name) => `${testInfo.file}-snapshots/${name}`;
+    testInfo.snapshotSuffix = '';
+    testInfo.snapshotPath = name => `${testInfo.file}-snapshots/${name}`;
 
     await use(page);
   },
   timeLogger: [
     async ({ page }: { page: Page }, use: TestFixture<Page, any>, testInfo: TestInfo) => {
       test.info().annotations.push({
-        type: "Start",
+        type: 'Start',
         description: new Date().toISOString(),
       });
 
       await use(
         page,
-        async (page) => {
+        async page => {
           // The page is available here
         },
         testInfo,
       );
 
       test.info().annotations.push({
-        type: "End",
+        type: 'End',
         description: new Date().toISOString(),
       });
     },
@@ -59,7 +59,7 @@ export const test: TestType<
 
       await use(
         page,
-        async (page) => {
+        async page => {
           // The page is available here
         },
         testInfo,
@@ -70,11 +70,11 @@ export const test: TestType<
       const duration = endTime - startTime;
 
       test.info().annotations.push({
-        type: "Duration",
+        type: 'Duration',
         description: `${duration}ms`,
       });
       test.info().annotations.push({
-        type: "End",
+        type: 'End',
         description: new Date().toISOString(),
       });
     },
@@ -86,7 +86,11 @@ export const test: TestType<
       const stepTimings = new Map<string, number>();
 
       // Create a new step function with the same interface as the original
-      const newStep = function <T>(this: any, name: string, fn: (step: TestStepInfo) => Promise<T> | T) {
+      const newStep = function <T>(
+        this: any,
+        name: string,
+        fn: (step: TestStepInfo) => Promise<T> | T,
+      ) {
         return originalStep.call(this, name, async (stepInfo: TestStepInfo) => {
           const startTime = Date.now();
           console.time(`[step] ${name}`);
@@ -117,7 +121,7 @@ export const test: TestType<
 
       await use(
         page,
-        async (page) => {
+        async page => {
           // The page is available here
         },
         testInfo,
@@ -131,13 +135,13 @@ export const test: TestType<
   exceptionLogger: [
     async ({ page }: { page: Page }, use: TestFixture<Page, any>, testInfo: TestInfo) => {
       const errors: Error[] = [];
-      page.on("pageerror", (error: Error) => {
+      page.on('pageerror', (error: Error) => {
         errors.push(error);
       });
 
       await use(
         page,
-        async (page) => {
+        async page => {
           // The page is available here
         },
         testInfo,
@@ -145,18 +149,18 @@ export const test: TestType<
 
       if (errors.length > 0) {
         const testInfo = test.info();
-        await testInfo.attach("frontend-exceptions", {
-          body: errors.map((error) => `${error.message}\n${error.stack}`).join("\n---------\n"),
+        await testInfo.attach('frontend-exceptions', {
+          body: errors.map(error => `${error.message}\n${error.stack}`).join('\n---------\n'),
         });
 
-        throw new Error("Some frontend exceptions occurred");
+        throw new Error('Some frontend exceptions occurred');
       }
     },
     { auto: true },
   ],
 });
 
-export { expect } from "@playwright/test";
+export { expect } from '@playwright/test';
 
 /**
  * Decorator function for wrapping POM methods in a test.step.
@@ -172,9 +176,7 @@ export function step(stepName?: string) {
   return function decorator(target: Function, context: ClassMethodDecoratorContext) {
     return function replacementMethod(this: { name: string }, ...args: any[]) {
       const name = `${stepName || (context.name as string)} (${this.name})`;
-      return test.step(name, async () => {
-        return await target.call(this, ...args);
-      });
+      return test.step(name, async () => await target.call(this, ...args));
     };
   };
 }

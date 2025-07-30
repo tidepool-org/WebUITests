@@ -1,4 +1,4 @@
-import { Locator, Page } from "@playwright/test";
+import { Locator, Page } from '@playwright/test';
 
 /**
  * @class
@@ -10,9 +10,13 @@ import { Locator, Page } from "@playwright/test";
  */
 export default class LoginPage {
   page: Page;
+
   emailInput: Locator;
+
   nextButton: Locator;
+
   passwordInput: Locator;
+
   loginButton: Locator;
 
   /**
@@ -20,10 +24,10 @@ export default class LoginPage {
    */
   constructor(page: Page) {
     this.page = page;
-    this.emailInput = page.getByRole("textbox", { name: "Email" });
-    this.nextButton = page.getByRole("button", { name: "Next" });
-    this.passwordInput = page.getByRole("textbox", { name: "Password" });
-    this.loginButton = page.getByRole("button", { name: "Log In" });
+    this.emailInput = page.getByRole('textbox', { name: 'Email' });
+    this.nextButton = page.getByRole('button', { name: 'Next' });
+    this.passwordInput = page.getByRole('textbox', { name: 'Password' });
+    this.loginButton = page.getByRole('button', { name: 'Log In' });
   }
 
   /**

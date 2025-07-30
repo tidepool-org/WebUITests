@@ -1,12 +1,15 @@
-import { Page } from "@playwright/test";
-import DailyChartSection from "@components/daily-chart.js";
-import NavigationSubMenu from "@components/navigation-submenu.section.js";
-import NavigationSection from "page-objects/sections/navigation.section.js";
+import { Page } from '@playwright/test';
+import DailyChartSection from '@components/daily-chart.js';
+import NavigationSubMenu from '@components/navigation-submenu.section.js';
+import NavigationSection from 'page-objects/sections/navigation.section.js';
 
 export default class PatientDataDailyPage {
   page: Page;
+
   navigationBar: NavigationSection;
+
   navigationSubMenu: NavigationSubMenu;
+
   dailyChart: DailyChartSection;
 
   constructor(page: Page) {

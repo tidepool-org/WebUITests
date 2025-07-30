@@ -1,5 +1,5 @@
 import { defineConfig, devices, FullConfig } from '@playwright/test';
-import { resolve } from 'path';
+import { resolve } from 'node:path';
 import env from './utilities/env';
 
 const xrayOptions = {
@@ -9,9 +9,10 @@ const xrayOptions = {
   outputFile: 'test-output/test-results.xml',
 };
 
-
 // Helper to detect BrowserStack run
-const isBrowserStack = Boolean(process.env.BROWSERSTACK_USERNAME && process.env.BROWSERSTACK_ACCESS_KEY);
+const isBrowserStack = Boolean(
+  process.env.BROWSERSTACK_USERNAME && process.env.BROWSERSTACK_ACCESS_KEY,
+);
 
 function buildBrowserStackEndpoint(testName: string) {
   const caps = {
@@ -59,7 +60,7 @@ export default defineConfig({
       use: {
         ...devices['Desktop Chrome'],
         storageState: 'tests/.auth/patient.json',
-        headless: false
+        headless: false,
       },
     },
 
@@ -69,7 +70,7 @@ export default defineConfig({
       use: {
         ...devices['Desktop Chrome'],
         storageState: 'tests/.auth/clinician.json',
-        headless: false
+        headless: false,
       },
     },
 

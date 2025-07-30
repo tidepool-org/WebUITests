@@ -1,19 +1,18 @@
 import { chromium, FullConfig } from '@playwright/test';
 import LoginPage from '@pom/LoginPage';
-import fs from 'fs';
-import path from 'path';
+import fs from 'node:fs';
+import path from 'node:path';
 import env from '../utilities/env';
-
 
 async function loginUserType(role: 'patient' | 'clinician') {
   const browser = await chromium.launch();
-   const context = await browser.newContext({
+  const context = await browser.newContext({
     baseURL: process.env.BASE_URL,
   });
   const page = await context.newPage();
   await page.goto(env.BASE_URL);
   const loginPage = new LoginPage(page);
-if (role === 'patient') {
+  if (role === 'patient') {
     await loginPage.login(env.PATIENT_USERNAME, env.PATIENT_PASSWORD);
     await page.waitForURL('**/data');
   } else {
