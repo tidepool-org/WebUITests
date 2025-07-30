@@ -141,13 +141,3 @@ workflows:
       - test:
           requires:
             - eslint-check
-  scheduled-workflow:
-    triggers:
-      - schedule:
-          filters:
-            branches:
-              only:
-                - main
-          cron: "0 8 * * *"
-    jobs:
-      - test
