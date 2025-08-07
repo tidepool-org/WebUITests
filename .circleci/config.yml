@@ -1,6 +1,6 @@
 version: 2.1
 orbs:
-  node: circleci/node@5.0.2
+  node: circleci/node@6.1.0
   browser-tools: circleci/browser-tools@1.5.1
   slack: circleci/slack@4.1
 parameters:
@@ -11,25 +11,41 @@ parameters:
     type: string
     default: 'none'
 jobs:
-  # eslint-check:
-  #   working_directory: ~/tidepool-org/webuitests
-  #   docker:
-  #     - image: cimg/node:lts
-  #   steps:
-  #     - checkout
-  #     - node/install
-  #     - run: npm install
-  #     - run: npm run eslint
+  eslint-check:
+    working_directory: ~/tidepool-org/webuitests
+    docker:
+      - image: cimg/node:lts
+    steps:
+      - checkout
+      - node/install
+      - restore_cache:
+          keys:
+            - dependency-cache-{{ checksum "package.json" }}
+            - dependency-cache-
+      - run: npm ci
+      - save_cache:
+          paths:
+            - ./node_modules
+          key: dependency-cache-{{ checksum "package.json" }}
+      - run:
+          name: Run ESLint
+          command: npm run lint
   test:
     working_directory: ~/tidepool-org/webuitests
     docker:
-      - image: mcr.microsoft.com/playwright:v1.51.1-noble
+      - image: mcr.microsoft.com/playwright:v1.54.1-noble
+    parallelism: 4
     environment:
       TEST_EXECUTION_KEY: << pipeline.parameters.testExecKey >>
+      TARGET_ENV: qa1
     steps:
       - checkout
       - node/install
       - run: node --version
+      - restore_cache:
+          keys:
+            - dependency-cache-{{ checksum "package.json" }}
+            - dependency-cache-
       - run: npm ci
       - save_cache:
           paths:
@@ -41,10 +57,10 @@ jobs:
           name: Install Playwright Dependencies
           command: npx playwright install --with-deps
 
-      # Run tests
+      # Run tests with parallel execution
       - run:
           name: Run Playwright Tests
-          command: npm run playwright:ci
+          command: npm run test --shard=$CIRCLE_NODE_INDEX/$CIRCLE_NODE_TOTAL
 
       # Store test results and artifacts
       - store_artifacts:
@@ -131,7 +147,7 @@ jobs:
                 when: always
             - run:
                 name: Send Results to XRAY
-                command: 'curl -H "Content-Type: text/xml" -H "Authorization: Bearer $token" --data @tests_output/testresults.xml  "https://xray.cloud.getxray.app/api/v1/import/execution/junit?testExecKey=<< pipeline.parameters.testExecKey >>"'
+                command: 'curl -H "Content-Type: text/xml" -H "Authorization: Bearer $token" --data @test-output/test-results.xml  "https://xray.cloud.getxray.app/api/v1/import/execution/junit?testExecKey=<< pipeline.parameters.testExecKey >>"'
                 when: always
             - run:
                 name: Add Test Evidence to JIRA
