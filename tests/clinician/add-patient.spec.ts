@@ -7,7 +7,7 @@ test.describe('Add new patient', () => {
   const patientName = `Test Patient Playwright ${Date.now()}`;
   const patientBirthdate = '01/01/1990';
 
-  test.beforeEach(async ({ page }) => {
+  test.beforeEach(async () => {
     await test.step('Given user has been logged in and navigated to base URL', async () => {});
   });
 
