@@ -1,7 +1,6 @@
-import { defineConfig, devices, FullConfig } from '@playwright/test';
-import { resolve } from 'node:path';
-import env from './utilities/env';
+import { defineConfig, devices } from '@playwright/test';
 import path from 'node:path';
+import env from './utilities/env';
 
 const xrayOptions = {
   embedAnnotationsAsProperties: true,
