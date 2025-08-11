@@ -7,6 +7,8 @@
     "merge-reports": "jrm tests_output/testresults.xml \"tests_output/e2e/*.xml\" \"tests_output/ui/*.xml\"",
     "lint": "eslint --ext .ts . --max-warnings 999999",
     "lint:fix": "eslint --ext .ts . --fix",
+    "typecheck": "tsc --noEmit",
+    "check": "npm run lint && npm run typecheck",
     "debug": "TARGET_ENV=qa1 npx playwright test --debug ",
     "test": "TARGET_ENV=qa1 playwright test",
     "format": "prettier --write ."
