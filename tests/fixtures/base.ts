@@ -53,12 +53,11 @@ export const test: TestType<
   timeStepLogger: [
     async ({ page }: { page: Page }, use: (r: Page) => Promise<void>, testInfo: TestInfo) => {
       const startTime = Date.now();
-      // eslint-disable-next-line no-console
+
       console.time(`[test] ${testInfo.title}`);
 
       await use(page);
 
-      // eslint-disable-next-line no-console
       console.timeEnd(`[test] ${testInfo.title}`);
       const endTime = Date.now();
       const duration = endTime - startTime;
@@ -87,12 +86,11 @@ export const test: TestType<
       ) {
         return originalStep.call(this, name, async (stepInfo: TestStepInfo) => {
           const startTime = Date.now();
-          // eslint-disable-next-line no-console
+
           console.time(`[step] ${name}`);
 
           const result = await fn(stepInfo);
 
-          // eslint-disable-next-line no-console
           console.timeEnd(`[step] ${name}`);
           const endTime = Date.now();
           const duration = endTime - startTime;
@@ -153,7 +151,6 @@ export const test: TestType<
 
           // Skip screenshot if step name contains [no-screenshot]
           if (name.includes('[no-screenshot]')) {
-            // eslint-disable-next-line no-console
             console.log(`⏭️  Skipping screenshot for step: ${name}`);
             return result;
           }
@@ -172,11 +169,10 @@ export const test: TestType<
                 path: screenshotPath,
                 fullPage: true,
               });
-              // eslint-disable-next-line no-console
+
               console.log(`📸 Screenshot taken: ${screenshotPath}`);
             }
           } catch (error) {
-            // eslint-disable-next-line no-console
             console.log(`⚠️  Screenshot failed for step "${name}": ${error}`);
           }
 

@@ -1,7 +1,3 @@
-/* eslint-disable no-console */
-/* eslint-disable n/no-unsupported-features/node-builtins */
-/* eslint-disable n/no-sync */
-
 import fs from 'node:fs';
 import { FullConfig, FullResult, Suite, TestCase, TestResult } from '@playwright/test/reporter';
 import env from './env';

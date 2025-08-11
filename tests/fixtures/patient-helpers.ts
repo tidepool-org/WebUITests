@@ -1,8 +1,3 @@
-/* eslint-disable no-console */
-/* eslint-disable no-restricted-syntax */
-/* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable import-x/prefer-default-export */
-
 import { test as base } from '@fixtures/base';
 import PatientNav from '@pom/patient/PatientNavigation';
 import type { Page } from '@playwright/test';
