@@ -1,6 +1,6 @@
 /**
  * Test Tags Fixture
- * 
+ *
  * Simple tag definitions for test organization and Xray integration.
  */
 
@@ -18,18 +18,18 @@ export const TEST_TAGS = {
   BACK_GATEKEEPER: '@back-gatekeeper',
   BACK_EXPORT: '@back-export',
   BACK_KEYCLOAK: '@back-keycloak',
-  
+
   // User Types
   PATIENT: '@patient',
   CLINICIAN: '@clinician',
   CAREGIVER: '@caregiver',
-  
+
   // Test Types
   API: '@api',
   UI: '@ui',
   SMOKE: '@smoke',
   REGRESSION: '@regression',
-  
+
   // Priority
   CRITICAL: '@critical',
   HIGH: '@high',
@@ -44,7 +44,7 @@ export const TEST_TAGS = {
 export const TAG_CATEGORIES = {
   USER_TYPES: [TEST_TAGS.PATIENT, TEST_TAGS.CLINICIAN, TEST_TAGS.CAREGIVER],
   TEST_TYPES: [TEST_TAGS.API, TEST_TAGS.UI, TEST_TAGS.SMOKE, TEST_TAGS.REGRESSION],
-  PRIORITIES: [TEST_TAGS.CRITICAL, TEST_TAGS.HIGH, TEST_TAGS.MEDIUM, TEST_TAGS.LOW]
+  PRIORITIES: [TEST_TAGS.CRITICAL, TEST_TAGS.HIGH, TEST_TAGS.MEDIUM, TEST_TAGS.LOW],
 };
 
 /**
@@ -56,18 +56,18 @@ export function validateRequiredTags(tags: string[]) {
   const hasUserType = tags.some(tag => TAG_CATEGORIES.USER_TYPES.includes(tag));
   const hasTestType = tags.some(tag => TAG_CATEGORIES.TEST_TYPES.includes(tag));
   const hasPriority = tags.some(tag => TAG_CATEGORIES.PRIORITIES.includes(tag));
-  
+
   const isValid = hasUserType && hasTestType && hasPriority;
-  
+
   const missing = [];
   if (!hasUserType) missing.push('User Type');
   if (!hasTestType) missing.push('Test Type');
   if (!hasPriority) missing.push('Priority');
-  
+
   return {
     isValid,
     missing,
-    message: isValid ? 'All required tags present' : `Missing required tags: ${missing.join(', ')}`
+    message: isValid ? 'All required tags present' : `Missing required tags: ${missing.join(', ')}`,
   };
 }
 
