@@ -1,8 +1,12 @@
+/* eslint-disable no-console */
+/* eslint-disable no-restricted-syntax */
+/* eslint-disable no-await-in-loop */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable import-x/prefer-default-export */
+
 import { test as base } from '@fixtures/base';
 import PatientNav from '@pom/patient/PatientNavigation';
 import type { Page } from '@playwright/test';
-import LoginPage from '@pom/LoginPage';
-import env from '../../utilities/env';
 
 /**
  * Initialize patient navigation helpers after login
@@ -12,9 +16,9 @@ async function setupPatientSession(page: Page): Promise<PatientNav> {
   const nav = new PatientNav(page);
   await Promise.all([
     nav.pages.ViewData.link.waitFor({ state: 'visible' }),
-    nav.pages.Profile.link.waitFor({ state: 'visible' })
+    nav.pages.Profile.link.waitFor({ state: 'visible' }),
   ]);
-  
+
   return nav;
 }
 
@@ -27,14 +31,14 @@ async function closeOpenDialogs(page: Page): Promise<void> {
     if (page.isClosed()) {
       return;
     }
-    
+
     // First, try the most common close buttons that are actually visible
     const specificCloseButtons = [
       page.getByRole('button', { name: 'close dialog' }),
       page.getByRole('button', { name: 'Cancel' }),
-      page.getByRole('button', { name: 'Close' })
+      page.getByRole('button', { name: 'Close' }),
     ];
-    
+
     for (const closeButton of specificCloseButtons) {
       try {
         if (page.isClosed()) return;
@@ -47,13 +51,13 @@ async function closeOpenDialogs(page: Page): Promise<void> {
         // Continue trying other close methods
       }
     }
-    
+
     // Try Escape key - most effective for closing modals
     if (!page.isClosed()) {
       await page.keyboard.press('Escape');
       await page.waitForTimeout(500);
     }
-    
+
     // Check for dialog container and try additional methods if still open
     if (!page.isClosed()) {
       const dialogContainer = page.locator('#dialog-container');
@@ -61,16 +65,16 @@ async function closeOpenDialogs(page: Page): Promise<void> {
         // Try more generic close button patterns
         const genericCloseSelectors = [
           'button[aria-label="close"]',
-          'button[aria-label="Close"]', 
+          'button[aria-label="Close"]',
           'button[data-testid="close"]',
           'button.close',
           '.close-button',
           '[role="button"][aria-label*="close" i]',
           'button:has-text("×")',
           '.modal-close',
-          '[data-dismiss="modal"]'
+          '[data-dismiss="modal"]',
         ];
-        
+
         for (const selector of genericCloseSelectors) {
           try {
             if (page.isClosed()) return;
@@ -84,9 +88,9 @@ async function closeOpenDialogs(page: Page): Promise<void> {
             // Continue trying other selectors
           }
         }
-        
+
         // If dialog still exists, try clicking outside the modal
-        if (!page.isClosed() && await dialogContainer.isVisible({ timeout: 500 })) {
+        if (!page.isClosed() && (await dialogContainer.isVisible({ timeout: 500 }))) {
           try {
             await page.locator('body').click({ position: { x: 10, y: 10 } });
             await page.waitForTimeout(500);
@@ -94,7 +98,7 @@ async function closeOpenDialogs(page: Page): Promise<void> {
             // Ignore click errors
           }
         }
-        
+
         // Final escape attempts
         if (!page.isClosed()) {
           await page.keyboard.press('Escape');
@@ -111,10 +115,7 @@ async function closeOpenDialogs(page: Page): Promise<void> {
 /**
  * Core navigation function that handles different page types consistently
  */
-async function navigateTo(
-  targetPage: keyof PatientNav['pages'],
-  page: Page
-): Promise<void> {
+async function navigateTo(targetPage: keyof PatientNav['pages'], page: Page): Promise<void> {
   const nav = new PatientNav(page);
   const pageConfig = nav.pages[targetPage];
 
@@ -175,7 +176,7 @@ async function navigateTo(
       console.log(`Page is closed, skipping navigation to ${targetPage}`);
       return;
     }
-    
+
     await pageConfig.link.click();
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
@@ -201,9 +202,9 @@ async function navigateTo(
         `**/*${pageConfig.verifyURL}*`,
         `**/*${pageConfig.verifyURL}`,
         `**/data/${pageConfig.verifyURL}*`,
-        `**/data/${pageConfig.verifyURL}`
+        `**/data/${pageConfig.verifyURL}`,
       ];
-      
+
       let urlMatched = false;
       for (const pattern of urlPatterns) {
         try {
@@ -214,12 +215,14 @@ async function navigateTo(
           // Try next pattern
         }
       }
-      
+
       if (!urlMatched) {
-        console.log(`URL verification failed for ${targetPage}. Current URL: ${page.url()}, Expected pattern: ${pageConfig.verifyURL}`);
+        console.log(
+          `URL verification failed for ${targetPage}. Current URL: ${page.url()}, Expected pattern: ${pageConfig.verifyURL}`,
+        );
       }
     }
-    
+
     if (pageConfig.verifyElement) {
       await pageConfig.verifyElement.waitFor({ state: 'visible', timeout: 5000 });
     }
@@ -242,7 +245,7 @@ const test = base as typeof base & {
 
 test.patient = {
   navigateTo,
-  setup: setupPatientSession
+  setup: setupPatientSession,
 };
 
 export { test };
