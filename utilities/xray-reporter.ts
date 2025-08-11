@@ -1,10 +1,27 @@
-import fs from 'fs';
+/* eslint-disable no-console */
+/* eslint-disable n/no-unsupported-features/node-builtins */
+/* eslint-disable n/no-sync */
+
+import fs from 'node:fs';
+import { FullConfig, FullResult, Suite, TestCase, TestResult } from '@playwright/test/reporter';
 import env from './env';
+
+interface Styles {
+  success: string;
+  error: string;
+  info: string;
+  warning: string;
+  upload: string;
+  test: string;
+  separator: string;
+}
 
 /**
  * Reporter class for uploading test results to Xray
  */
 class XRayReporter {
+  private styles: Styles;
+
   constructor() {
     this.styles = {
       success: '✅',
@@ -22,7 +39,7 @@ class XRayReporter {
    * @returns {Promise<string>} The authentication token
    * @throws {Error} If authentication fails
    */
-  async authenticateWithXray() {
+  async authenticateWithXray(): Promise<string> {
     try {
       console.log(`${this.styles.info} Authenticating with Xray...`);
       const response = await fetch('https://xray.cloud.getxray.app/api/v1/authenticate', {
@@ -56,7 +73,7 @@ class XRayReporter {
    * @returns {Promise<void>}
    * @throws {Error} If upload fails
    */
-  async uploadTestResults(token, xmlContent) {
+  async uploadTestResults(token: string, xmlContent: string): Promise<void> {
     try {
       console.log(`${this.styles.info} Uploading test results to Xray...`);
       const response = await fetch(
@@ -85,21 +102,19 @@ class XRayReporter {
 
   /**
    * Called when test run begins
-   * @param {Object} config - Playwright configuration object
-   * @param {Object} suite - Test suite object containing all tests
+   * @param suite - Test suite object containing all tests
    */
-  onBegin(config, suite) {
-    console.log('\n' + this.styles.separator);
+  onBegin(_config: FullConfig, suite: Suite): void {
+    console.log(`\n${this.styles.separator}`);
     console.log(`${this.styles.test} Starting test run with ${suite.allTests().length} tests`);
-    console.log(this.styles.separator + '\n');
+    console.log(`${this.styles.separator}\n`);
   }
 
   /**
    * Called when a test begins
-   * @param {Object} test - Test case object
-   * @param {Object} result - Test result object
+   * @param test - Test case object
    */
-  onTestBegin(test, result) {
+  onTestBegin(test: TestCase, _result: TestResult): void {
     console.log(`${this.styles.test} Starting: ${test.title}`);
   }
 
@@ -108,23 +123,23 @@ class XRayReporter {
    * @param {Object} test - Test case object
    * @param {Object} result - Test result object containing status and other details
    */
-  onTestEnd(test, result) {
+  onTestEnd(test: TestCase, result: TestResult): void {
     const statusEmoji = result.status === 'passed' ? this.styles.success : this.styles.error;
     console.log(`${statusEmoji} Finished: ${test.title} (${result.status})`);
   }
 
   /**
    * Called when all tests have finished
-   * @param {Object} result - Full test run result object containing status and duration
+   * @param result - Full test run result object containing status and duration
    */
-  async onEnd(result) {
-    console.log('\n' + this.styles.separator);
+  async onEnd(result: FullResult): Promise<void> {
+    console.log(`\n${this.styles.separator}`);
     console.log(`${this.styles.info} Test Run Summary:`);
     console.log(
       `Status: ${result.status === 'passed' ? this.styles.success : this.styles.error} ${result.status}`,
     );
     console.log(`Duration: ${result.duration}ms`);
-    console.log(this.styles.separator + '\n');
+    console.log(`${this.styles.separator}\n`);
 
     if (!(env.XRAY_CLIENT_ID || env.XRAY_CLIENT_SECRET)) {
       console.log(
@@ -143,7 +158,7 @@ class XRayReporter {
     } catch (error) {
       console.error(`${this.styles.error} Failed to process test results:`, error);
     }
-    console.log(this.styles.separator + '\n');
+    console.log(`${this.styles.separator}\n`);
   }
 }
 
