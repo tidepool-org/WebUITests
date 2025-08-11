@@ -1,11 +1,11 @@
 import { step } from '@fixtures/base';
 import { Locator, Page } from '@playwright/test';
-import NavigationSubMenu from '@pom/patient/PatientNavigation';
+import PatientNav from '@pom/patient/PatientNavigation';
 import NavigationSection from '@components/navigation.section';
 
 interface CalendarSection {
   container: Locator;
-  firstDayOfData: Locator,
+  firstDayOfData: Locator;
   calendarDayhover: {
     el: Locator;
     text(): Promise<string | null>;
@@ -63,8 +63,6 @@ const statsSideBarSection = [
   'averageDailyDose',
 ] as const;
 
-type StatName = (typeof statsSideBarSection)[number];
-
 interface StatsSidebar {
   toggleContainer: Locator;
   toggleTo(toState: 'BGM' | 'CGM'): Promise<void>;
@@ -100,7 +98,7 @@ export default class PatientDataBasicsPage {
 
   navigationBar: NavigationSection;
 
-  navigationSubMenu: NavigationSubMenu;
+  navigationSubMenu: PatientNav;
 
   headerBgReading: Locator;
 
@@ -121,7 +119,7 @@ export default class PatientDataBasicsPage {
     this.url = '/patients/data/basics';
     this.emailInput = page.getByRole('textbox', { name: 'Email' });
     this.navigationBar = new NavigationSection(page);
-    this.navigationSubMenu = new NavigationSubMenu(page);
+    this.navigationSubMenu = new PatientNav(page);
     this.headerBgReading = page.getByRole('heading', { name: 'BG readings' });
     this.headerBolusing = page.getByRole('heading', { name: 'Bolusing' });
 
