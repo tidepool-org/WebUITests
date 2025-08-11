@@ -1,6 +1,5 @@
 /* eslint-disable no-console */
 /* eslint-disable no-restricted-syntax */
-/* eslint-disable no-await-in-loop */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable no-useless-escape */
 /* eslint-disable n/no-sync */

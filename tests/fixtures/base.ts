@@ -6,6 +6,7 @@ import {
   PlaywrightWorkerArgs,
   PlaywrightWorkerOptions,
   TestFixture,
+  TestInfo,
   TestStepInfo,
   TestType,
 } from '@playwright/test';
@@ -34,15 +35,15 @@ export const test: TestType<
     await use(page);
   },
   timeLogger: [
-    async ({ page }: { page: Page }, use: TestFixture<Page, any>) => {
-      test.info().annotations.push({
+    async ({ page }: { page: Page }, use: (r: Page) => Promise<void>, testInfo: TestInfo) => {
+      testInfo.annotations.push({
         type: 'Start',
         description: new Date().toISOString(),
       });
 
       await use(page);
 
-      test.info().annotations.push({
+      testInfo.annotations.push({
         type: 'End',
         description: new Date().toISOString(),
       });
@@ -50,7 +51,7 @@ export const test: TestType<
     { auto: true },
   ],
   timeStepLogger: [
-    async ({ page }: { page: Page }, use: TestFixture<Page, any>) => {
+    async ({ page }: { page: Page }, use: (r: Page) => Promise<void>, testInfo: TestInfo) => {
       const startTime = Date.now();
       // eslint-disable-next-line no-console
       console.time(`[test] ${testInfo.title}`);
@@ -62,11 +63,11 @@ export const test: TestType<
       const endTime = Date.now();
       const duration = endTime - startTime;
 
-      test.info().annotations.push({
+      testInfo.annotations.push({
         type: 'Duration',
         description: `${duration}ms`,
       });
-      test.info().annotations.push({
+      testInfo.annotations.push({
         type: 'End',
         description: new Date().toISOString(),
       });
@@ -74,7 +75,7 @@ export const test: TestType<
     { auto: true },
   ],
   stepTimer: [
-    async ({ page }: { page: Page }, use: TestFixture<Page, any>) => {
+    async ({ page }: { page: Page }, use: (r: Page) => Promise<void>, testInfo: TestInfo) => {
       const originalStep = test.step;
       const stepTimings = new Map<string, number>();
 
@@ -97,7 +98,7 @@ export const test: TestType<
           const duration = endTime - startTime;
 
           stepTimings.set(name, duration);
-          test.info().annotations.push({
+          testInfo.annotations.push({
             type: `Step Duration: ${name}`,
             description: `${duration}ms`,
           });
@@ -125,7 +126,7 @@ export const test: TestType<
     { auto: true },
   ],
   stepScreenshoter: [
-    async ({ page }: { page: Page }, use: TestFixture<Page, any>, testInfo: TestInfo) => {
+    async ({ page }: { page: Page }, use: (r: Page) => Promise<void>, testInfo: TestInfo) => {
       const originalStep = test.step;
       let stepCounter = 0;
 
@@ -202,7 +203,7 @@ export const test: TestType<
     { auto: true },
   ],
   exceptionLogger: [
-    async ({ page }: { page: Page }, use: TestFixture<Page, any>) => {
+    async ({ page }: { page: Page }, use: (r: Page) => Promise<void>, testInfo: TestInfo) => {
       const errors: Error[] = [];
       page.on('pageerror', (error: Error) => {
         errors.push(error);
@@ -211,8 +212,7 @@ export const test: TestType<
       await use(page);
 
       if (errors.length > 0) {
-        const currentTestInfo = test.info();
-        await currentTestInfo.attach('frontend-exceptions', {
+        await testInfo.attach('frontend-exceptions', {
           body: errors.map(error => `${error.message}\n${error.stack}`).join('\n---------\n'),
         });
 

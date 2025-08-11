@@ -72,4 +72,12 @@ export default [
   ...typescriptConfig,
   // Prettier Config
   ...prettierConfig,
+  // Custom rules for test automation
+  {
+    name: 'custom/test-automation-rules',
+    rules: {
+      // Disable no-await-in-loop for test automation where sequential UI interactions are necessary
+      'no-await-in-loop': 'off',
+    },
+  },
 ];
