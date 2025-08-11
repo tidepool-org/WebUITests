@@ -205,7 +205,6 @@ test.describe('Patient Data Navigation and Visualization', () => {
 
     // Other BGM tooltip functionality
     await basicsPage.statsSidebar.toggleTo('BGM');
-    /* eslint-disable no-await-in-loop */
     for (let i = 0; i < 5; i += 1) {
       const bar = basicsPage.statsSidebar.readingsInRange.hoverBar.nth(i);
       const barLabel = basicsPage.statsSidebar.readingsInRange.hoverBarLabel.nth(i);
@@ -226,7 +225,6 @@ test.describe('Patient Data Navigation and Visualization', () => {
           .toContainText(expectedHeadersReadingInRange[i].value.toString());
       });
     }
-    /* eslint-enable no-await-in-loop */
 
     // Stats for CGM
     // Time in range functionality
@@ -238,7 +236,6 @@ test.describe('Patient Data Navigation and Visualization', () => {
       { header: 'Time Above Range', value: 0.3 },
     ];
     await basicsPage.statsSidebar.toggleTo('CGM');
-    /* eslint-disable no-await-in-loop */
     for (let i = 0; i < expectedHeadersTimeInRange.length; i += 1) {
       const bar = basicsPage.statsSidebar.timeInRange.hoverBar.nth(i);
       const barLabel = basicsPage.statsSidebar.timeInRange.hoverBarLabel.nth(i);
@@ -257,7 +254,6 @@ test.describe('Patient Data Navigation and Visualization', () => {
         await expect.soft(barLabel).toContainText(expectedHeadersTimeInRange[i].value.toString());
       });
     }
-    /* eslint-enable no-await-in-loop */
   });
 
   // Other CGM tooltip functionality
@@ -270,7 +266,6 @@ test.describe('Patient Data Navigation and Visualization', () => {
       { header: 'Bolus Insulin', value: 18.8, percentage: 56 },
     ];
 
-    /* eslint-disable no-await-in-loop */
     for (let i = 0; i < expectedHeadersTimeInRange.length; i += 1) {
       const bar = basicsPage.statsSidebar.totalInsulin.hoverBar.nth(i);
       const barLabel = basicsPage.statsSidebar.totalInsulin.hoverBarLabel.nth(i);
@@ -289,6 +284,5 @@ test.describe('Patient Data Navigation and Visualization', () => {
         await expect.soft(barLabel).toContainText(expectedHeadersTimeInRange[i].value.toString());
       });
     }
-    /* eslint-enable no-await-in-loop */
   });
 });
