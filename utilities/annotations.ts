@@ -13,7 +13,7 @@ interface TestAnnotations {
 /**
  * Add test annotations to the test info for JIRA integration
  */
-export function addTestAnnotations(testInfo: TestInfo, annotations: TestAnnotations): void {
+export default function addTestAnnotations(testInfo: TestInfo, annotations: TestAnnotations): void {
   testInfo.annotations.push({
     type: 'test_key',
     description: annotations.testKey,
