@@ -1,3 +1,5 @@
+/* eslint-disable import-x/prefer-default-export */
+
 import { test as base } from '@fixtures/base';
 import AccountNav from '@pom/account/AccountNavigation';
 import type { Page } from '@playwright/test';
@@ -5,10 +7,7 @@ import type { Page } from '@playwright/test';
 /**
  * Core navigation function that handles account navigation consistently
  */
-async function navigateTo(
-  targetPage: keyof AccountNav['pages'],
-  page: Page
-): Promise<void> {
+async function navigateTo(targetPage: keyof AccountNav['pages'], page: Page): Promise<void> {
   const nav = new AccountNav(page);
   const pageConfig = nav.pages[targetPage];
 
@@ -41,7 +40,7 @@ async function navigateTo(
     if (targetPage === 'Logout') {
       // Ensure we're on the nav menu first
       if (await page.isClosed()) return;
-      if (!await nav.pages.AccountNav.verifyElement.isVisible({ timeout: 5000 })) {
+      if (!(await nav.pages.AccountNav.verifyElement.isVisible({ timeout: 5000 }))) {
         if (await page.isClosed()) return;
         await nav.pages.AccountNav.link.click();
         await nav.pages.AccountNav.verifyElement.waitFor({ state: 'visible', timeout: 10000 });
@@ -50,7 +49,9 @@ async function navigateTo(
       await pageConfig.link.click();
       // Wait for redirect to login page
       if (await page.isClosed()) return;
-      await page.waitForURL(/.*login.*/, { waitUntil: 'networkidle', timeout: 10000 }).catch(() => {});
+      await page
+        .waitForURL(/.*login.*/, { waitUntil: 'networkidle', timeout: 10000 })
+        .catch(() => {});
     } else {
       // For other pages, normal navigation
       if (await page.isClosed()) return;
