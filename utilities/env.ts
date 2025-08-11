@@ -11,12 +11,15 @@ const envSchema = z.object({
   CLINICIAN_USERNAME: z.string(),
   CLINICIAN_PASSWORD: z.string(),
   TARGET_ENV: z.enum(['qa1', 'qa2', 'qa3', 'qa4', 'qa5', 'production']),
+  XRAY_CLIENT_ID: z.string().optional(),
+  XRAY_CLIENT_SECRET: z.string().optional(),
 });
 
 const env = envSchema.safeParse(process.env);
 if (!env.success) {
+  // eslint-disable-next-line no-console
   console.error('❌ Invalid environment variables:\n', env.error.format());
-  process.exit(1);
+  throw new Error('Invalid environment variables. Check your .env file.');
 }
 
 const URL_MAP: Record<typeof env.data.TARGET_ENV, string> = {
