@@ -1,5 +1,3 @@
-/* eslint-disable no-console */
-
 import { test } from '@fixtures/patient-helpers';
 import { createNetworkHelper } from '@fixtures/network-helpers';
 import * as path from 'node:path';

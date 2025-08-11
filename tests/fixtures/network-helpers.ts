@@ -1,10 +1,3 @@
-/* eslint-disable no-console */
-/* eslint-disable no-restricted-syntax */
-/* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable no-useless-escape */
-/* eslint-disable n/no-sync */
-/* eslint-disable class-methods-use-this */
-
 import { Page, Route, Request, Response, expect } from '@playwright/test';
 import * as fs from 'node:fs';
 import * as path from 'node:path';

@@ -1,5 +1,3 @@
-/* eslint-disable import-x/prefer-default-export */
-
 import { test as base } from '@fixtures/base';
 import AccountNav from '@pom/account/AccountNavigation';
 import type { Page } from '@playwright/test';
