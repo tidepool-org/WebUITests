@@ -1,6 +1,6 @@
 import { Locator, Page } from '@playwright/test';
 
-export type AccountNavVerify = {
+export interface AccountNavVerify {
   name: string;
   link: Locator;
   verifyURL: string;
@@ -12,10 +12,7 @@ export default class AccountNav {
   readonly page: Page;
 
   readonly pages: Record<
-    | 'AccountNav'
-    | 'PrivateWorkspace'
-    | 'AccountSettings'
-    | 'Logout',
+    'AccountNav' | 'PrivateWorkspace' | 'AccountSettings' | 'Logout',
     AccountNavVerify
   >;
 
@@ -23,27 +20,35 @@ export default class AccountNav {
     this.page = page;
 
     this.pages = {
-      'AccountNav': {
+      AccountNav: {
         name: 'AccountNav',
         link: page.locator('button#navigation-menu-trigger'), // Use exact ID to identify menu trigger
         verifyURL: '',
-        verifyElement: page.locator('button.navigation-menu-option').filter({ hasText: 'Private Workspace' }),
+        verifyElement: page
+          .locator('button.navigation-menu-option')
+          .filter({ hasText: 'Private Workspace' }),
       },
-      'PrivateWorkspace': {
+      PrivateWorkspace: {
         name: 'PrivateWorkspace',
-        link: page.locator('button.navigation-menu-option').filter({ hasText: 'Private Workspace' }),
+        link: page
+          .locator('button.navigation-menu-option')
+          .filter({ hasText: 'Private Workspace' }),
         verifyURL: 'workspaces',
         verifyElement: page.getByText('View data for:'),
       },
-      'AccountSettings': {
+      AccountSettings: {
         name: 'AccountSettings',
-        link: page.locator('#navigationMenu button.navigation-menu-option').filter({ hasText: 'Account Settings' }),
+        link: page
+          .locator('#navigationMenu button.navigation-menu-option')
+          .filter({ hasText: 'Account Settings' }),
         verifyURL: 'account',
         verifyElement: page.getByText('Full name'), // Use "Full name" text which is visible on the account settings page
       },
-      'Logout': {
+      Logout: {
         name: 'Logout',
-        link: page.locator('#navigationMenu button.navigation-menu-option').filter({ hasText: 'Logout' }),
+        link: page
+          .locator('#navigationMenu button.navigation-menu-option')
+          .filter({ hasText: 'Logout' }),
         verifyURL: 'login',
         verifyElement: page.getByRole('heading', { name: 'Log in to Tidepool' }),
       },
