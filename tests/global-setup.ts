@@ -21,14 +21,14 @@ async function loginUserType(role: 'patient' | 'clinician') {
   }
 
   const authDir = path.resolve(process.cwd(), 'tests', '.auth');
-  fs.mkdirSync(authDir, { recursive: true });
+  await fs.promises.mkdir(authDir, { recursive: true });
   const filePath = path.join(authDir, `${role}.json`);
   await context.storageState({ path: filePath });
 
   await browser.close();
 }
 
-export default async function globalSetup(config: FullConfig) {
+export default async function globalSetup(_config: FullConfig) {
   await loginUserType('patient');
   await loginUserType('clinician');
 }
