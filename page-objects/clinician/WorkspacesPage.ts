@@ -1,11 +1,10 @@
 import { Locator, Page } from '@playwright/test';
 import env from '../../utilities/env';
 
-
 export default class WorkspacesPage {
   readonly page: Page;
 
-  readonly url: string = env.BASE_URL + '/workspaces';
+  readonly url: string = `${env.BASE_URL}/workspaces`;
 
   readonly header: Locator;
 
