@@ -69,76 +69,15 @@ jobs:
           path: test-results
       - store_test_results:
           path: test-output/test-results.xml
-
-      - run:
-          name: Install xmllint
-          command: apt-get update && apt-get install -y libxml2-utils
-          when: always
-
-      # Parse test results for Slack notification
-      - run:
-          name: Parse Test Results
-          command: |
-            TOTAL_TESTS=$(xmllint --xpath "string(/testsuites/@tests)" test-output/test-results.xml)
-            FAILURES=$(xmllint --xpath "string(/testsuites/@failures)" test-output/test-results.xml)
-            ERRORS=$(xmllint --xpath "string(/testsuites/@errors)" test-output/test-results.xml)
-            PASSED_TESTS=$((TOTAL_TESTS - FAILURES - ERRORS))
-            TIME=$(xmllint --xpath "string(/testsuites/@time)" test-output/test-results.xml)
-            echo "export TOTAL_TESTS=$TOTAL_TESTS" >> $BASH_ENV
-            echo "export PASSED_TESTS=$PASSED_TESTS" >> $BASH_ENV
-            echo "export FAILURES=$FAILURES" >> $BASH_ENV
-            echo "export ERRORS=$ERRORS" >> $BASH_ENV
-            echo "export TIME=$TIME" >> $BASH_ENV
-          when: always
-      # Main branch notifications - always send
+      # Commit workflow notifications - basic templates for all branches
       - slack/notify:
           event: fail
-          branch_pattern: main
           mentions: '<@UG56AQFK2>'
-          custom: |
-            {
-              "blocks": [
-                {
-                  "type": "section",
-                  "text": {
-                    "type": "mrkdwn",
-                    "text": "*:x: Tidepool Web UI Tests Failed* :sad_tapani: \n\n :pencil:*Summary* \n\n *$PASSED_TESTS/$TOTAL_TESTS* tests passed \n *$FAILURES* tests failed \n Total time: *$TIME* seconds"
-                  }
-                },
-                {
-                  "type": "divider"
-                },
-                {
-                  "type": "section",
-                  "text": {
-                    "type": "mrkdwn",
-                    "text": ":link: *<${CIRCLE_BUILD_URL}|View CircleCI Build Details>*"
-                  }
-                }
-              ]
-            }
+          template: basic_fail_1
       - slack/notify:
           event: pass
           branch_pattern: main
-          custom: |
-            {
-              "blocks": [
-                {
-                  "type": "section",
-                  "text": {
-                    "type": "mrkdwn",
-                    "text": "*:white_check_mark: Tidepool Web UI Tests Passed!* :catjam:  \n\n :pencil:*Summary:* \n *$PASSED_TESTS/$TOTAL_TESTS* tests passed \n Total time: *$TIME* seconds \n\n :link: *<${CIRCLE_BUILD_URL}|View CircleCI Build Details>*"
-                  }
-                }
-              ]
-            }
-
-      # PR notifications - only send on status change
-      - slack/notify:
-          event: fail
-          branch_pattern: /^(?!main$).*/
-          mentions: '<@UG56AQFK2>'
-          template: basic_fail_1
+          template: basic_success_1
       - slack/notify:
           event: pass
           branch_pattern: /^(?!main$).*/
@@ -166,6 +105,133 @@ jobs:
                 name: Add Test Evidence to JIRA
                 command: node utilities/sendTestEvidenceToJira.js
                 when: always
+
+  scheduled-test:
+    working_directory: ~/tidepool-org/webuitests
+    docker:
+      - image: mcr.microsoft.com/playwright:v1.54.1-noble
+    parallelism: 4
+    environment:
+      TEST_EXECUTION_KEY: << pipeline.parameters.testExecKey >>
+      TARGET_ENV: << pipeline.parameters.testEnvironment >>
+    steps:
+      - checkout
+      - node/install
+      - run: node --version
+      - restore_cache:
+          keys:
+            - dependency-cache-{{ checksum "package.json" }}
+            - dependency-cache-
+      - run: npm ci
+      - save_cache:
+          paths:
+            - ./node_modules
+          key: dependency-cache-{{ checksum "package.json" }}
+
+      # Install Playwright browsers and dependencies
+      - run:
+          name: Install Playwright Dependencies
+          command: npx playwright install --with-deps
+
+      # Run tests with parallel execution
+      - run:
+          name: Run Playwright Tests
+          command: npm run test --shard=$CIRCLE_NODE_INDEX/$CIRCLE_NODE_TOTAL
+
+      # Store test results and artifacts
+      - store_artifacts:
+          path: playwright-report
+      - store_artifacts:
+          path: test-results
+      - store_test_results:
+          path: test-output/test-results.xml
+
+      - run:
+          name: Install xmllint
+          command: apt-get update && apt-get install -y libxml2-utils
+          when: always
+
+      # Parse test results for detailed Slack notification
+      - run:
+          name: Parse Test Results
+          command: |
+            TOTAL_TESTS=$(xmllint --xpath "string(/testsuites/@tests)" test-output/test-results.xml)
+            FAILURES=$(xmllint --xpath "string(/testsuites/@failures)" test-output/test-results.xml)
+            ERRORS=$(xmllint --xpath "string(/testsuites/@errors)" test-output/test-results.xml)
+            PASSED_TESTS=$((TOTAL_TESTS - FAILURES - ERRORS))
+            TIME=$(xmllint --xpath "string(/testsuites/@time)" test-output/test-results.xml)
+            echo "export TOTAL_TESTS=$TOTAL_TESTS" >> $BASH_ENV
+            echo "export PASSED_TESTS=$PASSED_TESTS" >> $BASH_ENV
+            echo "export FAILURES=$FAILURES" >> $BASH_ENV
+            echo "export ERRORS=$ERRORS" >> $BASH_ENV
+            echo "export TIME=$TIME" >> $BASH_ENV
+          when: always
+
+      # Detailed Slack notifications for scheduled runs
+      - slack/notify:
+          event: fail
+          mentions: '<@UG56AQFK2>'
+          custom: |
+            {
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*:x: Scheduled Tidepool Web UI Tests Failed* :sad_tapani: \n\n :pencil:*Summary* \n\n *$PASSED_TESTS/$TOTAL_TESTS* tests passed \n *$FAILURES* tests failed \n Total time: *$TIME* seconds"
+                  }
+                },
+                {
+                  "type": "divider"
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": ":link: *<${CIRCLE_BUILD_URL}|View CircleCI Build Details>*"
+                  }
+                }
+              ]
+            }
+      - slack/notify:
+          event: pass
+          custom: |
+            {
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*:white_check_mark: Scheduled Tidepool Web UI Tests Passed!* :catjam:  \n\n :pencil:*Summary:* \n *$PASSED_TESTS/$TOTAL_TESTS* tests passed \n Total time: *$TIME* seconds \n\n :link: *<${CIRCLE_BUILD_URL}|View CircleCI Build Details>*"
+                  }
+                }
+              ]
+            }
+
+      - unless:
+          condition:
+            and:
+              - equal: ['testParallel', << pipeline.parameters.testEnvironment >>]
+          steps:
+            - run:
+                name: Gather Test Evidence
+                command: node utilities/browserstackEvidenceDownload.js
+                when: always
+            - run:
+                name: Get API token
+                command: |
+                  echo export token=$(curl -H "Content-Type: application/json" -X POST --data "{ \"client_id\": \"$CLIENT_ID\",\"client_secret\": \"$CLIENT_SECRET\" }" https://xray.cloud.getxray.app/api/v1/authenticate| tr -d '"') >> $BASH_ENV
+                  source $BASH_ENV
+                when: always
+            - run:
+                name: Send Results to XRAY
+                command: 'curl -H "Content-Type: text/xml" -H "Authorization: Bearer $token" --data @test-output/test-results.xml  "https://xray.cloud.getxray.app/api/v1/import/execution/junit?testExecKey=<< pipeline.parameters.testExecKey >>"'
+                when: always
+            - run:
+                name: Add Test Evidence to JIRA
+                command: node utilities/sendTestEvidenceToJira.js
+                when: always
+
 workflows:
   commit-workflow:
     jobs:
