@@ -9,14 +9,14 @@ export const loginSchema: EndpointSchema = {
   expectedStatus: 200,
   requestSchema: {
     username: 'string',
-    password: 'string'
+    password: 'string',
   },
   responseSchema: {
     userid: 'string',
     username: 'string',
     emails: 'object',
-    roles: 'object'
-  }
+    roles: 'object',
+  },
 };
 
 /**
@@ -25,7 +25,7 @@ export const loginSchema: EndpointSchema = {
 export const logoutSchema: EndpointSchema = {
   url: /\/auth\/logout$/,
   method: 'POST',
-  expectedStatus: 200
+  expectedStatus: 200,
 };
 
 /**
@@ -37,6 +37,6 @@ export const refreshTokenSchema: EndpointSchema = {
   expectedStatus: 200,
   responseSchema: {
     userid: 'string',
-    username: 'string'
-  }
+    username: 'string',
+  },
 };
