@@ -1,7 +1,14 @@
-import { Page, Route, Request, Response } from '@playwright/test';
-import { expect } from '@playwright/test';
-import * as fs from 'fs';
-import * as path from 'path';
+/* eslint-disable no-console */
+/* eslint-disable no-restricted-syntax */
+/* eslint-disable no-await-in-loop */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable no-useless-escape */
+/* eslint-disable n/no-sync */
+/* eslint-disable class-methods-use-this */
+
+import { Page, Route, Request, Response, expect } from '@playwright/test';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
 
 export interface NetworkCapture {
   url: string;
@@ -16,7 +23,7 @@ const ENDPOINTS = {
   profile: /\/data\/[^\/]+$/, // GET requests for patient data
   profileUpdate: /\/data\/[^\/]+$/, // PUT requests for patient data updates
   profileMetrics: /\/metrics\/thisuser\//,
-  profileMessage: /\/message\/notes\//
+  profileMessage: /\/message\/notes\//,
 };
 
 /**
@@ -24,8 +31,10 @@ const ENDPOINTS = {
  */
 export class NetworkHelper {
   private page: Page;
+
   private captures: NetworkCapture[] = [];
-  private isCapturing: boolean = false;
+
+  private isCapturing = false;
 
   constructor(page: Page) {
     this.page = page;
@@ -33,36 +42,36 @@ export class NetworkHelper {
 
   async startCapture(): Promise<void> {
     if (this.isCapturing) return;
-    
+
     // Only intercept API requests we care about to avoid interfering with other requests
     const apiPatterns = [
       '**/data/**',
-      '**/metrics/**', 
+      '**/metrics/**',
       '**/message/**',
       '**/auth/**',
       '**/v1/**',
       '**/metadata/**',
       '**/user/**',
       '**/users/**',
-      '**/profile/**'
+      '**/profile/**',
     ];
-    
+
     for (const pattern of apiPatterns) {
       await this.page.route(pattern, async (route: Route) => {
         const request = route.request();
-        
+
         try {
           const response = await route.fetch();
-          
+
           let requestBody: any;
           let responseBody: any;
-          
+
           try {
             requestBody = request.postDataJSON();
           } catch {
             requestBody = request.postData();
           }
-          
+
           try {
             responseBody = await response.json();
           } catch {
@@ -75,9 +84,9 @@ export class NetworkHelper {
             requestBody,
             responseBody,
             statusCode: response.status(),
-            timestamp: Date.now()
+            timestamp: Date.now(),
           });
-          
+
           await route.fulfill({ response });
         } catch (error) {
           // If there's an error, continue the request without handling
@@ -89,50 +98,48 @@ export class NetworkHelper {
         }
       });
     }
-    
+
     this.isCapturing = true;
   }
 
   async stopCapture(): Promise<void> {
     if (!this.isCapturing) return;
-    
+
     // Remove all API route handlers
-    const apiPatterns = [
-      '**/data/**',
-      '**/metrics/**', 
-      '**/message/**',
-      '**/auth/**',
-      '**/v1/**'
-    ];
-    
+    const apiPatterns = ['**/data/**', '**/metrics/**', '**/message/**', '**/auth/**', '**/v1/**'];
+
     for (const pattern of apiPatterns) {
       await this.page.unroute(pattern);
     }
-    
+
     this.isCapturing = false;
   }
 
-  async waitForEndpoint(endpointName: string, method: string, timeout: number = 30000): Promise<NetworkCapture> {
+  async waitForEndpoint(
+    endpointName: string,
+    method: string,
+    timeout = 30000,
+  ): Promise<NetworkCapture> {
     const pattern = ENDPOINTS[endpointName as keyof typeof ENDPOINTS];
     if (!pattern) {
       throw new Error(`Unknown endpoint: ${endpointName}`);
     }
 
     const startTime = Date.now();
-    
+
     while (Date.now() - startTime < timeout) {
-      const matches = this.captures.filter(capture => 
-        pattern.test(capture.url) && 
-        capture.method.toLowerCase() === method.toLowerCase()
+      const matches = this.captures.filter(
+        capture =>
+          pattern.test(capture.url) && capture.method.toLowerCase() === method.toLowerCase(),
       );
-      
+
       if (matches.length > 0) {
         return matches[matches.length - 1]; // Return latest match
       }
-      
+
       await this.page.waitForTimeout(100);
     }
-    
+
     throw new Error(`${method} request to ${endpointName} not found within ${timeout}ms`);
   }
 
@@ -144,9 +151,7 @@ export class NetworkHelper {
    * Simple helper to validate endpoint requests by URL pattern and method
    */
   validateEndpointRequests(urlPattern: string, method: string): NetworkCapture[] {
-    return this.captures.filter(c => 
-      c.url.includes(urlPattern) && c.method === method
-    );
+    return this.captures.filter(c => c.url.includes(urlPattern) && c.method === method);
   }
 
   /**
@@ -157,14 +162,14 @@ export class NetworkHelper {
     if (!fs.existsSync(logDir)) {
       fs.mkdirSync(logDir, { recursive: true });
     }
-    
+
     const filepath = path.join(logDir, filename);
     const captureData = {
       timestamp: new Date().toISOString(),
       totalCaptures: this.captures.length,
-      captures: this.captures
+      captures: this.captures,
     };
-    
+
     fs.writeFileSync(filepath, JSON.stringify(captureData, null, 2));
     console.log(`📄 Network captures saved to: ${filepath}`);
   }
@@ -174,8 +179,8 @@ export class NetworkHelper {
    */
   printCaptureSummary(): void {
     console.log(`\n📊 Network Capture Summary (${this.captures.length} total requests):`);
-    console.log('=' .repeat(60));
-    
+    console.log('='.repeat(60));
+
     this.captures.forEach((capture, index) => {
       const timestamp = new Date(capture.timestamp).toLocaleTimeString();
       console.log(`${index + 1}. ${capture.method} ${capture.statusCode} - ${capture.url}`);
@@ -201,7 +206,7 @@ export class NetworkHelper {
     const matches = this.captures
       .filter(c => c.method === method && urlPattern.test(c.url))
       .sort((a, b) => b.timestamp - a.timestamp);
-    
+
     return matches.length > 0 ? matches[0] : null;
   }
 
@@ -213,7 +218,7 @@ export class NetworkHelper {
     if (!pattern) {
       throw new Error(`Unknown endpoint: ${endpointName}`);
     }
-    
+
     return this.captures.filter(c => pattern.test(c.url));
   }
 
@@ -227,15 +232,20 @@ export class NetworkHelper {
   /**
    * Save API response as JSON file with endpoint metadata
    */
-  async saveApiResponse(response: any, endpoint: string, method: string, filePath: string): Promise<void> {
+  async saveApiResponse(
+    response: any,
+    endpoint: string,
+    method: string,
+    filePath: string,
+  ): Promise<void> {
     const responseData = {
       _request: {
-        method: method,
-        endpoint: endpoint
+        method,
+        endpoint,
       },
-      ...response
+      ...response,
     };
-    
+
     await fs.promises.writeFile(filePath, JSON.stringify(responseData, null, 2), 'utf8');
   }
 }
