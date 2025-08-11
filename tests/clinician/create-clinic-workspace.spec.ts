@@ -1,18 +1,15 @@
 import { expect, test } from '@fixtures/base';
 import ClinicCreationPage from '@pom/clinician/ClinicCreationPage';
-import LoginPage from 'page-objects/LoginPage';
 import WorkspacesPage from '@pom/clinician/WorkspacesPage';
 import { randomUUID } from 'node:crypto';
 
 test.describe('Create clinic workspace', () => {
   const uniqueSuffix = randomUUID().substring(0, 8);
   const clinicName = `Test Clinic ${uniqueSuffix}`;
-  let loginPage: LoginPage;
   let workspacesPage: WorkspacesPage;
   let clinicCreationPage: ClinicCreationPage;
 
   test.beforeEach(async ({ page }) => {
-    loginPage = new LoginPage(page);
     workspacesPage = new WorkspacesPage(page);
     clinicCreationPage = new ClinicCreationPage(page);
   });
