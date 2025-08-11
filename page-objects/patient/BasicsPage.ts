@@ -1,11 +1,11 @@
 import { step } from '@fixtures/base';
 import { Locator, Page } from '@playwright/test';
-import NavigationSubMenu from '@components/navigation-submenu.section';
+import NavigationSubMenu from '@pom/patient/PatientNavigation';
 import NavigationSection from '@components/navigation.section';
 
 interface CalendarSection {
   container: Locator;
-  dayMostRecentBgReading: Locator;
+  firstDayOfData: Locator,
   calendarDayhover: {
     el: Locator;
     text(): Promise<string | null>;
@@ -18,7 +18,7 @@ function createSection(page: Page, selector: string): CalendarSection {
 
   return {
     container,
-    dayMostRecentBgReading: container.locator('.Calendar-day-most-recent'),
+    firstDayOfData: container.locator(`.Calendar-day--${parsedSelector}.Calendar-day`).first(),
     calendarDayhover: {
       el: container.locator('.Calendar-day--HOVER'),
       async text() {

@@ -3,7 +3,7 @@
     "baseUrl": ".",
     "paths": {
       "@components/*": ["page-objects/clinician/components/*", "page-objects/patient/components/*"],
-      "@pom/*": ["page-objects/*"],
+      "@pom/*": ["page-objects/*", "page-objects/patient/*", "page-objects/clinician/*"],
       "@fixtures/*": ["tests/fixtures/*"]
     },
     "target": "ES2020",
@@ -15,6 +15,6 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true
   },
-  "include": ["**/*.ts"],
+  "include": ["**/*.ts", "page-objects/**/*.ts"],
   "exclude": ["node_modules"]
 }
