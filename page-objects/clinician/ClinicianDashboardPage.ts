@@ -1,12 +1,11 @@
-import { step } from '@fixtures/base';
 import { Locator, Page } from '@playwright/test';
 
-class ClinicWorkspacePage {
+class ClinicianDashboardPage {
   page: Page;
 
   url = '/clinic-workspace';
 
-  name = 'ClinicWorkspacePage'; // Added name for step decorator context
+  name = 'ClinicianDashboardPage'; // Added name for step decorator context
 
   // Locators for the main page
   readonly addNewPatientButton: Locator;
@@ -109,4 +108,4 @@ class ClinicWorkspacePage {
   }
 }
 
-export default ClinicWorkspacePage;
+export default ClinicianDashboardPage;
