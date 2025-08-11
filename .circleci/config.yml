@@ -6,12 +6,12 @@ orbs:
 parameters:
   testEnvironment:
     type: string
-    default: 'testParallel'
+    default: 'qa1'
   testExecKey:
     type: string
     default: 'none'
 jobs:
-  eslint-check:
+  code-quality-check:
     working_directory: ~/tidepool-org/webuitests
     docker:
       - image: cimg/node:lts
@@ -28,8 +28,8 @@ jobs:
             - ./node_modules
           key: dependency-cache-{{ checksum "package.json" }}
       - run:
-          name: Run ESLint
-          command: npm run lint
+          name: Run ESLint and TypeScript Check
+          command: npm run check
   test:
     working_directory: ~/tidepool-org/webuitests
     docker:
@@ -37,7 +37,7 @@ jobs:
     parallelism: 4
     environment:
       TEST_EXECUTION_KEY: << pipeline.parameters.testExecKey >>
-      TARGET_ENV: qa1
+      TARGET_ENV: << pipeline.parameters.testEnvironment >>
     steps:
       - checkout
       - node/install
@@ -90,6 +90,7 @@ jobs:
             echo "export ERRORS=$ERRORS" >> $BASH_ENV
             echo "export TIME=$TIME" >> $BASH_ENV
           when: always
+      # Main branch notifications - always send
       - slack/notify:
           event: fail
           branch_pattern: main
@@ -131,6 +132,17 @@ jobs:
                 }
               ]
             }
+
+      # PR notifications - only send on status change
+      - slack/notify:
+          event: fail
+          branch_pattern: /^(?!main$).*/
+          mentions: '<@UG56AQFK2>'
+          template: basic_fail_1
+      - slack/notify:
+          event: pass
+          branch_pattern: /^(?!main$).*/
+          template: basic_success_1
       - unless:
           condition:
             and:
@@ -157,7 +169,7 @@ jobs:
 workflows:
   commit-workflow:
     jobs:
-      - eslint-check
+      - code-quality-check
       - test:
           requires:
             - eslint-check
