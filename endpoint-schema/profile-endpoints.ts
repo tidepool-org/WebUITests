@@ -13,12 +13,12 @@ export interface EndpointSchema {
  * Schema for patient data GET endpoint
  */
 export const getPatientDataSchema: EndpointSchema = {
-  url: /\/data\/[^\/]+\?.*$/,
+  url: /\/data\/[^/]+\?.*$/,
   method: 'GET',
   expectedStatus: 200,
   responseSchema: {
     // Patient data array - structure will vary
-  }
+  },
 };
 
 /**
@@ -27,14 +27,14 @@ export const getPatientDataSchema: EndpointSchema = {
 export const getMetricsSchema: EndpointSchema = {
   url: /\/metrics\/thisuser\/.*$/,
   method: 'GET',
-  expectedStatus: 200
+  expectedStatus: 200,
 };
 
 /**
  * Schema for message notes endpoint
  */
 export const getMessageNotesSchema: EndpointSchema = {
-  url: /\/message\/notes\/[^\/]+\?.*$/,
+  url: /\/message\/notes\/[^/]+\?.*$/,
   method: 'GET',
   expectedStatus: 200, // We'll handle 404 as acceptable in the validation logic
 };
