@@ -6,12 +6,11 @@ import {
   PlaywrightWorkerArgs,
   PlaywrightWorkerOptions,
   TestFixture,
-  TestInfo,
   TestStepInfo,
   TestType,
 } from '@playwright/test';
-import * as fs from 'fs';
-import * as path from 'path';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
 
 // Define the custom fixtures interface
 interface CustomFixtures {
@@ -28,25 +27,20 @@ export const test: TestType<
   PlaywrightWorkerArgs & PlaywrightWorkerOptions
 > = base.extend({
   page: async ({ page }, use, testInfo) => {
-    testInfo.snapshotSuffix = '';
-    testInfo.snapshotPath = name => `${testInfo.file}-snapshots/${name}`;
+    const modifiedTestInfo = testInfo;
+    modifiedTestInfo.snapshotSuffix = '';
+    modifiedTestInfo.snapshotPath = name => `${testInfo.file}-snapshots/${name}`;
 
     await use(page);
   },
   timeLogger: [
-    async ({ page }: { page: Page }, use: TestFixture<Page, any>, testInfo: TestInfo) => {
+    async ({ page }: { page: Page }, use: TestFixture<Page, any>) => {
       test.info().annotations.push({
         type: 'Start',
         description: new Date().toISOString(),
       });
 
-      await use(
-        page,
-        async page => {
-          // The page is available here
-        },
-        testInfo,
-      );
+      await use(page);
 
       test.info().annotations.push({
         type: 'End',
@@ -56,19 +50,15 @@ export const test: TestType<
     { auto: true },
   ],
   timeStepLogger: [
-    async ({ page }: { page: Page }, use: TestFixture<Page, any>, testInfo: TestInfo) => {
+    async ({ page }: { page: Page }, use: TestFixture<Page, any>) => {
       const startTime = Date.now();
+      // eslint-disable-next-line no-console
       console.time(`[test] ${testInfo.title}`);
 
-      await use(
-        page,
-        async page => {
-          // The page is available here
-        },
-        testInfo,
-      );
+      await use(page);
 
-      console.timeEnd(`[test] ${testInfo.title} ${testInfo}`);
+      // eslint-disable-next-line no-console
+      console.timeEnd(`[test] ${testInfo.title}`);
       const endTime = Date.now();
       const duration = endTime - startTime;
 
@@ -84,22 +74,24 @@ export const test: TestType<
     { auto: true },
   ],
   stepTimer: [
-    async ({ page }: { page: Page }, use: TestFixture<Page, any>, testInfo: TestInfo) => {
+    async ({ page }: { page: Page }, use: TestFixture<Page, any>) => {
       const originalStep = test.step;
       const stepTimings = new Map<string, number>();
 
       // Create a new step function with the same interface as the original
-      const newStep = function <T>(
+      const newStep = function newStepWrapper<T>(
         this: any,
         name: string,
         fn: (step: TestStepInfo) => Promise<T> | T,
       ) {
         return originalStep.call(this, name, async (stepInfo: TestStepInfo) => {
           const startTime = Date.now();
+          // eslint-disable-next-line no-console
           console.time(`[step] ${name}`);
 
           const result = await fn(stepInfo);
 
+          // eslint-disable-next-line no-console
           console.timeEnd(`[step] ${name}`);
           const endTime = Date.now();
           const duration = endTime - startTime;
@@ -115,20 +107,17 @@ export const test: TestType<
       };
 
       // Add the skip method to match the original test.step interface
-      newStep.skip = function <T>(name: string, fn: (step: TestStepInfo) => Promise<T> | T) {
+      newStep.skip = function skipStep<T>(
+        name: string,
+        fn: (step: TestStepInfo) => Promise<T> | T,
+      ) {
         return originalStep.skip.call(this, name, fn);
       };
 
       // Replace the original step with our enhanced version
       test.step = newStep as any;
 
-      await use(
-        page,
-        async page => {
-          // The page is available here
-        },
-        testInfo,
-      );
+      await use(page);
 
       // Restore original test.step
       test.step = originalStep;
@@ -143,46 +132,50 @@ export const test: TestType<
       // Create a safe directory name based on test info
       const testDirName = `${testInfo.title.replace(/[^a-z0-9]/gi, '-')}-${testInfo.project.name}`;
       const screenshotDir = path.join('test-results', testDirName);
-      
+
       // Clean up existing screenshots from previous runs
-      if (fs.existsSync(screenshotDir)) {
-        fs.rmSync(screenshotDir, { recursive: true, force: true });
+      try {
+        await fs.promises.access(screenshotDir);
+        await fs.promises.rm(screenshotDir, { recursive: true, force: true });
+      } catch {
+        // Directory doesn't exist, no need to clean up
       }
-      
+
       // Create a new step function that takes screenshots after completion
-      const newStep = function <T>(
+      const newStep = function newStepScreenshot<T>(
         this: any,
         name: string,
         fn: (step: TestStepInfo) => Promise<T> | T,
       ) {
         return originalStep.call(this, name, async (stepInfo: TestStepInfo) => {
           const result = await fn(stepInfo);
-          
+
           // Skip screenshot if step name contains [no-screenshot]
           if (name.includes('[no-screenshot]')) {
+            // eslint-disable-next-line no-console
             console.log(`⏭️  Skipping screenshot for step: ${name}`);
             return result;
           }
-          
+
           // Take screenshot after step completion
-          stepCounter++;
+          stepCounter += 1;
           try {
             if (!page.isClosed()) {
               // Ensure directory exists
-              if (!fs.existsSync(screenshotDir)) {
-                fs.mkdirSync(screenshotDir, { recursive: true });
-              }
-              
+              await fs.promises.mkdir(screenshotDir, { recursive: true });
+
               const screenshotName = `step-${stepCounter.toString().padStart(2, '0')}-${name.toLowerCase().replace(/[^a-z0-9]/g, '-')}.png`;
               const screenshotPath = path.join(screenshotDir, screenshotName);
-              
-              await page.screenshot({ 
+
+              await page.screenshot({
                 path: screenshotPath,
-                fullPage: true 
+                fullPage: true,
               });
+              // eslint-disable-next-line no-console
               console.log(`📸 Screenshot taken: ${screenshotPath}`);
             }
           } catch (error) {
+            // eslint-disable-next-line no-console
             console.log(`⚠️  Screenshot failed for step "${name}": ${error}`);
           }
 
@@ -191,20 +184,17 @@ export const test: TestType<
       };
 
       // Add the skip method to match the original test.step interface
-      newStep.skip = function <T>(name: string, fn: (step: TestStepInfo) => Promise<T> | T) {
+      newStep.skip = function skipStepScreenshot<T>(
+        name: string,
+        fn: (step: TestStepInfo) => Promise<T> | T,
+      ) {
         return originalStep.skip.call(this, name, fn);
       };
 
       // Replace the original step with our enhanced version
       test.step = newStep as any;
 
-      await use(
-        page,
-        async page => {
-          // The page is available here
-        },
-        testInfo,
-      );
+      await use(page);
 
       // Restore original test.step
       test.step = originalStep;
@@ -212,23 +202,17 @@ export const test: TestType<
     { auto: true },
   ],
   exceptionLogger: [
-    async ({ page }: { page: Page }, use: TestFixture<Page, any>, testInfo: TestInfo) => {
+    async ({ page }: { page: Page }, use: TestFixture<Page, any>) => {
       const errors: Error[] = [];
       page.on('pageerror', (error: Error) => {
         errors.push(error);
       });
 
-      await use(
-        page,
-        async page => {
-          // The page is available here
-        },
-        testInfo,
-      );
+      await use(page);
 
       if (errors.length > 0) {
-        const testInfo = test.info();
-        await testInfo.attach('frontend-exceptions', {
+        const currentTestInfo = test.info();
+        await currentTestInfo.attach('frontend-exceptions', {
           body: errors.map(error => `${error.message}\n${error.stack}`).join('\n---------\n'),
         });
 
@@ -252,7 +236,7 @@ export { expect } from '@playwright/test';
  * @returns A decorator function that can be used to decorate test methods.
  */
 export function step(stepName?: string) {
-  return function decorator(target: Function, context: ClassMethodDecoratorContext) {
+  return function decorator(target: any, context: ClassMethodDecoratorContext) {
     return function replacementMethod(this: { name: string }, ...args: any[]) {
       const name = `${stepName || (context.name as string)} (${this.name})`;
       return test.step(name, async () => await target.call(this, ...args));
