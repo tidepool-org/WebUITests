@@ -10,12 +10,15 @@ import {
   TestStepInfo,
   TestType,
 } from '@playwright/test';
+import * as fs from 'fs';
+import * as path from 'path';
 
 // Define the custom fixtures interface
 interface CustomFixtures {
   timeLogger: Page;
   timeStepLogger: Page;
   stepTimer: Page;
+  stepScreenshoter: Page;
   exceptionLogger: Page;
 }
 
@@ -106,6 +109,82 @@ export const test: TestType<
             type: `Step Duration: ${name}`,
             description: `${duration}ms`,
           });
+
+          return result;
+        });
+      };
+
+      // Add the skip method to match the original test.step interface
+      newStep.skip = function <T>(name: string, fn: (step: TestStepInfo) => Promise<T> | T) {
+        return originalStep.skip.call(this, name, fn);
+      };
+
+      // Replace the original step with our enhanced version
+      test.step = newStep as any;
+
+      await use(
+        page,
+        async page => {
+          // The page is available here
+        },
+        testInfo,
+      );
+
+      // Restore original test.step
+      test.step = originalStep;
+    },
+    { auto: true },
+  ],
+  stepScreenshoter: [
+    async ({ page }: { page: Page }, use: TestFixture<Page, any>, testInfo: TestInfo) => {
+      const originalStep = test.step;
+      let stepCounter = 0;
+
+      // Create a safe directory name based on test info
+      const testDirName = `${testInfo.title.replace(/[^a-z0-9]/gi, '-')}-${testInfo.project.name}`;
+      const screenshotDir = path.join('test-results', testDirName);
+      
+      // Clean up existing screenshots from previous runs
+      if (fs.existsSync(screenshotDir)) {
+        fs.rmSync(screenshotDir, { recursive: true, force: true });
+      }
+      
+      // Create a new step function that takes screenshots after completion
+      const newStep = function <T>(
+        this: any,
+        name: string,
+        fn: (step: TestStepInfo) => Promise<T> | T,
+      ) {
+        return originalStep.call(this, name, async (stepInfo: TestStepInfo) => {
+          const result = await fn(stepInfo);
+          
+          // Skip screenshot if step name contains [no-screenshot]
+          if (name.includes('[no-screenshot]')) {
+            console.log(`⏭️  Skipping screenshot for step: ${name}`);
+            return result;
+          }
+          
+          // Take screenshot after step completion
+          stepCounter++;
+          try {
+            if (!page.isClosed()) {
+              // Ensure directory exists
+              if (!fs.existsSync(screenshotDir)) {
+                fs.mkdirSync(screenshotDir, { recursive: true });
+              }
+              
+              const screenshotName = `step-${stepCounter.toString().padStart(2, '0')}-${name.toLowerCase().replace(/[^a-z0-9]/g, '-')}.png`;
+              const screenshotPath = path.join(screenshotDir, screenshotName);
+              
+              await page.screenshot({ 
+                path: screenshotPath,
+                fullPage: true 
+              });
+              console.log(`📸 Screenshot taken: ${screenshotPath}`);
+            }
+          } catch (error) {
+            console.log(`⚠️  Screenshot failed for step "${name}": ${error}`);
+          }
 
           return result;
         });
