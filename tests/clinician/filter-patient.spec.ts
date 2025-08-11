@@ -1,5 +1,5 @@
 import { expect, test } from '@fixtures/base';
-import ClinicWorkspacePage from '@pom/clinician/ClinicianDashboardPage';
+import ClinicianDashboardPage from '@pom/clinician/ClinicianDashboardPage';
 import WorkspacesPage from '@pom/clinician/WorkspacesPage';
 
 test.describe('Filter patients in clinic', () => {
@@ -10,11 +10,11 @@ test.describe('Filter patients in clinic', () => {
   const patientBirthdate = '01/01/1995'; // Shared birthdate for simplicity
 
   let workspacesPage: WorkspacesPage;
-  let clinicWorkspacePage: ClinicWorkspacePage;
+  let clinicWorkspacePage: ClinicianDashboardPage;
 
   test.beforeEach(async ({ page }) => {
     workspacesPage = new WorkspacesPage(page);
-    clinicWorkspacePage = new ClinicWorkspacePage(page);
+    clinicWorkspacePage = new ClinicianDashboardPage(page);
 
     await test.step('Given user has been logged in and navigated to base URL', async () => {
       await workspacesPage.goto();
@@ -48,7 +48,7 @@ test.describe('Filter patients in clinic', () => {
     });
   });
 
-  test('should successfully filter patients by name', async ({ page }) => {
+  test('should successfully filter patients by name', async () => {
     await test.step("When user filters by the first patient's name", async () => {
       await clinicWorkspacePage.searchForPatient(patientName1);
     });
