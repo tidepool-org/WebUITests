@@ -129,7 +129,7 @@ export const test: TestType<
       let stepCounter = 0;
 
       // Create a safe directory name based on test info
-      const testDirName = `${path.basename(testInfo.file, '.spec.ts').replace(/[^a-z0-9]/gi, '-')}`;
+      const testDirName = path.basename(testInfo.file, '.spec.ts').replace(/[^a-z0-9]/gi, '-');
       const screenshotDir = path.join('test-results', testDirName);
 
       // Store current step name for network helpers
@@ -141,7 +141,9 @@ export const test: TestType<
         increment: () => ++stepCounter,
         getDirectory: () => screenshotDir,
         getCurrentStepName: () => currentStepName,
-        setCurrentStepName: (name: string) => { currentStepName = name; }
+        setCurrentStepName: (name: string) => {
+          currentStepName = name;
+        },
       };
 
       // Clean up existing screenshots from previous runs
@@ -189,10 +191,8 @@ export const test: TestType<
                 path: screenshotPath,
                 fullPage: true,
               });
-
             }
-          } catch (error) {
-          }
+          } catch (error) {}
 
           return result;
         });
@@ -220,17 +220,17 @@ export const test: TestType<
           }
 
           const result = await fn(stepInfo);
-          
+
           // No screenshot taken for this step type
-          //console.log(`⏭️  API step completed without screenshot: ${name}`);
-          
+          // console.log(`⏭️  API step completed without screenshot: ${name}`);
+
           return result;
         });
       };
 
       // Replace the original step with our enhanced version
       test.step = newStep as any;
-      
+
       // Add the no-screenshot step function to the test object
       (test as any).stepNoScreenshot = stepNoScreenshot;
 
