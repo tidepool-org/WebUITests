@@ -12,7 +12,7 @@ export default class AccountNav {
   readonly page: Page;
 
   readonly pages: Record<
-    'AccountNav' | 'PrivateWorkspace' | 'AccountSettings' | 'Logout',
+    'AccountNav' | 'PrivateWorkspace' | 'AccountSettings' | 'ManageWorkspaces' | 'Logout',
     AccountNavVerify
   >;
 
@@ -43,6 +43,14 @@ export default class AccountNav {
           .filter({ hasText: 'Account Settings' }),
         verifyURL: 'account',
         verifyElement: page.getByText('Full name'), // Use "Full name" text which is visible on the account settings page
+      },
+      ManageWorkspaces: {
+        name: 'ManageWorkspaces',
+        link: page
+          .locator('#navigationMenu button.navigation-menu-option')
+          .filter({ hasText: 'Manage Workspaces' }),
+        verifyURL: 'workspaces',
+        verifyElement: page.getByText('Welcome To Tidepool'), // Should land back on the workspace selection page
       },
       Logout: {
         name: 'Logout',
