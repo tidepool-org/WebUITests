@@ -130,7 +130,20 @@ export const test: TestType<
 
       // Create a safe directory name based on test info
       const testDirName = `${testInfo.title.replace(/[^a-z0-9]/gi, '-')}-${testInfo.project.name}`;
+      const testDirName = `${path.basename(testInfo.file, '.spec.ts').replace(/[^a-z0-9]/gi, '-')}`;
       const screenshotDir = path.join('test-results', testDirName);
+
+      // Store current step name for network helpers
+      let currentStepName = '';
+
+      // Make step counter accessible globally for network helper
+      (globalThis as any).__stepCounter = {
+        get: () => stepCounter,
+        increment: () => ++stepCounter,
+        getDirectory: () => screenshotDir,
+        getCurrentStepName: () => currentStepName,
+        setCurrentStepName: (name: string) => { currentStepName = name; }
+      };
 
       // Clean up existing screenshots from previous runs
       try {
@@ -147,11 +160,17 @@ export const test: TestType<
         fn: (step: TestStepInfo) => Promise<T> | T,
       ) {
         return originalStep.call(this, name, async (stepInfo: TestStepInfo) => {
+          // Set current step name for network helpers (clean name without [no-screenshot])
+          const stepCounterObj = (globalThis as any).__stepCounter;
+          if (stepCounterObj) {
+            const cleanName = name.replace(/\s*\[no-screenshot\]\s*/g, '').trim();
+            stepCounterObj.setCurrentStepName(cleanName);
+          }
+
           const result = await fn(stepInfo);
 
           // Skip screenshot if step name contains [no-screenshot]
           if (name.includes('[no-screenshot]')) {
-            console.log(`⏭️  Skipping screenshot for step: ${name}`);
             return result;
           }
 
@@ -162,7 +181,9 @@ export const test: TestType<
               // Ensure directory exists
               await fs.promises.mkdir(screenshotDir, { recursive: true });
 
-              const screenshotName = `step-${stepCounter.toString().padStart(2, '0')}-${name.toLowerCase().replace(/[^a-z0-9]/g, '-')}.png`;
+              // Use clean name for filename (without [no-screenshot])
+              const cleanName = name.replace(/\s*\[no-screenshot\]\s*/g, '').trim();
+              const screenshotName = `step-${stepCounter.toString().padStart(2, '0')}-${cleanName.toLowerCase().replace(/[^a-z0-9]/g, '-')}.png`;
               const screenshotPath = path.join(screenshotDir, screenshotName);
 
               await page.screenshot({
@@ -170,10 +191,8 @@ export const test: TestType<
                 fullPage: true,
               });
 
-              console.log(`📸 Screenshot taken: ${screenshotPath}`);
             }
           } catch (error) {
-            console.log(`⚠️  Screenshot failed for step "${name}": ${error}`);
           }
 
           return result;
@@ -188,8 +207,33 @@ export const test: TestType<
         return originalStep.skip.call(this, name, fn);
       };
 
+      // Add a custom stepNoScreenshot function for API validation steps
+      const stepNoScreenshot = function stepNoScreenshot<T>(
+        this: any,
+        name: string,
+        fn: (step: TestStepInfo) => Promise<T> | T,
+      ) {
+        return originalStep.call(this, name, async (stepInfo: TestStepInfo) => {
+          // Set current step name for network helpers (clean name)
+          const stepCounterObj = (globalThis as any).__stepCounter;
+          if (stepCounterObj) {
+            stepCounterObj.setCurrentStepName(name);
+          }
+
+          const result = await fn(stepInfo);
+          
+          // No screenshot taken for this step type
+          //console.log(`⏭️  API step completed without screenshot: ${name}`);
+          
+          return result;
+        });
+      };
+
       // Replace the original step with our enhanced version
       test.step = newStep as any;
+      
+      // Add the no-screenshot step function to the test object
+      (test as any).stepNoScreenshot = stepNoScreenshot;
 
       await use(page);
 
