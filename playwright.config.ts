@@ -55,11 +55,21 @@ export default defineConfig({
 
   projects: [
     {
-      name: 'chromium-patient',
-      testMatch: '**/patient/**/*.spec.ts',
+      name: 'chromium-personal',
+      testMatch: '**/personal/**/*.spec.ts',
       use: {
         ...devices['Desktop Chrome'],
-        storageState: 'tests/.auth/patient.json',
+        storageState: 'tests/.auth/personal.json',
+        headless: false,
+      },
+    },
+
+    {
+      name: 'chromium-claimed',
+      testMatch: '**/claimed/**/*.spec.ts',
+      use: {
+        ...devices['Desktop Chrome'],
+        storageState: 'tests/.auth/claimed.json',
         headless: false,
       },
     },
@@ -77,11 +87,20 @@ export default defineConfig({
     ...(isBrowserStack
       ? [
           {
-            name: 'bs-chrome-patient',
+            name: 'bs-chrome-personal',
             testMatch: '**/patient/**/*.spec.ts',
             use: {
-              storageState: 'tests/.auth/patient.json',
-              connectOptions: { wsEndpoint: buildBrowserStackEndpoint('Patient Tests') },
+              storageState: 'tests/.auth/personal.json',
+              connectOptions: { wsEndpoint: buildBrowserStackEndpoint('Personal Patient Tests') },
+            },
+          },
+
+          {
+            name: 'bs-chrome-claimed',
+            testMatch: '**/claimed/**/*.spec.ts',
+            use: {
+              storageState: 'tests/.auth/claimed.json',
+              connectOptions: { wsEndpoint: buildBrowserStackEndpoint('Claimed Patient Tests') },
             },
           },
 
