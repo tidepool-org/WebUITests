@@ -87,7 +87,10 @@ class ClinicianDashboardPage {
    */
   async searchForPatient(name: string): Promise<void> {
     await this.searchInput.fill(name);
-    await this.patientListTable.waitFor({ state: 'visible' }); // Wait for search results
+    // Press Enter to trigger search
+    await this.searchInput.press('Enter');
+    // Wait longer for search to process and results to load
+    await this.page.waitForTimeout(3000);
   }
 
   /**
@@ -96,8 +99,8 @@ class ClinicianDashboardPage {
    * @returns Locator for the table cell containing the patient's name.
    */
   getPatientCellByName(name: string): Locator {
-    // Use a regex to be more flexible with how the name appears in the cell
-    return this.patientListTable.getByRole('cell', { name: new RegExp(name, 'i') });
+    // Use exact match to avoid multiple matches with similar names
+    return this.patientListTable.getByRole('cell', { name, exact: true });
   }
 
   /**
