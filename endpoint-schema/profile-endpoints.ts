@@ -10,6 +10,36 @@ export interface EndpointSchema {
 }
 
 /**
+ * Schema for profile metadata GET endpoint
+ */
+export const getProfileMetadataSchema: EndpointSchema = {
+  url: /\/metadata\/.*\/profile$/,
+  method: 'GET',
+  expectedStatus: 200,
+  responseSchema: {
+    fullName: 'string',
+    patient: 'object',
+  },
+};
+
+/**
+ * Schema for profile metadata PUT endpoint
+ */
+export const putProfileMetadataSchema: EndpointSchema = {
+  url: /\/metadata\/.*\/profile$/,
+  method: 'PUT',
+  expectedStatus: 200,
+  requestSchema: {
+    fullName: 'string',
+    patient: 'object',
+  },
+  responseSchema: {
+    fullName: 'string',
+    patient: 'object',
+  },
+};
+
+/**
  * Schema for patient data GET endpoint
  */
 export const getPatientDataSchema: EndpointSchema = {
