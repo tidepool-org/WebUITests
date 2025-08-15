@@ -129,7 +129,6 @@ export const test: TestType<
       let stepCounter = 0;
 
       // Create a safe directory name based on test info
-      const testDirName = `${testInfo.title.replace(/[^a-z0-9]/gi, '-')}-${testInfo.project.name}`;
       const testDirName = `${path.basename(testInfo.file, '.spec.ts').replace(/[^a-z0-9]/gi, '-')}`;
       const screenshotDir = path.join('test-results', testDirName);
 
