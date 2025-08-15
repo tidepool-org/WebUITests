@@ -3,6 +3,47 @@ import AccountNav from '@pom/account/AccountNavigation';
 import type { Page } from '@playwright/test';
 
 /**
+ * Switch user authentication context by loading different storageState
+ * @param userType - The user type corresponding to the storageState file (e.g., 'shared', 'clinician', 'claimed')
+ * @param page - The Playwright page instance
+ */
+async function switchUser(userType: string, page: Page): Promise<void> {
+  try {
+    // Import fs dynamically
+    const fs = await import('node:fs');
+
+    // Load the specified user's storage state
+    const storageStatePath = `tests/.auth/${userType}.json`;
+    const storageState = JSON.parse(fs.readFileSync(storageStatePath, 'utf-8'));
+
+    // Clear existing cookies first
+    await page.context().clearCookies();
+
+    // Set cookies from the new user's storage state
+    if (storageState.cookies) {
+      await page.context().addCookies(storageState.cookies);
+    }
+
+    // Set localStorage from the new user's storage state
+    if (storageState.origins) {
+      for (const origin of storageState.origins) {
+        await page.addInitScript(originData => {
+          if (originData.localStorage) {
+            for (const item of originData.localStorage) {
+              localStorage.setItem(item.name, item.value);
+            }
+          }
+        }, origin);
+      }
+    }
+
+    console.log(`✅ Successfully switched to ${userType} user authentication`);
+  } catch (error) {
+    throw new Error(`Failed to switch to ${userType} user: ${error}`);
+  }
+}
+
+/**
  * Core navigation function that handles account navigation consistently
  */
 async function navigateTo(targetPage: keyof AccountNav['pages'], page: Page): Promise<void> {
@@ -68,11 +109,13 @@ async function navigateTo(targetPage: keyof AccountNav['pages'], page: Page): Pr
 const test = base as typeof base & {
   account: {
     navigateTo: typeof navigateTo;
+    switchUser: typeof switchUser;
   };
 };
 
 test.account = {
   navigateTo,
+  switchUser,
 };
 
 export { test };

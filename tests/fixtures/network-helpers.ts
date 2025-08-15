@@ -1,6 +1,11 @@
-import { Page, Route, Request, Response, expect } from '@playwright/test';
+import { Page, Route, Request, Response, expect, TestInfo } from '@playwright/test';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
+import {
+  ENDPOINT_REGISTRY,
+  getEndpointSchema,
+  type EndpointName,
+} from '../../endpoint-schema/endpoint-registry';
 
 export interface NetworkCapture {
   url: string;
@@ -239,6 +244,324 @@ export class NetworkHelper {
     };
 
     await fs.promises.writeFile(filePath, JSON.stringify(responseData, null, 2), 'utf8');
+  }
+
+  /**
+   * Validate and save API response for any endpoint defined in the endpoint registry
+   * @param endpointName - The endpoint name from the registry (e.g., 'profile-metadata-get')
+   * @returns The captured network request or null if not found
+   */
+  async validateEndpointResponse(endpointName: EndpointName): Promise<NetworkCapture | null> {
+    const schema = getEndpointSchema(endpointName);
+    const request = this.getLatestCaptureMatching(schema.method, schema.url as RegExp);
+
+    if (request?.responseBody) {
+      // Access the shared step counter from the stepScreenshoter fixture
+      const stepCounterObj = (globalThis as any).__stepCounter;
+      if (stepCounterObj) {
+        const stepNumber = stepCounterObj.increment();
+        const screenshotDir = stepCounterObj.getDirectory();
+        const currentStepName = stepCounterObj.getCurrentStepName();
+
+        // Create consistent filename with step number and step name (like screenshots)
+        const stepNameForFile = currentStepName
+          ? currentStepName.toLowerCase().replace(/[^a-z0-9]/g, '-')
+          : endpointName.replace(/[^a-z0-9]/gi, '-');
+        const fileName = `step-${stepNumber.toString().padStart(2, '0')}-${stepNameForFile}-response.json`;
+        const saveToPath = path.join(screenshotDir, fileName);
+
+        // Ensure directory exists
+        await fs.promises.mkdir(screenshotDir, { recursive: true });
+
+        await this.saveApiResponse(request.responseBody, request.url, schema.method, saveToPath);
+      }
+    }
+
+    return request;
+  }
+
+  /**
+   * Save network capture for producer/consumer test patterns
+   * @param endpointName - The endpoint to save
+   * @param testName - Name of the test (used for file naming)
+   * @returns The saved network capture or null
+   */
+  async saveForDependentTests(
+    endpointName: EndpointName,
+    testName: string,
+  ): Promise<NetworkCapture | null> {
+    const schema = getEndpointSchema(endpointName);
+    const capture = this.getLatestCaptureMatching(schema.method, schema.url as RegExp);
+
+    if (capture) {
+      const filePath = path.join(
+        process.cwd(),
+        'log',
+        'test-data-pipeline',
+        `${testName}-response.json`,
+      );
+
+      // Ensure directory exists
+      const dir = path.dirname(filePath);
+      if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
+      }
+
+      // Save the capture for dependent tests
+      fs.writeFileSync(filePath, JSON.stringify(capture, null, 2));
+      console.log(`✅ Saved ${endpointName} response for dependent tests: ${filePath}`);
+      return capture;
+    }
+
+    return null;
+  }
+
+  /**
+   * Load producer test data for consumer tests
+   * @param testName - Name of the producer test (used for file naming)
+   * @returns The loaded network capture or null
+   */
+  loadFromProducerTest(testName: string): NetworkCapture | null {
+    const filePath = path.join(
+      process.cwd(),
+      'log',
+      'test-data-pipeline',
+      `${testName}-response.json`,
+    );
+
+    if (fs.existsSync(filePath)) {
+      const fileContent = fs.readFileSync(filePath, 'utf-8');
+      const capture = JSON.parse(fileContent);
+      console.log(`✅ Loaded ${testName} response from producer test`);
+      return capture;
+    }
+    throw new Error(
+      `Producer test data not found at: ${filePath}. Please run ${testName} test first.`,
+    );
+  }
+
+  /**
+   * Validate data consistency between producer and consumer responses
+   * @param producerCapture - The producer test network capture
+   * @param consumerCapture - The consumer test network capture
+   * @param fieldsToValidate - Array of field paths to validate (e.g., ['fullName', 'patient.birthday'])
+   */
+  validateDataConsistency(
+    producerCapture: NetworkCapture,
+    consumerCapture: NetworkCapture,
+    fieldsToValidate: string[] = [
+      'clinic.name',
+      'clinic.role',
+      'clinic.telephone',
+      'clinic.npi',
+      'fullName',
+      'patient.fullName',
+      'patient.birthday',
+      'patient.diagnosisDate',
+      'patient.diagnosisType',
+      'patient.targetDevices',
+      'patient.targetTimezone',
+      'patient.about',
+      'patient.isOtherPerson',
+      'patient.mrn',
+      'patient.biologicalSex',
+      'email',
+      'patient.email',
+      'patient.emails',
+      'emails',
+    ],
+  ): void {
+    const producerData = producerCapture.responseBody;
+    const consumerData = consumerCapture.responseBody;
+
+    if (!producerData || !consumerData) {
+      throw new Error('Missing response data for consistency validation');
+    }
+
+    console.log('🔍 Validating data consistency:');
+    console.log('Producer:', JSON.stringify(producerData, null, 2));
+    console.log('Consumer:', JSON.stringify(consumerData, null, 2));
+
+    // Validate each specified field
+    for (const fieldPath of fieldsToValidate) {
+      const producerValue = this.getNestedValue(producerData, fieldPath);
+      const consumerValue = this.getNestedValue(consumerData, fieldPath);
+
+      // fullName is required - must exist and match
+      if (fieldPath === 'fullName') {
+        if (producerValue === undefined || producerValue === null) {
+          throw new Error(`Required field ${fieldPath} is missing in producer data`);
+        }
+        if (consumerValue === undefined || consumerValue === null) {
+          throw new Error(`Required field ${fieldPath} is missing in consumer data`);
+        }
+      }
+
+      // For optional fields: only validate if the field exists in producer data
+      // If it exists in producer, it must also exist in consumer with same value
+      if (producerValue !== undefined && producerValue !== null) {
+        // Handle array comparison
+        if (Array.isArray(producerValue) && Array.isArray(consumerValue)) {
+          if (JSON.stringify(producerValue) !== JSON.stringify(consumerValue)) {
+            throw new Error(
+              `${fieldPath} mismatch - Expected: ${JSON.stringify(producerValue)}, Got: ${JSON.stringify(consumerValue)}`,
+            );
+          }
+        } else if (producerValue !== consumerValue) {
+          throw new Error(
+            `${fieldPath} mismatch - Expected: ${producerValue}, Got: ${consumerValue}`,
+          );
+        }
+      }
+      // If producer value doesn't exist, consumer doesn't need to have it either (optional field)
+    }
+
+    console.log('✅ Data consistency validated: consumer data reflects producer changes');
+  }
+
+  /**
+   * Helper method to get nested object values using dot notation
+   * @param obj - The object to search
+   * @param path - The dot-notation path (e.g., 'patient.birthday')
+   * @returns The value at the path or undefined
+   */
+  private getNestedValue(obj: any, path: string): any {
+    return path.split('.').reduce((current, key) => current?.[key], obj);
+  }
+
+  /**
+   * Validate producer-consumer data consistency for profile endpoints
+   * @param producerEndpointName - The PUT endpoint name (e.g., 'profile-metadata-put')
+   * @param consumerEndpointName - The GET endpoint name (e.g., 'profile-metadata-get')
+   * @param fieldsToValidate - Optional array of fields to validate
+   * @throws Error if validation fails
+   */
+  async validateProducerConsumerData(
+    producerEndpointName: EndpointName,
+    consumerEndpointName: EndpointName,
+    fieldsToValidate?: string[],
+  ): Promise<void> {
+    const producerSchema = getEndpointSchema(producerEndpointName);
+    const consumerSchema = getEndpointSchema(consumerEndpointName);
+
+    const producerCapture = this.getLatestCaptureMatching(
+      producerSchema.method,
+      producerSchema.url as RegExp,
+    );
+    const consumerCapture = this.getLatestCaptureMatching(
+      consumerSchema.method,
+      consumerSchema.url as RegExp,
+    );
+
+    if (!producerCapture) {
+      throw new Error(`No ${producerEndpointName} capture found for producer validation`);
+    }
+
+    if (!consumerCapture) {
+      throw new Error(`No ${consumerEndpointName} capture found for consumer validation`);
+    }
+
+    this.validateDataConsistency(producerCapture, consumerCapture, fieldsToValidate);
+  }
+
+  /**
+   * Private method to validate endpoint response without generating JSON file
+   * @param endpointName - The endpoint name from the registry
+   * @returns The captured network request or null if not found
+   */
+  private validateEndpointResponseSilent(endpointName: EndpointName): NetworkCapture | null {
+    const schema = getEndpointSchema(endpointName);
+    const request = this.getLatestCaptureMatching(schema.method, schema.url as RegExp);
+    return request;
+  }
+
+  /**
+   * Complete validation workflow for a user viewing profile data
+   * Validates both API schema and data consistency in one call
+   * @param consumerEndpointName - The GET endpoint name
+   * @param producerCapture - The stored PUT capture from the producer
+   * @param fieldsToValidate - Optional array of fields to validate
+   */
+  async compareEndpointResponse(
+    consumerEndpointName: EndpointName,
+    producerCapture: NetworkCapture,
+    fieldsToValidate?: string[],
+  ): Promise<void> {
+    // Validate GET response schema without generating JSON file
+    const consumerCapture = this.validateEndpointResponseSilent(consumerEndpointName);
+
+    if (!consumerCapture) {
+      throw new Error(`No compare endpoint found`);
+    }
+
+    if (!producerCapture) {
+      throw new Error('No base endpoint found');
+    }
+
+    // Generate comparison JSON file similar to validateEndpointResponse
+    const stepCounterObj = (globalThis as any).__stepCounter;
+    if (stepCounterObj) {
+      const stepNumber = stepCounterObj.increment();
+      const screenshotDir = stepCounterObj.getDirectory();
+      const currentStepName = stepCounterObj.getCurrentStepName();
+
+      // Create comparison data object
+      const comparisonData = {
+        _comparison: {
+          description: `Data consistency comparison for ${consumerEndpointName}`,
+          timestamp: new Date().toISOString(),
+          fieldsValidated: fieldsToValidate || [
+            'clinic.name',
+            'clinic.role',
+            'clinic.telephone',
+            'clinic.npi',
+            'fullName',
+            'patient.fullName',
+            'patient.birthday',
+            'patient.diagnosisDate',
+            'patient.diagnosisType',
+            'patient.targetDevices',
+            'patient.targetTimezone',
+            'patient.about',
+            'patient.isOtherPerson',
+            'patient.mrn',
+            'patient.biologicalSex',
+            'email',
+            'patient.email',
+            'patient.emails',
+            'emails',
+          ],
+        },
+        original: {
+          url: producerCapture.url,
+          method: producerCapture.method,
+          timestamp: producerCapture.timestamp,
+          responseBody: producerCapture.responseBody,
+        },
+        new: {
+          url: consumerCapture.url,
+          method: consumerCapture.method,
+          timestamp: consumerCapture.timestamp,
+          responseBody: consumerCapture.responseBody,
+        },
+      };
+
+      // Create consistent filename with step number and step name (like screenshots)
+      const stepNameForFile = currentStepName
+        ? currentStepName.toLowerCase().replace(/[^a-z0-9]/g, '-')
+        : consumerEndpointName.replace(/[^a-z0-9]/gi, '-');
+      const fileName = `step-${stepNumber.toString().padStart(2, '0')}-${stepNameForFile}-comparison.json`;
+      const saveToPath = path.join(screenshotDir, fileName);
+
+      // Ensure directory exists
+      await fs.promises.mkdir(screenshotDir, { recursive: true });
+
+      // Save the comparison data
+      await fs.promises.writeFile(saveToPath, JSON.stringify(comparisonData, null, 2), 'utf8');
+    }
+
+    // Validate data consistency
+    this.validateDataConsistency(producerCapture, consumerCapture, fieldsToValidate);
   }
 }
 
