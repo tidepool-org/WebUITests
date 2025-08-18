@@ -1,4 +1,5 @@
-import { test } from '../fixtures/patient-helpers';
+import {test} from '../fixtures/base'
+import { test as patientTest} from '../fixtures/patient-helpers';
 import { test as clinicTest } from '../fixtures/clinic-helpers';
 import { test as accountTest } from '../fixtures/account-helpers';
 import { createNetworkHelper } from '../fixtures/network-helpers';
@@ -32,12 +33,12 @@ test.describe('Comprehensive Profile Access Test: Edit as Claimed, View as Share
         api = createNetworkHelper(page);
         await api.startCapture();
         await page.goto('/data');
-        await test.patient.setup(page);
+        await patientTest.patient.setup(page);
       });
 
       // Step 2: User navigates to Profile page
       await test.step('When user navigates to Profile page', async () => {
-        await test.patient.navigateTo('Profile', page);
+        await patientTest.patient.navigateTo('Profile', page);
       });
 
       // Step 3: GET response is pulled and validated
@@ -50,7 +51,7 @@ test.describe('Comprehensive Profile Access Test: Edit as Claimed, View as Share
 
       // Step 4: Confirm edit button and click it
       await test.step('When user selects Edit button', async () => {
-        await test.patient.navigateTo('ProfileEdit', page);
+        await patientTest.patient.navigateTo('ProfileEdit', page);
       });
 
       // Initialize ProfilePage for steps 4 and 5
@@ -107,12 +108,12 @@ test.describe('Comprehensive Profile Access Test: Edit as Claimed, View as Share
       await test.step('When shared user views claimed user profile', async () => {
         await accountTest.account.switchUser('shared', page);
         await page.goto('/data');
-        await test.patient.navigateTo('ViewData', page);
+        await patientTest.patient.navigateTo('ViewData', page);
       });
 
       // Step 9: Validate GET response and confirm view-only access
       await test.step('When user navigates to Profile page', async () => {
-        await test.patient.navigateTo('Profile', page);
+        await patientTest.patient.navigateTo('Profile', page);
       });
 
       // Step 10: Confirm edit button is not present

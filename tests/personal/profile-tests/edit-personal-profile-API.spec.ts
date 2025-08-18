@@ -1,6 +1,4 @@
-import * as path from 'node:path';
-import * as fs from 'node:fs';
-import PatientDataBasicsPage from '@pom/patient/BasicsPage';
+
 import { test } from '../../fixtures/patient-helpers';
 import { createNetworkHelper } from '../../fixtures/network-helpers';
 import { TEST_TAGS, createValidatedTags } from '../../fixtures/test-tags';
