@@ -54,8 +54,8 @@ export const TEST_TAGS = {
   LOW: '@low',
 
   // Endpoint API Testing
-  API_PROFILE: '@profile',
-  API_USER: '@user',
+  API_PROFILE: '@api_profile',
+  API_USER: '@api_user',
 };
 
 // Tag Categories for Validation
