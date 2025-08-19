@@ -62,4 +62,17 @@ export default class AccountNav {
       },
     };
   }
+
+  /**
+   * Navigate to a page in the account navigation menu by key.
+   * Example: await accountNav.navigateTo('AccountSettings');
+   */
+  async navigateTo(pageKey: keyof AccountNav['pages']): Promise<void> {
+    // Always open the navigation menu first
+    await this.pages.AccountNav.link.click();
+    // Then click the desired page
+    await this.pages[pageKey].link.click();
+    // Wait for the verification element to appear
+    await this.pages[pageKey].verifyElement.waitFor({ state: 'visible', timeout: 5000 });
+  }
 }
