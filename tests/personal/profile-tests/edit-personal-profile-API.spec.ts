@@ -13,10 +13,11 @@ test.describe('Personal Accounts allow access and modification of profile detail
     {
       tag: createValidatedTags([
         TEST_TAGS.PATIENT, // User Type (required)
+        TEST_TAGS.PERSONAL, // User Subtype (required)
         TEST_TAGS.API, // Test Type (required)
         TEST_TAGS.UI, // Test Type (required)
         TEST_TAGS.HIGH, // Priority (required)
-        TEST_TAGS.PROFILE, // Feature (optional)
+        TEST_TAGS.API_PROFILE, // Feature (optional)
       ]),
     },
     async ({ page }) => {

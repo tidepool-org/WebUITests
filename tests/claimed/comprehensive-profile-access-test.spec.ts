@@ -16,10 +16,12 @@ test.describe('Comprehensive Profile Access Test: Edit as Claimed, View as Share
       tag: createValidatedTags([
         TEST_TAGS.PATIENT, // User Type (required)
         TEST_TAGS.CLINICIAN, // User Type (required)
+        TEST_TAGS.CLAIMED,
+        TEST_TAGS.SHARED_MEMBER,
         TEST_TAGS.API, // Test Type (required)
         TEST_TAGS.UI, // Test Type (required)
         TEST_TAGS.HIGH, // Priority (required)
-        TEST_TAGS.PROFILE, // Feature (optional)
+        TEST_TAGS.API_PROFILE, // Feature (optional)
       ]),
     },
     async ({ page }) => {
@@ -111,7 +113,7 @@ test.describe('Comprehensive Profile Access Test: Edit as Claimed, View as Share
         await patientTest.patient.navigateTo('ViewData', page);
       });
 
-      // Step 9: Validate GET response and confirm view-only access
+      // Step 9: Navigate to profile page
       await test.step('When user navigates to Profile page', async () => {
         await patientTest.patient.navigateTo('Profile', page);
       });

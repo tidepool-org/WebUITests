@@ -5,6 +5,18 @@
  */
 
 export const TEST_TAGS = {
+  /**
+   * Generate a Jira-related tag for linking tests to Jira tickets.
+   * Usage: TEST_TAGS.RELATED('JIRA-1234') => '@jira(JIRA-1234)'
+   */
+  RELATED: (jiraId: string) => {
+    // Accepts formats like ABC-1234 or JIRA-1234
+    const jiraPattern = /^[A-Z][A-Z0-9]+-\d+$/;
+    if (!jiraPattern.test(jiraId)) {
+      throw new Error(`Invalid Jira ID: ${jiraId}. Must match pattern ABC-1234.`);
+    }
+    return `@jira(${jiraId})`;
+  },
   // Backend Services
   BACK_SHORELINE: '@back-shoreline',
   BACK_CLINIC: '@back-clinic',
@@ -22,7 +34,12 @@ export const TEST_TAGS = {
   // User Types
   PATIENT: '@patient',
   CLINICIAN: '@clinician',
-  CAREGIVER: '@caregiver',
+ 
+  // User-Subtypes
+  CUSTODIAL: '@custodial',
+  SHARED_MEMBER: '@shared_member',
+  PERSONAL: '@personal',
+  CLAIMED: '@claimed',
 
   // Test Types
   API: '@api',
@@ -36,13 +53,14 @@ export const TEST_TAGS = {
   MEDIUM: '@medium',
   LOW: '@low',
 
-  // Specific Features
-  PROFILE: '@profile',
+  // Endpoint API Testing
+  API_PROFILE: '@profile',
+  API_USER: '@user',
 };
 
 // Tag Categories for Validation
 export const TAG_CATEGORIES = {
-  USER_TYPES: [TEST_TAGS.PATIENT, TEST_TAGS.CLINICIAN, TEST_TAGS.CAREGIVER],
+  USER_TYPES: [TEST_TAGS.PATIENT, TEST_TAGS.CLINICIAN],
   TEST_TYPES: [TEST_TAGS.API, TEST_TAGS.UI, TEST_TAGS.SMOKE, TEST_TAGS.REGRESSION],
   PRIORITIES: [TEST_TAGS.CRITICAL, TEST_TAGS.HIGH, TEST_TAGS.MEDIUM, TEST_TAGS.LOW],
 };
