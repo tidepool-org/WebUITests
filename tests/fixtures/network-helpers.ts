@@ -154,7 +154,7 @@ export class NetworkHelper {
   /**
    * Save all captures to a JSON file
    */
-  async saveCapturesTo(filename: string): Promise<void> {
+  async saveCapturesTo(filename: string, testInfo?: import('@playwright/test').TestInfo): Promise<void> {
     const logDir = path.join(process.cwd(), 'log');
     if (!fs.existsSync(logDir)) {
       fs.mkdirSync(logDir, { recursive: true });
@@ -169,6 +169,14 @@ export class NetworkHelper {
 
     fs.writeFileSync(filepath, JSON.stringify(captureData, null, 2));
     console.log(`📄 Network captures saved to: ${filepath}`);
+
+    // Attach to Playwright report if testInfo is provided
+    if (testInfo && typeof testInfo.attach === 'function') {
+      await testInfo.attach(filename, {
+        path: filepath,
+        contentType: 'application/json',
+      });
+    }
   }
 
   /**
@@ -234,6 +242,7 @@ export class NetworkHelper {
     endpoint: string,
     method: string,
     filePath: string,
+    testInfo?: import('@playwright/test').TestInfo
   ): Promise<void> {
     const responseData = {
       _request: {
@@ -244,6 +253,14 @@ export class NetworkHelper {
     };
 
     await fs.promises.writeFile(filePath, JSON.stringify(responseData, null, 2), 'utf8');
+
+    // Attach to Playwright report if testInfo is provided
+    if (testInfo && typeof testInfo.attach === 'function') {
+      await testInfo.attach(path.basename(filePath), {
+        path: filePath,
+        contentType: 'application/json',
+      });
+    }
   }
 
   /**
@@ -273,7 +290,13 @@ export class NetworkHelper {
         // Ensure directory exists
         await fs.promises.mkdir(screenshotDir, { recursive: true });
 
-        await this.saveApiResponse(request.responseBody, request.url, schema.method, saveToPath);
+        await this.saveApiResponse(
+          request.responseBody,
+          request.url,
+          schema.method,
+          saveToPath,
+          (globalThis as any).testInfo
+        );
       }
     }
 
@@ -310,6 +333,14 @@ export class NetworkHelper {
       // Save the capture for dependent tests
       fs.writeFileSync(filePath, JSON.stringify(capture, null, 2));
       console.log(`✅ Saved ${endpointName} response for dependent tests: ${filePath}`);
+      // Attach to Playwright report if testInfo is available on globalThis
+      const testInfo = (globalThis as any).testInfo;
+      if (testInfo && typeof testInfo.attach === 'function') {
+        await testInfo.attach(path.basename(filePath), {
+          path: filePath,
+          contentType: 'application/json',
+        });
+      }
       return capture;
     }
 
@@ -558,6 +589,14 @@ export class NetworkHelper {
 
       // Save the comparison data
       await fs.promises.writeFile(saveToPath, JSON.stringify(comparisonData, null, 2), 'utf8');
+      // Attach to Playwright report if testInfo is available on globalThis
+      const testInfo = (globalThis as any).testInfo;
+      if (testInfo && typeof testInfo.attach === 'function') {
+        await testInfo.attach(path.basename(saveToPath), {
+          path: saveToPath,
+          contentType: 'application/json',
+        });
+      }
     }
 
     // Validate data consistency

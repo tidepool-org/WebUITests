@@ -32,7 +32,14 @@ export const test: TestType<
     modifiedTestInfo.snapshotSuffix = '';
     modifiedTestInfo.snapshotPath = name => `${testInfo.file}-snapshots/${name}`;
 
-    await use(page);
+    // Make testInfo globally available for network helpers
+    (globalThis as any).testInfo = testInfo;
+    try {
+      await use(page);
+    } finally {
+      // Clean up after test
+      delete (globalThis as any).testInfo;
+    }
   },
   timeLogger: [
     async ({ page }: { page: Page }, use: (r: Page) => Promise<void>, testInfo: TestInfo) => {
@@ -154,7 +161,7 @@ export const test: TestType<
         // Directory doesn't exist, no need to clean up
       }
 
-      // Create a new step function that takes screenshots after completion
+      // Create a new step function that takes screenshots after completion and attaches them to the report
       const newStep = function newStepScreenshot<T>(
         this: any,
         name: string,
@@ -191,6 +198,14 @@ export const test: TestType<
                 path: screenshotPath,
                 fullPage: true,
               });
+
+              // Attach screenshot to Playwright report
+              if (testInfo && typeof testInfo.attach === 'function') {
+                await testInfo.attach(screenshotName, {
+                  path: screenshotPath,
+                  contentType: 'image/png',
+                });
+              }
             }
           } catch (error) {}
 
