@@ -1,4 +1,3 @@
-import * as path from 'node:path';
 import * as fs from 'node:fs';
 import { test } from '../../fixtures/clinic-helpers';
 import { createNetworkHelper } from '../../fixtures/network-helpers';
@@ -81,6 +80,9 @@ test.describe('Custodial patients are allowed access and modification of profile
           String.fromCharCode(65 + Math.floor(Math.random() * 26)),
         ).join('');
 
+        // Generate unique email
+        const email = `webuiautomation+custodialEdit${randomId}@tidepool.org`;
+
         // Get current diagnosis index and calculate next one (1-7, wrapping)
         const currentDiagnosisIndex = await profilePage.getCurrentDiagnosisIndex();
         let nextDiagnosisIndex = currentDiagnosisIndex + 1;
@@ -94,6 +96,7 @@ test.describe('Custodial patients are allowed access and modification of profile
         await profilePage.fillMRN(randomMRN);
         await profilePage.fillDiagnosisDate(diagnosisDate);
         await profilePage.selectDiagnosisType(nextDiagnosisIndex);
+        await profilePage.fillEmail(email);
         await profilePage.fillClinicalNotes(randomString);
       });
 

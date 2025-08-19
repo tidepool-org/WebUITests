@@ -1,46 +1,38 @@
+
 import { Locator, Page } from '@playwright/test';
+
 
 export class ProfilePage {
   readonly page: Page;
 
+  // Centralized field locators
+  private fieldLocators: Record<string, Locator>;
+
   constructor(page: Page) {
     this.page = page;
+    this.fieldLocators = {
+      fullName: this.page.getByRole('textbox', { name: 'Full name' }),
+      birthDate: this.page.getByRole('textbox', { name: 'Date of birth' }),
+      mrn: this.page.getByRole('textbox', { name: 'MRN' }),
+      diagnosisDate: this.page.getByRole('textbox', { name: 'Date of diagnosis' }),
+      clinicalNotes: this.page.getByRole('textbox', { name: 'Anything you would like to share' }),
+      email: this.page.getByRole('textbox', { name: /email/i }),
+    };
   }
 
-  async fillFullName(name: string): Promise<void> {
-    const nameField = this.page.getByRole('textbox', { name: 'Full name' });
-    if (await nameField.isVisible({ timeout: 3000 })) {
-      await nameField.fill(name);
+
+  // Generic fill method for text fields
+  async fillField(field: keyof typeof this.fieldLocators, value: string): Promise<void> {
+    const locator = this.fieldLocators[field];
+    if (!locator) throw new Error(`No locator defined for field: ${field}`);
+    if (await locator.isVisible({ timeout: 3000 }).catch(() => false)) {
+      await locator.fill(value);
+    } else {
+      throw new Error(`Field '${field}' not found or not visible`);
     }
   }
 
-  async fillBirthDate(date: string): Promise<void> {
-    const birthDateField = this.page.getByRole('textbox', { name: 'Date of birth' });
-    if (await birthDateField.isVisible({ timeout: 3000 })) {
-      await birthDateField.fill(date);
-    }
-  }
-
-  async fillMRN(mrn: string): Promise<void> {
-    const mrnField = this.page
-      .getByRole('textbox', { name: 'MRN' })
-      .or(this.page.getByRole('textbox', { name: 'Medical Record Number' }))
-      .or(this.page.getByRole('textbox', { name: 'Patient ID' }))
-      .or(this.page.locator('input[placeholder*="MRN"]'))
-      .or(this.page.locator('input[id*="mrn"]'));
-
-    if (await mrnField.isVisible({ timeout: 3000 })) {
-      await mrnField.fill(mrn);
-    }
-  }
-
-  async fillDiagnosisDate(date: string): Promise<void> {
-    const diagnosisDateField = this.page.getByRole('textbox', { name: 'Date of diagnosis' });
-    if (await diagnosisDateField.isVisible({ timeout: 3000 })) {
-      await diagnosisDateField.fill(date);
-    }
-  }
-
+  // Select a diagnosis type from the dropdown
   async selectDiagnosisType(index: number): Promise<void> {
     const diagnosisCombo = this.page.getByRole('combobox', { name: 'Diagnosed as' });
     if (await diagnosisCombo.isVisible({ timeout: 3000 })) {
@@ -48,6 +40,7 @@ export class ProfilePage {
     }
   }
 
+  // Get the current diagnosis index from the dropdown (needed for setting a new diagnosis)
   async getCurrentDiagnosisIndex(): Promise<number> {
     const diagnosisCombo = this.page.getByRole('combobox', { name: 'Diagnosed as' });
     if (await diagnosisCombo.isVisible({ timeout: 3000 })) {
@@ -65,17 +58,22 @@ export class ProfilePage {
     return 1; // Default to 1 if not found
   }
 
-  async fillClinicalNotes(notes: string): Promise<void> {
-    const shareField = this.page.getByRole('textbox', { name: 'Anything you would like to share' });
-    if (await shareField.isVisible({ timeout: 3000 })) {
-      await shareField.fill(notes);
-    }
-  }
+
+  // For backwards compatibility, keep these as wrappers (optional)
+  async fillFullName(name: string) { return this.fillField('fullName', name); }
+  async fillBirthDate(date: string) { return this.fillField('birthDate', date); }
+  async fillMRN(mrn: string) { return this.fillField('mrn', mrn); }
+  async fillDiagnosisDate(date: string) { return this.fillField('diagnosisDate', date); }
+  async fillClinicalNotes(notes: string) { return this.fillField('clinicalNotes', notes); }
+  async fillEmail(email: string) { return this.fillField('email', email); }
 
   async saveProfile(): Promise<void> {
-    const saveButton = this.page.getByRole('button', { name: 'Save changes' });
-    const saveProfileButton = this.page.getByRole('button', { name: 'Save Profile' });
-    const saveBtn = this.page.getByRole('button', { name: 'Save' });
+    // Save button locators
+    const saveButtons = [
+      this.page.getByRole('button', { name: 'Save changes' }),
+      this.page.getByRole('button', { name: 'Save Profile' }),
+      this.page.getByRole('button', { name: 'Save' })
+    ];
 
     // Wait for the PUT request to complete after clicking save
     const saveProfilePromise = this.page.waitForResponse(
@@ -85,13 +83,15 @@ export class ProfilePage {
         response.request().method() === 'PUT',
     );
 
-    if (await saveButton.isVisible({ timeout: 5000 })) {
-      await saveButton.click();
-    } else if (await saveProfileButton.isVisible({ timeout: 5000 })) {
-      await saveProfileButton.click();
-    } else if (await saveBtn.isVisible({ timeout: 5000 })) {
-      await saveBtn.click();
+    let clicked = false;
+    for (const btn of saveButtons) {
+      if (await btn.isVisible({ timeout: 5000 }).catch(() => false)) {
+        await btn.click();
+        clicked = true;
+        break;
+      }
     }
+    if (!clicked) throw new Error('No save button found');
 
     // Wait for the PUT request to complete (with timeout)
     try {
@@ -116,4 +116,5 @@ export class ProfilePage {
       throw new Error('Edit button should not be visible for this user - security violation!');
     }
   }
+ 
 }
