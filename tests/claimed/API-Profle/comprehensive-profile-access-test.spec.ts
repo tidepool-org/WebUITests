@@ -1,10 +1,10 @@
-import {test} from '../fixtures/base'
-import { test as patientTest} from '../fixtures/patient-helpers';
-import { test as clinicTest } from '../fixtures/clinic-helpers';
-import { test as accountTest } from '../fixtures/account-helpers';
-import { createNetworkHelper } from '../fixtures/network-helpers';
-import { TEST_TAGS, createValidatedTags } from '../fixtures/test-tags';
-import { ProfilePage } from '../../page-objects/patient/ProfilePage';
+import {test} from '../../fixtures/base'
+import { test as patientTest} from '../../fixtures/patient-helpers';
+import { test as clinicTest } from '../../fixtures/clinic-helpers';
+import { test as accountTest } from '../../fixtures/account-helpers';
+import { createNetworkHelper } from '../../fixtures/network-helpers';
+import { TEST_TAGS, createValidatedTags } from '../../fixtures/test-tags';
+import { ProfilePage } from '../../../page-objects/patient/ProfilePage';
 
 const CUSTODIAL_WORKSPACE = 'AdminClinicBase';
 const CLAIMED_PATIENT_SEARCH = 'Claimed Patient';
@@ -98,7 +98,7 @@ test.describe('Comprehensive Profile Access Test: Edit as Claimed, View as Share
         'Then profile endpoint responds with PUT request consistent with schema',
         async () => {
           await api.validateEndpointResponse('profile-metadata-put');
-          const putSchema = await import('../../endpoint-schema/profile-endpoints');
+          const putSchema = await import('../../../endpoint-schema/profile-endpoints');
           const schema = putSchema.putProfileMetadataSchema;
           producerPutCapture = api.getLatestCaptureMatching(schema.method, schema.url as RegExp);
         },

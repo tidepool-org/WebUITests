@@ -1,9 +1,9 @@
-import { test } from '../fixtures/base';
-import { test as patientTest } from '../fixtures/patient-helpers';
-import { test as accountTest} from '../fixtures/account-helpers'
-import { createNetworkHelper } from '../fixtures/network-helpers';
-import { TEST_TAGS, createValidatedTags } from '../fixtures/test-tags';
-import { AccountSettingsPage } from '../../page-objects/account/AccountSettingsPage';
+import { test } from '../../fixtures/base';
+import { test as patientTest } from '../../fixtures/patient-helpers';
+import { test as accountTest} from '../../fixtures/account-helpers'
+import { createNetworkHelper } from '../../fixtures/network-helpers';
+import { TEST_TAGS, createValidatedTags } from '../../fixtures/test-tags';
+import { AccountSettingsPage } from '../../../page-objects/account/AccountSettingsPage';
 
 
 
