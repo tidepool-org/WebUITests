@@ -7,9 +7,10 @@ import { AccountSettingsPage } from '../../../page-objects/account/AccountSettin
 import { ProfilePage } from '../../../page-objects/patient/ProfilePage';
 
 
-test.describe('Clinician Account Profile Edit (Full Name)', () => {
+test.describe('Claimed Account Settings edit (Full Name only) updates Profile endpoint and visually updates for user, clinic, and shared member', () => {
   let api: ReturnType<typeof createNetworkHelper>;
   let putCapture: any;
+  let newName: string; // Declare at test level scope
 
   test(
     'should allow navigation to account settings, edit full name, and verify profile update',
@@ -45,11 +46,13 @@ test.describe('Clinician Account Profile Edit (Full Name)', () => {
           await api.validateEndpointResponse('profile-metadata-get');
         },
       );
-
-      // Step 4: Change the Full Name field to a new value
+      
+      //Create new acccount settings page for the following test
       const accountSettingsPage = new AccountSettingsPage(page);
-      let newName = `Claimed User Updated ${Math.floor(Math.random() * 10000)}`;
+      
+      // Step 4: Change the Full Name field to a new value
       await test.step('When user updates the Full Name field', async () => {
+        newName = `Claimed User Updated ${Math.floor(Math.random() * 10000)}`; // Remove let declaration
         const nameInput = page.getByRole('textbox', { name: /full name/i });
         await nameInput.fill(newName);
       });

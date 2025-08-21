@@ -1,4 +1,4 @@
-import {test} from '../../fixtures/base'
+import { test } from '../../fixtures/base'
 import { test as patientTest} from '../../fixtures/patient-helpers';
 import { test as clinicTest } from '../../fixtures/clinic-helpers';
 import { test as accountTest } from '../../fixtures/account-helpers';
