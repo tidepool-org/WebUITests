@@ -42,7 +42,7 @@ export default class AccountNav {
           .locator('#navigationMenu button.navigation-menu-option')
           .filter({ hasText: 'Account Settings' }),
         verifyURL: 'account',
-        verifyElement: page.getByText('Full name'), // Use "Full name" text which is visible on the account settings page
+        verifyElement: page.locator('.profile-subnav-title').getByText('Account'), // Target the specific Account title element
       },
       ManageWorkspaces: {
         name: 'ManageWorkspaces',

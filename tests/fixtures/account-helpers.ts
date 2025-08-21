@@ -51,58 +51,32 @@ async function navigateTo(targetPage: keyof AccountNav['pages'], page: Page): Pr
   const pageConfig = nav.pages[targetPage];
 
   try {
-    // Check page is not closed before proceeding
-    if (await page.isClosed()) return;
+    // Single page check at start
+    if (page.isClosed()) return;
 
-    // Wait for any loading to complete
-    await page.waitForLoadState('domcontentloaded', { timeout: 10000 }).catch(() => {});
-    if (await page.isClosed()) return;
+    // Quick DOM ready check only
+    await page.waitForLoadState('domcontentloaded', { timeout: 3000 }).catch(() => {});
 
-    const loading = page.getByText('Loading...', { exact: true });
-    try {
-      await loading.waitFor({ state: 'hidden', timeout: 5000 });
-    } catch {
-      // Loading indicator might not be present
-    }
-
-    // Open navigation menu if needed and not already visible
+    // Open navigation menu if needed (only for non-AccountNav targets)
     if (targetPage !== 'AccountNav') {
-      if (await page.isClosed()) return;
-      if (!(await nav.pages.AccountNav.verifyElement.isVisible({ timeout: 5000 }))) {
-        if (await page.isClosed()) return;
+      const menuVisible = await nav.pages.AccountNav.verifyElement.isVisible({ timeout: 1000 }).catch(() => false);
+      if (!menuVisible) {
         await nav.pages.AccountNav.link.click();
-        await nav.pages.AccountNav.verifyElement.waitFor({ state: 'visible', timeout: 10000 });
+        await nav.pages.AccountNav.verifyElement.waitFor({ state: 'visible', timeout: 3000 });
       }
     }
 
-    // For logout, special handling
+    // Handle logout specially
     if (targetPage === 'Logout') {
-      // Ensure we're on the nav menu first
-      if (await page.isClosed()) return;
-      if (!(await nav.pages.AccountNav.verifyElement.isVisible({ timeout: 5000 }))) {
-        if (await page.isClosed()) return;
-        await nav.pages.AccountNav.link.click();
-        await nav.pages.AccountNav.verifyElement.waitFor({ state: 'visible', timeout: 10000 });
-      }
-      if (await page.isClosed()) return;
       await pageConfig.link.click();
-      // Wait for redirect to login page
-      if (await page.isClosed()) return;
-      await page
-        .waitForURL(/.*login.*/, { waitUntil: 'networkidle', timeout: 10000 })
-        .catch(() => {});
+      await page.waitForURL(/.*login.*/, { waitUntil: 'domcontentloaded', timeout: 5000 }).catch(() => {});
     } else {
-      // For other pages, normal navigation
-      if (await page.isClosed()) return;
+      // Standard navigation - click and verify
       await pageConfig.link.click();
-      if (await page.isClosed()) return;
-      await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {});
-      if (await page.isClosed()) return;
-      await pageConfig.verifyElement.waitFor({ state: 'visible', timeout: 10000 });
+      await pageConfig.verifyElement.waitFor({ state: 'visible', timeout: 5000 });
     }
   } catch (error) {
-    if (await page.isClosed()) return;
-    throw error;
+    if (!page.isClosed()) throw error;
   }
 }
 

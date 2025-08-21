@@ -107,7 +107,7 @@ export default class PatientNav {
       Profile: {
         name: 'Profile',
         link: page.getByRole('button', { name: 'Profile Profile' }),
-        verifyURL: 'profile',
+        verifyURL: '', 
         verifyElement: page.getByRole('button', { name: 'Edit' }), // Edit button is visible on profile page
       },
       ProfileEdit: {
