@@ -186,25 +186,27 @@ export const test: TestType<
           stepCounter += 1;
           try {
             if (!page.isClosed()) {
-              // Ensure directory exists
-              await fs.promises.mkdir(screenshotDir, { recursive: true });
-
               // Use clean name for filename (without [no-screenshot])
               const cleanName = name.replace(/\s*\[no-screenshot\]\s*/g, '').trim();
               const screenshotName = `step-${stepCounter.toString().padStart(2, '0')}-${cleanName.toLowerCase().replace(/[^a-z0-9]/g, '-')}.png`;
-              const screenshotPath = path.join(screenshotDir, screenshotName);
 
-              await page.screenshot({
-                path: screenshotPath,
+              // Take screenshot directly to buffer (no local file)
+              const screenshot = await page.screenshot({
                 fullPage: true,
               });
 
-              // Attach screenshot to Playwright report
+              // Attach to Playwright report AND force test-results folder creation
               if (testInfo && typeof testInfo.attach === 'function') {
                 await testInfo.attach(screenshotName, {
-                  path: screenshotPath,
+                  body: screenshot,
                   contentType: 'image/png',
                 });
+                
+                // Also save to test-results for organized viewing (single source)
+                const testResultsDir = path.join(testInfo.outputDir, 'attachments');
+                await fs.promises.mkdir(testResultsDir, { recursive: true });
+                const screenshotPath = path.join(testResultsDir, screenshotName);
+                await fs.promises.writeFile(screenshotPath, screenshot);
               }
             }
           } catch (error) {}

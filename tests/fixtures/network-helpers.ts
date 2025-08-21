@@ -160,22 +160,22 @@ export class NetworkHelper {
       fs.mkdirSync(logDir, { recursive: true });
     }
 
-    const filepath = path.join(logDir, filename);
+    // Create capture data
     const captureData = {
       timestamp: new Date().toISOString(),
       totalCaptures: this.captures.length,
       captures: this.captures,
     };
 
-    fs.writeFileSync(filepath, JSON.stringify(captureData, null, 2));
-    console.log(`📄 Network captures saved to: ${filepath}`);
-
-    // Attach to Playwright report if testInfo is provided
+    // Use Playwright's automatic attachment instead of manual file writing
     if (testInfo && typeof testInfo.attach === 'function') {
       await testInfo.attach(filename, {
-        path: filepath,
+        body: JSON.stringify(captureData, null, 2),
         contentType: 'application/json',
       });
+      console.log(`📄 Network captures attached to Playwright report: ${filename}`);
+    } else {
+      console.log(`📄 Network captures ready (${this.captures.length} captures)`);
     }
   }
 
@@ -235,13 +235,13 @@ export class NetworkHelper {
   }
 
   /**
-   * Save API response as JSON file with endpoint metadata
+   * Save API response as JSON attachment and to organized test-results folder
    */
   async saveApiResponse(
     response: any,
     endpoint: string,
     method: string,
-    filePath: string,
+    fileName: string,
     testInfo?: import('@playwright/test').TestInfo
   ): Promise<void> {
     const responseData = {
@@ -252,14 +252,20 @@ export class NetworkHelper {
       ...response,
     };
 
-    await fs.promises.writeFile(filePath, JSON.stringify(responseData, null, 2), 'utf8');
+    const jsonContent = JSON.stringify(responseData, null, 2);
 
-    // Attach to Playwright report if testInfo is provided
+    // Attach to Playwright report AND save to organized test-results folder
     if (testInfo && typeof testInfo.attach === 'function') {
-      await testInfo.attach(path.basename(filePath), {
-        path: filePath,
+      await testInfo.attach(fileName, {
+        body: jsonContent,
         contentType: 'application/json',
       });
+      
+      // Also save to test-results for organized viewing (like screenshots)
+      const testResultsDir = path.join(testInfo.outputDir, 'attachments');
+      await fs.promises.mkdir(testResultsDir, { recursive: true });
+      const jsonPath = path.join(testResultsDir, fileName);
+      await fs.promises.writeFile(jsonPath, jsonContent, 'utf8');
     }
   }
 
@@ -277,7 +283,6 @@ export class NetworkHelper {
       const stepCounterObj = (globalThis as any).__stepCounter;
       if (stepCounterObj) {
         const stepNumber = stepCounterObj.increment();
-        const screenshotDir = stepCounterObj.getDirectory();
         const currentStepName = stepCounterObj.getCurrentStepName();
 
         // Create consistent filename with step number and step name (like screenshots)
@@ -285,16 +290,12 @@ export class NetworkHelper {
           ? currentStepName.toLowerCase().replace(/[^a-z0-9]/g, '-')
           : endpointName.replace(/[^a-z0-9]/gi, '-');
         const fileName = `step-${stepNumber.toString().padStart(2, '0')}-${stepNameForFile}-response.json`;
-        const saveToPath = path.join(screenshotDir, fileName);
-
-        // Ensure directory exists
-        await fs.promises.mkdir(screenshotDir, { recursive: true });
 
         await this.saveApiResponse(
           request.responseBody,
           request.url,
           schema.method,
-          saveToPath,
+          fileName,
           (globalThis as any).testInfo
         );
       }
@@ -317,30 +318,22 @@ export class NetworkHelper {
     const capture = this.getLatestCaptureMatching(schema.method, schema.url as RegExp);
 
     if (capture) {
-      const filePath = path.join(
-        process.cwd(),
-        'log',
-        'test-data-pipeline',
-        `${testName}-response.json`,
-      );
+      // Create step-based filename for better organization
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+      const stepName = testName.toLowerCase().replace(/[^a-z0-9]/g, '-');
+      const fileName = `step-api-${stepName}-${endpointName.replace(/[^a-z0-9]/gi, '-')}-${timestamp}.json`;
 
-      // Ensure directory exists
-      const dir = path.dirname(filePath);
-      if (!fs.existsSync(dir)) {
-        fs.mkdirSync(dir, { recursive: true });
-      }
-
-      // Save the capture for dependent tests
-      fs.writeFileSync(filePath, JSON.stringify(capture, null, 2));
-      console.log(`✅ Saved ${endpointName} response for dependent tests: ${filePath}`);
-      // Attach to Playwright report if testInfo is available on globalThis
+      console.log(`✅ Saved ${endpointName} response for dependent tests`);
+      
+      // Use Playwright's automatic attachment instead of file system
       const testInfo = (globalThis as any).testInfo;
       if (testInfo && typeof testInfo.attach === 'function') {
-        await testInfo.attach(path.basename(filePath), {
-          path: filePath,
+        await testInfo.attach(fileName, {
+          body: JSON.stringify(capture, null, 2),
           contentType: 'application/json',
         });
       }
+      
       return capture;
     }
 
@@ -582,21 +575,16 @@ export class NetworkHelper {
         ? currentStepName.toLowerCase().replace(/[^a-z0-9]/g, '-')
         : consumerEndpointName.replace(/[^a-z0-9]/gi, '-');
       const fileName = `step-${stepNumber.toString().padStart(2, '0')}-${stepNameForFile}-comparison.json`;
-      const saveToPath = path.join(screenshotDir, fileName);
 
-      // Ensure directory exists
-      await fs.promises.mkdir(screenshotDir, { recursive: true });
-
-      // Save the comparison data
-      await fs.promises.writeFile(saveToPath, JSON.stringify(comparisonData, null, 2), 'utf8');
-      // Attach to Playwright report if testInfo is available on globalThis
+      // Save the comparison data using the unified approach
       const testInfo = (globalThis as any).testInfo;
-      if (testInfo && typeof testInfo.attach === 'function') {
-        await testInfo.attach(path.basename(saveToPath), {
-          path: saveToPath,
-          contentType: 'application/json',
-        });
-      }
+      await this.saveApiResponse(
+        comparisonData,
+        consumerCapture.url,
+        consumerCapture.method,
+        fileName,
+        testInfo
+      );
     }
 
     // Validate data consistency

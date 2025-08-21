@@ -30,6 +30,7 @@ function buildBrowserStackEndpoint(testName: string) {
 
 export default defineConfig({
   testDir: './tests',
+  outputDir: './test-results', // Custom output directory
   globalSetup: require.resolve(path.join(__dirname, 'tests/global-setup')),
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
@@ -51,6 +52,8 @@ export default defineConfig({
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
+    // Custom test attachment naming
+    testIdAttribute: 'data-testid',
   },
 
   projects: [
