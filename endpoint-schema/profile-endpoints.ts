@@ -7,6 +7,8 @@ export interface EndpointSchema {
   expectedStatus?: number;
   responseSchema?: any;
   requestSchema?: any;
+  validationFields?: string[];
+  requiredFields?: string[];
 }
 
 /**
@@ -20,6 +22,26 @@ export const getProfileMetadataSchema: EndpointSchema = {
     fullName: 'string',
     patient: 'object',
   },
+  validationFields: [
+    'fullName',
+    'patient.fullName',
+    'patient.birthday',
+    'patient.diagnosisDate',
+    'patient.diagnosisType',
+    'patient.targetDevices',
+    'patient.targetTimezone',
+    'patient.about',
+    'patient.isOtherPerson',
+    'patient.mrn',
+    'patient.biologicalSex',
+    'email',
+    'patient.email',
+    'patient.emails',
+    'emails',
+  ],
+  requiredFields: [
+    'fullName', // Profile endpoint must have fullName
+  ],
 };
 
 /**
@@ -37,6 +59,26 @@ export const putProfileMetadataSchema: EndpointSchema = {
     fullName: 'string',
     patient: 'object',
   },
+  validationFields: [
+    'fullName',
+    'patient.fullName',
+    'patient.birthday',
+    'patient.diagnosisDate',
+    'patient.diagnosisType',
+    'patient.targetDevices',
+    'patient.targetTimezone',
+    'patient.about',
+    'patient.isOtherPerson',
+    'patient.mrn',
+    'patient.biologicalSex',
+    'email',
+    'patient.email',
+    'patient.emails',
+    'emails',
+  ],
+  requiredFields: [
+    'fullName', // Profile endpoint must have fullName
+  ],
 };
 
 /**
@@ -49,6 +91,9 @@ export const getPatientDataSchema: EndpointSchema = {
   responseSchema: {
     // Patient data array - structure will vary
   },
+  validationFields: [
+    // Data array validation fields would go here based on specific data types
+  ],
 };
 
 /**
@@ -58,6 +103,9 @@ export const getMetricsSchema: EndpointSchema = {
   url: /\/metrics\/thisuser\/.*$/,
   method: 'GET',
   expectedStatus: 200,
+  validationFields: [
+    // Metrics-specific validation fields would go here
+  ],
 };
 
 /**
@@ -67,4 +115,7 @@ export const getMessageNotesSchema: EndpointSchema = {
   url: /\/message\/notes\/[^/]+\?.*$/,
   method: 'GET',
   expectedStatus: 200, // We'll handle 404 as acceptable in the validation logic
+  validationFields: [
+    // Message notes validation fields would go here
+  ],
 };

@@ -17,6 +17,16 @@ export const loginSchema: EndpointSchema = {
     emails: 'object',
     roles: 'object',
   },
+  validationFields: [
+    'userid',
+    'username',
+    'emails',
+    'roles',
+  ],
+  requiredFields: [
+    'userid',    // Auth endpoints require userid instead of fullName
+    'username',  // Username is also critical for auth
+  ],
 };
 
 /**
@@ -26,6 +36,9 @@ export const logoutSchema: EndpointSchema = {
   url: /\/auth\/logout$/,
   method: 'POST',
   expectedStatus: 200,
+  validationFields: [
+    // Logout typically doesn't return data to validate
+  ],
 };
 
 /**
@@ -39,4 +52,11 @@ export const refreshTokenSchema: EndpointSchema = {
     userid: 'string',
     username: 'string',
   },
+  validationFields: [
+    'userid',
+    'username',
+  ],
+  requiredFields: [
+    'userid',    // Token refresh must return userid
+  ],
 };

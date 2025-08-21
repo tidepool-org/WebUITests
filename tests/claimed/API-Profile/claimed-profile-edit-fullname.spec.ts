@@ -1,23 +1,31 @@
 import { test } from '../../fixtures/base';
 import { test as patientTest } from '../../fixtures/patient-helpers';
 import { test as accountTest } from '../../fixtures/account-helpers';
+import { test as clinicTest } from '../../fixtures/clinic-helpers';
 import { createNetworkHelper } from '../../fixtures/network-helpers';
 import { TEST_TAGS, createValidatedTags } from '../../fixtures/test-tags';
 import { AccountSettingsPage } from '../../../page-objects/account/AccountSettingsPage';
 import { ProfilePage } from '../../../page-objects/patient/ProfilePage';
 
+const CUSTODIAL_WORKSPACE = 'AdminClinicBase';
+const CLAIMED_PATIENT_SEARCH = 'Claimed Patient';
+
 
 test.describe('Claimed Account Settings edit (Full Name only) updates Profile endpoint and visually updates for user, clinic, and shared member', () => {
+  test.setTimeout(120000); // 2 minute timeout for multi-phase test
+  
   let api: ReturnType<typeof createNetworkHelper>;
   let putCapture: any;
   let newName: string; // Declare at test level scope
 
   test(
-    'should allow navigation to account settings, edit full name, and verify profile update',
+    'should allow navigation to account settings, edit full name, and verify profile update for claimed, shared, and clinician users',
     {
       tag: createValidatedTags([
         TEST_TAGS.PATIENT,
+        TEST_TAGS.CLINICIAN, // Added clinician tag
         TEST_TAGS.CLAIMED,
+        TEST_TAGS.SHARED_MEMBER, // Added shared member tag
         TEST_TAGS.API,
         TEST_TAGS.UI,
         TEST_TAGS.HIGH,
@@ -26,8 +34,10 @@ test.describe('Claimed Account Settings edit (Full Name only) updates Profile en
     },
     async ({ page }) => {
       
+      // ========== PHASE 1: CLAIMED USER EDITS PROFILE ==========
+      
       // Step 1: Log in to clinician account and setup network capture
-      await test.step('Given clinician has been logged in', async () => {
+      await test.step('Given claimed account has been logged in', async () => {
         api = createNetworkHelper(page);
         await api.startCapture();
         await page.goto('/data');
@@ -113,6 +123,63 @@ test.describe('Claimed Account Settings edit (Full Name only) updates Profile en
           throw new Error('GET response fullName does not match PUT request fullName');
         }
       });
+
+      // ========== PHASE 2: SHARED USER VIEWS PROFILE ==========
+
+      // Step 10: Switch to shared user authentication and go directly to Profile
+      await test.step('When shared user views claimed user profile', async () => {
+        await accountTest.account.switchUser('shared', page);
+        await page.goto('/data');
+        await patientTest.patient.setup(page);
+        // Wait a moment for the page to stabilize after user switch
+        await page.waitForTimeout(500);
+        // Navigate directly to Profile in the same step to avoid redundancy
+        await patientTest.patient.navigateTo('Profile', page);
+      });
+
+      // Step 11: Verify Edit button is not present for shared users
+      await test.step('Then Edit button should not be present for shared patients', async () => {
+        const profilePage = new ProfilePage(page);
+        await profilePage.editButtonDisplays(false);
+      });
+
+      // Step 12: Validate shared user sees updated profile data
+      await (test as any).stepNoScreenshot(
+        'Then shared user sees view-only claimed profile data with matching data',
+        async () => {
+          await api.compareEndpointResponse('profile-metadata-get', putCapture);
+        },
+      );
+
+      // ========== PHASE 3: CLINICIAN VIEWS PROFILE ==========
+
+      // Step 13: Switch to clinician user authentication
+      await test.step('When clinician accesses patient workspace', async () => {
+        await accountTest.account.switchUser('clinician', page);
+        await page.goto('/');
+        await clinicTest.clinician.navigateToWorkspace(CUSTODIAL_WORKSPACE, page);
+      });
+
+      // Step 14: Access the specific claimed patient that was modified by the producer test
+      await test.step('When user accesses the claimed patient modified by producer test', async () => {
+        await clinicTest.clinician.findAndAccessPatientByPartialName(CLAIMED_PATIENT_SEARCH, page);
+        // Navigate directly to Profile in the same step to avoid redundancy
+        await clinicTest.clinician.navigateTo('Profile', page);
+      });
+
+      // Step 15: Verify Edit button is not present for claimed patients viewed by clinicians
+      await test.step('Then Edit button should not be present for claimed patients', async () => {
+        const profilePage = new ProfilePage(page);
+        await profilePage.editButtonDisplays(false);
+      });
+
+      // Step 16: Validate clinician sees updated profile data
+      await (test as any).stepNoScreenshot(
+        'Then clinician sees claimed profile data with matching data and no save access',
+        async () => {
+          await api.compareEndpointResponse('profile-metadata-get', putCapture);
+        },
+      );
     },
   );
 });

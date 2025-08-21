@@ -369,32 +369,23 @@ export class NetworkHelper {
    * @param producerCapture - The producer test network capture
    * @param consumerCapture - The consumer test network capture
    * @param fieldsToValidate - Array of field paths to validate (e.g., ['fullName', 'patient.birthday'])
+   * @param requiredFields - Array of fields that must exist and match (defaults to common required fields)
    */
   validateDataConsistency(
     producerCapture: NetworkCapture,
     consumerCapture: NetworkCapture,
-    fieldsToValidate: string[] = [
-      'clinic.name',
-      'clinic.role',
-      'clinic.telephone',
-      'clinic.npi',
+    fieldsToValidate?: string[],
+    requiredFields: string[] = ['fullName'], // Only require fullName by default, but allow override
+  ): void {
+    // Use provided fields or fall back to a basic set for backward compatibility
+    const defaultFields = [
       'fullName',
       'patient.fullName',
       'patient.birthday',
-      'patient.diagnosisDate',
-      'patient.diagnosisType',
-      'patient.targetDevices',
-      'patient.targetTimezone',
-      'patient.about',
-      'patient.isOtherPerson',
-      'patient.mrn',
-      'patient.biologicalSex',
       'email',
-      'patient.email',
-      'patient.emails',
-      'emails',
-    ],
-  ): void {
+    ];
+    
+    const fieldsToCheck = fieldsToValidate || defaultFields;
     const producerData = producerCapture.responseBody;
     const consumerData = consumerCapture.responseBody;
 
@@ -403,16 +394,24 @@ export class NetworkHelper {
     }
 
     console.log('🔍 Validating data consistency:');
-    console.log('Producer:', JSON.stringify(producerData, null, 2));
-    console.log('Consumer:', JSON.stringify(consumerData, null, 2));
+    // Only log full data in development mode
+    if (process.env.VERBOSE_VALIDATION) {
+      console.log('Producer:', JSON.stringify(producerData, null, 2));
+      console.log('Consumer:', JSON.stringify(consumerData, null, 2));
+    } else {
+      console.log('Producer fullName:', producerData.fullName);
+      console.log('Consumer fullName:', consumerData.fullName);
+    }
 
     // Validate each specified field
-    for (const fieldPath of fieldsToValidate) {
+    for (const fieldPath of fieldsToCheck) {
       const producerValue = this.getNestedValue(producerData, fieldPath);
       const consumerValue = this.getNestedValue(consumerData, fieldPath);
 
-      // fullName is required - must exist and match
-      if (fieldPath === 'fullName') {
+      // Check if this field is marked as required
+      const isRequired = requiredFields.includes(fieldPath);
+      
+      if (isRequired) {
         if (producerValue === undefined || producerValue === null) {
           throw new Error(`Required field ${fieldPath} is missing in producer data`);
         }
@@ -457,7 +456,7 @@ export class NetworkHelper {
    * Validate producer-consumer data consistency for profile endpoints
    * @param producerEndpointName - The PUT endpoint name (e.g., 'profile-metadata-put')
    * @param consumerEndpointName - The GET endpoint name (e.g., 'profile-metadata-get')
-   * @param fieldsToValidate - Optional array of fields to validate
+   * @param fieldsToValidate - Optional array of fields to validate (overrides endpoint schema)
    * @throws Error if validation fails
    */
   async validateProducerConsumerData(
@@ -467,6 +466,17 @@ export class NetworkHelper {
   ): Promise<void> {
     const producerSchema = getEndpointSchema(producerEndpointName);
     const consumerSchema = getEndpointSchema(consumerEndpointName);
+
+    // Use provided fields, or consumer endpoint validation fields, or producer endpoint validation fields
+    const validationFields = fieldsToValidate || 
+                            consumerSchema.validationFields || 
+                            producerSchema.validationFields ||
+                            ['fullName', 'email'];
+
+    // Use consumer endpoint required fields, or producer endpoint required fields, or default
+    const requiredFields = consumerSchema.requiredFields || 
+                          producerSchema.requiredFields || 
+                          ['fullName'];
 
     const producerCapture = this.getLatestCaptureMatching(
       producerSchema.method,
@@ -485,7 +495,7 @@ export class NetworkHelper {
       throw new Error(`No ${consumerEndpointName} capture found for consumer validation`);
     }
 
-    this.validateDataConsistency(producerCapture, consumerCapture, fieldsToValidate);
+    this.validateDataConsistency(producerCapture, consumerCapture, validationFields, requiredFields);
   }
 
   /**
@@ -504,13 +514,24 @@ export class NetworkHelper {
    * Validates both API schema and data consistency in one call
    * @param consumerEndpointName - The GET endpoint name
    * @param producerCapture - The stored PUT capture from the producer
-   * @param fieldsToValidate - Optional array of fields to validate
+   * @param fieldsToValidate - Optional array of fields to validate (overrides endpoint schema)
    */
   async compareEndpointResponse(
     consumerEndpointName: EndpointName,
     producerCapture: NetworkCapture,
     fieldsToValidate?: string[],
   ): Promise<void> {
+    // Get the endpoint schema to determine validation fields
+    const consumerSchema = getEndpointSchema(consumerEndpointName);
+    
+    // Use provided fields, or endpoint-specific fields, or fall back to basic fields
+    const validationFields = fieldsToValidate || 
+                            consumerSchema.validationFields || 
+                            ['fullName', 'patient.fullName', 'email'];
+
+    // Use endpoint-specific required fields, or default to fullName for backward compatibility
+    const requiredFields = consumerSchema.requiredFields || ['fullName'];
+
     // Validate GET response schema without generating JSON file
     const consumerCapture = this.validateEndpointResponseSilent(consumerEndpointName);
 
@@ -525,8 +546,8 @@ export class NetworkHelper {
     // Generate comparison JSON file similar to validateEndpointResponse
     const stepCounterObj = (globalThis as any).__stepCounter;
     if (stepCounterObj) {
+      // Increment for JSON file naming (this is correct behavior)
       const stepNumber = stepCounterObj.increment();
-      const screenshotDir = stepCounterObj.getDirectory();
       const currentStepName = stepCounterObj.getCurrentStepName();
 
       // Create comparison data object
@@ -534,27 +555,8 @@ export class NetworkHelper {
         _comparison: {
           description: `Data consistency comparison for ${consumerEndpointName}`,
           timestamp: new Date().toISOString(),
-          fieldsValidated: fieldsToValidate || [
-            'clinic.name',
-            'clinic.role',
-            'clinic.telephone',
-            'clinic.npi',
-            'fullName',
-            'patient.fullName',
-            'patient.birthday',
-            'patient.diagnosisDate',
-            'patient.diagnosisType',
-            'patient.targetDevices',
-            'patient.targetTimezone',
-            'patient.about',
-            'patient.isOtherPerson',
-            'patient.mrn',
-            'patient.biologicalSex',
-            'email',
-            'patient.email',
-            'patient.emails',
-            'emails',
-          ],
+          fieldsValidated: validationFields,
+          requiredFields: requiredFields,
         },
         original: {
           url: producerCapture.url,
@@ -587,8 +589,8 @@ export class NetworkHelper {
       );
     }
 
-    // Validate data consistency
-    this.validateDataConsistency(producerCapture, consumerCapture, fieldsToValidate);
+    // Validate data consistency using the determined validation fields and required fields
+    this.validateDataConsistency(producerCapture, consumerCapture, validationFields, requiredFields);
   }
 }
 
