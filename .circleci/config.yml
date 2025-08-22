@@ -10,6 +10,9 @@ parameters:
   testExecKey:
     type: string
     default: 'none'
+  testTags:
+    type: string
+    default: ''
 jobs:
   code-quality-check:
     working_directory: ~/tidepool-org/webuitests
@@ -38,6 +41,7 @@ jobs:
     environment:
       TEST_EXECUTION_KEY: << pipeline.parameters.testExecKey >>
       TARGET_ENV: << pipeline.parameters.testEnvironment >>
+      TEST_TAGS: << pipeline.parameters.testTags >>
     steps:
       - checkout
       - node/install
@@ -69,19 +73,69 @@ jobs:
           path: test-results
       - store_test_results:
           path: test-output/test-results.xml
-      # Commit workflow notifications - basic templates for all branches
+      # Main and Develop branch notifications - always notify with branch name
       - slack/notify:
           event: fail
+          branch_pattern: main
           mentions: '<@UG56AQFK2>'
-          template: basic_fail_1
+          custom: |
+            {
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": ":x: *Tidepool Web UI Tests Failed on Main Branch* \n\n:link: <${CIRCLE_BUILD_URL}|View Build Details>"
+                  }
+                }
+              ]
+            }
       - slack/notify:
           event: pass
           branch_pattern: main
-          template: basic_success_1
+          custom: |
+            {
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": ":white_check_mark: *Tidepool Web UI Tests Passed on Main Branch* \n\n:link: <${CIRCLE_BUILD_URL}|View Build Details>"
+                  }
+                }
+              ]
+            }
+      - slack/notify:
+          event: fail
+          branch_pattern: develop
+          mentions: '<@UG56AQFK2>'
+          custom: |
+            {
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": ":x: *Tidepool Web UI Tests Failed on Develop Branch* \n\n:link: <${CIRCLE_BUILD_URL}|View Build Details>"
+                  }
+                }
+              ]
+            }
       - slack/notify:
           event: pass
-          branch_pattern: /^(?!main$).*/
-          template: basic_success_1
+          branch_pattern: develop
+          custom: |
+            {
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": ":white_check_mark: *Tidepool Web UI Tests Passed on Develop Branch* \n\n:link: <${CIRCLE_BUILD_URL}|View Build Details>"
+                  }
+                }
+              ]
+            }
       - unless:
           condition:
             and:
@@ -114,6 +168,7 @@ jobs:
     environment:
       TEST_EXECUTION_KEY: << pipeline.parameters.testExecKey >>
       TARGET_ENV: << pipeline.parameters.testEnvironment >>
+      TEST_TAGS: << pipeline.parameters.testTags >>
     steps:
       - checkout
       - node/install
