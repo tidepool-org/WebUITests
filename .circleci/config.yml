@@ -69,49 +69,19 @@ jobs:
           path: test-results
       - store_test_results:
           path: test-output/test-results.xml
-      # Main branch notifications - always notify
+      # Commit workflow notifications - basic templates for all branches
       - slack/notify:
           event: fail
-          branch_pattern: main
           mentions: '<@UG56AQFK2>'
           template: basic_fail_1
       - slack/notify:
           event: pass
           branch_pattern: main
-          custom: |
-            {
-              "blocks": [
-                {
-                  "type": "section",
-                  "text": {
-                    "type": "mrkdwn",
-                    "text": ":white_check_mark: *Tidepool Web UI Tests Passed on Main!* \n\n<${CIRCLE_BUILD_URL}|View Build Details>"
-                  }
-                }
-              ]
-            }
-      
-      # PR notifications - notify on all events for now (we can add status change logic later)
-      - slack/notify:
-          event: fail
-          branch_pattern: /^(?!main).*/
-          mentions: '<@UG56AQFK2>'
-          template: basic_fail_1
+          template: basic_success_1
       - slack/notify:
           event: pass
-          branch_pattern: /^(?!main).*/
-          custom: |
-            {
-              "blocks": [
-                {
-                  "type": "section",
-                  "text": {
-                    "type": "mrkdwn",
-                    "text": ":white_check_mark: *PR Tests Passed!* \n\n<${CIRCLE_BUILD_URL}|View Build Details>"
-                  }
-                }
-              ]
-            }
+          branch_pattern: /^(?!main$).*/
+          template: basic_success_1
       - unless:
           condition:
             and:
