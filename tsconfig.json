@@ -1,0 +1,20 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@components/*": ["page-objects/clinician/components/*", "page-objects/patient/components/*"],
+      "@pom/*": ["page-objects/*", "page-objects/patient/*", "page-objects/clinician/*"],
+      "@fixtures/*": ["tests/fixtures/*"]
+    },
+    "target": "ES2020",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true
+  },
+  "include": ["**/*.ts", "page-objects/**/*.ts"],
+  "exclude": ["node_modules"]
+}

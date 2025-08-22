@@ -1,78 +1,175 @@
 version: 2.1
 orbs:
-  node: circleci/node@5.0.2
+  node: circleci/node@6.1.0
   browser-tools: circleci/browser-tools@1.5.1
   slack: circleci/slack@4.1
 parameters:
   testEnvironment:
-      type: string
-      default: "testParallel"
+    type: string
+    default: 'qa1'
   testExecKey:
-      type: string
-      default: "none"
+    type: string
+    default: 'none'
 jobs:
-  eslint-check:
+  code-quality-check:
     working_directory: ~/tidepool-org/webuitests
     docker:
       - image: cimg/node:lts
     steps:
       - checkout
       - node/install
-      - run: npm install
-      - run: npm run eslint
-  test:
-    working_directory: ~/tidepool-org/webuitests
-    docker: 
-      - image: cimg/node:lts-browsers
-    environment:
-      TEST_EXECUTION_KEY: << pipeline.parameters.testExecKey >>
-    steps:
-      - checkout
-      - browser-tools/install-browser-tools
-      - node/install
-      - run:
-          name: Install xmllint
-          command: sudo apt-get update && sudo apt-get install -y libxml2-utils
-      - run: node --version
-      - run: npm install
+      - restore_cache:
+          keys:
+            - dependency-cache-{{ checksum "package.json" }}
+            - dependency-cache-
+      - run: npm ci
       - save_cache:
           paths:
             - ./node_modules
           key: dependency-cache-{{ checksum "package.json" }}
       - run:
-          name: Run Parallel Tests on Chosen Environments
-          command: npm run << pipeline.parameters.testEnvironment >>
+          name: Run ESLint and TypeScript Check
+          command: npm run check
+  test:
+    working_directory: ~/tidepool-org/webuitests
+    docker:
+      - image: mcr.microsoft.com/playwright:v1.54.1-noble
+    parallelism: 4
+    environment:
+      TEST_EXECUTION_KEY: << pipeline.parameters.testExecKey >>
+      TARGET_ENV: << pipeline.parameters.testEnvironment >>
+    steps:
+      - checkout
+      - node/install
+      - run: node --version
+      - restore_cache:
+          keys:
+            - dependency-cache-{{ checksum "package.json" }}
+            - dependency-cache-
+      - run: npm ci
+      - save_cache:
+          paths:
+            - ./node_modules
+          key: dependency-cache-{{ checksum "package.json" }}
+
+      # Install Playwright browsers and dependencies
       - run:
-          name: Consolidate Test Report
-          command: npm run merge-reports
-          when: always
+          name: Install Playwright Dependencies
+          command: npx playwright install --with-deps
+
+      # Run tests with parallel execution
+      - run:
+          name: Run Playwright Tests
+          command: npm run test --shard=$CIRCLE_NODE_INDEX/$CIRCLE_NODE_TOTAL
+
+      # Store test results and artifacts
       - store_artifacts:
-          path: tests_output/nightwatch-html-report
+          path: playwright-report
       - store_artifacts:
-          path: vrt/latest
-      - store_artifacts:
-          path: vrt/diff
-      - store_artifacts:
-          path: vrt/baseline/ui
+          path: test-results
       - store_test_results:
-          path: tests_output/testresults.xml
+          path: test-output/test-results.xml
+      # Commit workflow notifications - basic templates for all branches
+      - slack/notify:
+          event: fail
+          mentions: '<@UG56AQFK2>'
+          template: basic_fail_1
+      - slack/notify:
+          event: pass
+          branch_pattern: main
+          template: basic_success_1
+      - slack/notify:
+          event: pass
+          branch_pattern: /^(?!main$).*/
+          template: basic_success_1
+      - unless:
+          condition:
+            and:
+              - equal: ['testParallel', << pipeline.parameters.testEnvironment >>]
+          steps:
+            - run:
+                name: Gather Test Evidence
+                command: node utilities/browserstackEvidenceDownload.js
+                when: always
+            - run:
+                name: Get API token
+                command: |
+                  echo export token=$(curl -H "Content-Type: application/json" -X POST --data "{ \"client_id\": \"$CLIENT_ID\",\"client_secret\": \"$CLIENT_SECRET\" }" https://xray.cloud.getxray.app/api/v1/authenticate| tr -d '"') >> $BASH_ENV
+                  source $BASH_ENV
+                when: always
+            - run:
+                name: Send Results to XRAY
+                command: 'curl -H "Content-Type: text/xml" -H "Authorization: Bearer $token" --data @test-output/test-results.xml  "https://xray.cloud.getxray.app/api/v1/import/execution/junit?testExecKey=<< pipeline.parameters.testExecKey >>"'
+                when: always
+            - run:
+                name: Add Test Evidence to JIRA
+                command: node utilities/sendTestEvidenceToJira.js
+                when: always
+
+  scheduled-test:
+    working_directory: ~/tidepool-org/webuitests
+    docker:
+      - image: mcr.microsoft.com/playwright:v1.54.1-noble
+    parallelism: 4
+    environment:
+      TEST_EXECUTION_KEY: << pipeline.parameters.testExecKey >>
+      TARGET_ENV: << pipeline.parameters.testEnvironment >>
+    steps:
+      - checkout
+      - node/install
+      - run: node --version
+      - restore_cache:
+          keys:
+            - dependency-cache-{{ checksum "package.json" }}
+            - dependency-cache-
+      - run: npm ci
+      - save_cache:
+          paths:
+            - ./node_modules
+          key: dependency-cache-{{ checksum "package.json" }}
+
+      # Install Playwright browsers and dependencies
+      - run:
+          name: Install Playwright Dependencies
+          command: npx playwright install --with-deps
+
+      # Run tests with parallel execution
+      - run:
+          name: Run Playwright Tests
+          command: npm run test --shard=$CIRCLE_NODE_INDEX/$CIRCLE_NODE_TOTAL
+
+      # Store test results and artifacts
       - store_artifacts:
-          path: tests_output/testresults.xml
+          path: playwright-report
+      - store_artifacts:
+          path: test-results
+      - store_test_results:
+          path: test-output/test-results.xml
+
+      - run:
+          name: Install xmllint
+          command: apt-get update && apt-get install -y libxml2-utils
+          when: always
+
+      # Parse test results for detailed Slack notification
       - run:
           name: Parse Test Results
           command: |
-            TOTAL_TESTS=$(xmllint --xpath "string(/testsuites/@tests)" tests_output/testresults.xml)
-            FAILURES=$(xmllint --xpath "string(/testsuites/@failures)" tests_output/testresults.xml)
-            ERRORS=$(xmllint --xpath "string(/testsuites/@errors)" tests_output/testresults.xml)
+            TOTAL_TESTS=$(xmllint --xpath "string(/testsuites/@tests)" test-output/test-results.xml)
+            FAILURES=$(xmllint --xpath "string(/testsuites/@failures)" test-output/test-results.xml)
+            ERRORS=$(xmllint --xpath "string(/testsuites/@errors)" test-output/test-results.xml)
             PASSED_TESTS=$((TOTAL_TESTS - FAILURES - ERRORS))
+            TIME=$(xmllint --xpath "string(/testsuites/@time)" test-output/test-results.xml)
             echo "export TOTAL_TESTS=$TOTAL_TESTS" >> $BASH_ENV
             echo "export PASSED_TESTS=$PASSED_TESTS" >> $BASH_ENV
             echo "export FAILURES=$FAILURES" >> $BASH_ENV
             echo "export ERRORS=$ERRORS" >> $BASH_ENV
+            echo "export TIME=$TIME" >> $BASH_ENV
           when: always
+
+      # Detailed Slack notifications for scheduled runs
       - slack/notify:
           event: fail
-          branch_pattern: main
           mentions: '<@UG56AQFK2>'
           custom: |
             {
@@ -81,7 +178,7 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "*:x: Tidepool Web UI Tests Failed* :sad_tapani: \n\n :pencil:*Summary* \n\n *$PASSED_TESTS/$TOTAL_TESTS* tests passed \n *$FAILURES* tests failed \n *$ERRORS* errors encountered"
+                    "text": "*:x: Scheduled Tidepool Web UI Tests Failed* :sad_tapani: \n\n :pencil:*Summary* \n\n *$PASSED_TESTS/$TOTAL_TESTS* tests passed \n *$FAILURES* tests failed \n Total time: *$TIME* seconds"
                   }
                 },
                 {
@@ -98,7 +195,6 @@ jobs:
             }
       - slack/notify:
           event: pass
-          branch_pattern: main
           custom: |
             {
               "blocks": [
@@ -106,38 +202,40 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "*:white_check_mark: Tidepool Web UI Tests Passed!* :catjam:  \n\n :pencil:*Summary:* \n *$PASSED_TESTS/$TOTAL_TESTS* tests passed \n\n :link: *<${CIRCLE_BUILD_URL}|View CircleCI Build Details>*"
+                    "text": "*:white_check_mark: Scheduled Tidepool Web UI Tests Passed!* :catjam:  \n\n :pencil:*Summary:* \n *$PASSED_TESTS/$TOTAL_TESTS* tests passed \n Total time: *$TIME* seconds \n\n :link: *<${CIRCLE_BUILD_URL}|View CircleCI Build Details>*"
                   }
                 }
               ]
             }
+
       - unless:
           condition:
             and:
-              - equal: ["testParallel", << pipeline.parameters.testEnvironment >> ]
+              - equal: ['testParallel', << pipeline.parameters.testEnvironment >>]
           steps:
-          - run:
-              name: Gather Test Evidence
-              command: node utilities/browserstackEvidenceDownload.js
-              when: always
-          - run:
-              name: Get API token
-              command: |
-                echo export token=$(curl -H "Content-Type: application/json" -X POST --data "{ \"client_id\": \"$CLIENT_ID\",\"client_secret\": \"$CLIENT_SECRET\" }" https://xray.cloud.getxray.app/api/v1/authenticate| tr -d '"') >> $BASH_ENV
-                source $BASH_ENV
-              when: always
-          - run: 
-              name: Send Results to XRAY
-              command: 'curl -H "Content-Type: text/xml" -H "Authorization: Bearer $token" --data @tests_output/testresults.xml  "https://xray.cloud.getxray.app/api/v1/import/execution/junit?testExecKey=<< pipeline.parameters.testExecKey >>"'
-              when: always
-          - run:
-              name: Add Test Evidence to JIRA
-              command: node utilities/sendTestEvidenceToJira.js
-              when: always
+            - run:
+                name: Gather Test Evidence
+                command: node utilities/browserstackEvidenceDownload.js
+                when: always
+            - run:
+                name: Get API token
+                command: |
+                  echo export token=$(curl -H "Content-Type: application/json" -X POST --data "{ \"client_id\": \"$CLIENT_ID\",\"client_secret\": \"$CLIENT_SECRET\" }" https://xray.cloud.getxray.app/api/v1/authenticate| tr -d '"') >> $BASH_ENV
+                  source $BASH_ENV
+                when: always
+            - run:
+                name: Send Results to XRAY
+                command: 'curl -H "Content-Type: text/xml" -H "Authorization: Bearer $token" --data @test-output/test-results.xml  "https://xray.cloud.getxray.app/api/v1/import/execution/junit?testExecKey=<< pipeline.parameters.testExecKey >>"'
+                when: always
+            - run:
+                name: Add Test Evidence to JIRA
+                command: node utilities/sendTestEvidenceToJira.js
+                when: always
+
 workflows:
   commit-workflow:
     jobs:
-      - eslint-check
+      - code-quality-check
       - test:
           requires:
             - eslint-check

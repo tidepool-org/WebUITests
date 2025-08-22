@@ -1,0 +1,8 @@
+test-results/
+node_modules/
+dist/
+build/
+coverage/
+playwright/.auth/
+playwright-report/
+tests_output/
