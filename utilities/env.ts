@@ -14,7 +14,7 @@ const envSchema = z.object({
   SHARED_PASSWORD: z.string(),
   CLINICIAN_USERNAME: z.string(),
   CLINICIAN_PASSWORD: z.string(),
-  TARGET_ENV: z.enum(['qa1', 'qa2', 'qa3', 'qa4', 'qa5', 'production']),
+  TARGET_ENV: z.enum(['qa1', 'qa2', 'qa3', 'qa4', 'qa5', 'production', 'prd', 'int']),
   XRAY_CLIENT_ID: z.string().optional(),
   XRAY_CLIENT_SECRET: z.string().optional(),
 });
@@ -32,6 +32,8 @@ const URL_MAP: Record<typeof env.data.TARGET_ENV, string> = {
   qa4: 'https://qa4.development.tidepool.org',
   qa5: 'https://qa5.development.tidepool.org',
   production: 'https://app.tidepool.org',
+  prd: 'https://app.tidepool.org', // Alias for production
+  int: 'https://int.development.tidepool.org', // Integration environment
 };
 
 export default {
