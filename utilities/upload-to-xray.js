@@ -10,12 +10,14 @@ const path = require('node:path');
 async function uploadResults() {
   try {
     // Import compiled CommonJS module
+    // eslint-disable-next-line n/global-require, import-x/extensions
     const XrayJsonReporter = require('../build/utilities/xray-json-reporter.js').default;
 
     const jsonPath = process.argv[2] || 'test-results/last-run.json';
 
     if (!fs.existsSync(jsonPath)) {
       console.error(`❌ JSON results file not found: ${jsonPath}`);
+      // eslint-disable-next-line n/no-process-exit
       process.exit(1);
     }
 
@@ -27,6 +29,7 @@ async function uploadResults() {
     console.log('✅ Xray upload completed successfully');
   } catch (error) {
     console.error('❌ Failed to upload to Xray:', error);
+    // eslint-disable-next-line n/no-process-exit
     process.exit(1);
   }
 }
