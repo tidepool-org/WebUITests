@@ -6,6 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const test_1 = require("@playwright/test");
 const node_path_1 = __importDefault(require("node:path"));
 const env_1 = __importDefault(require("./utilities/env"));
+// Legacy XML options - can be removed when fully migrated to JSON
 const xrayOptions = {
     embedAnnotationsAsProperties: true,
     textContentAnnotations: ['test_description', 'testrun_comment'],
