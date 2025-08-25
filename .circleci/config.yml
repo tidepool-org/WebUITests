@@ -266,12 +266,8 @@ jobs:
       - unless:
           condition:
             and:
-              - equal: ['testParallel', << pipeline.parameters.testEnvironment >>]
+              - equal: [<< pipeline.parameters.testEnvironment >>]
           steps:
-            - run:
-                name: Gather Test Evidence
-                command: node utilities/browserstackEvidenceDownload.js
-                when: always
             - run:
                 name: Build TypeScript utilities
                 command: npm run build
@@ -282,10 +278,6 @@ jobs:
                 when: always
                 environment:
                   TEST_EXECUTION_KEY: << pipeline.parameters.testExecKey >>
-            - run:
-                name: Add Test Evidence to JIRA
-                command: node utilities/sendTestEvidenceToJira.js
-                when: always
 
 workflows:
   commit-workflow:
