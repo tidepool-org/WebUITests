@@ -23,6 +23,8 @@
     "test:ui": "TEST_TAGS='@ui' node utilities/test-runner.js",
     "test:patient": "TEST_TAGS='@patient' node utilities/test-runner.js",
     "test:clinician": "TEST_TAGS='@clinician' node utilities/test-runner.js",
+    "upload-to-xray": "node utilities/upload-to-xray.js",
+    "build": "tsc",
     "format": "prettier --write ."
   },
   "repository": {

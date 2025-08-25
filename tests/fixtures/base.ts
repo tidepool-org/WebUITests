@@ -201,7 +201,7 @@ export const test: TestType<
                   body: screenshot,
                   contentType: 'image/png',
                 });
-                
+
                 // Also save to test-results for organized viewing (single source)
                 const testResultsDir = path.join(testInfo.outputDir, 'attachments');
                 await fs.promises.mkdir(testResultsDir, { recursive: true });

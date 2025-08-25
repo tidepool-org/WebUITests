@@ -1,6 +1,4 @@
-
 import { Locator, Page } from '@playwright/test';
-
 
 export class ProfilePage {
   readonly page: Page;
@@ -19,7 +17,6 @@ export class ProfilePage {
       email: this.page.getByRole('textbox', { name: /email/i }),
     };
   }
-
 
   // Generic fill method for text fields
   async fillField(field: keyof typeof this.fieldLocators, value: string): Promise<void> {
@@ -58,21 +55,37 @@ export class ProfilePage {
     return 1; // Default to 1 if not found
   }
 
-
   // For backwards compatibility, keep these as wrappers (optional)
-  async fillFullName(name: string) { return this.fillField('fullName', name); }
-  async fillBirthDate(date: string) { return this.fillField('birthDate', date); }
-  async fillMRN(mrn: string) { return this.fillField('mrn', mrn); }
-  async fillDiagnosisDate(date: string) { return this.fillField('diagnosisDate', date); }
-  async fillClinicalNotes(notes: string) { return this.fillField('clinicalNotes', notes); }
-  async fillEmail(email: string) { return this.fillField('email', email); }
+  async fillFullName(name: string) {
+    return this.fillField('fullName', name);
+  }
+
+  async fillBirthDate(date: string) {
+    return this.fillField('birthDate', date);
+  }
+
+  async fillMRN(mrn: string) {
+    return this.fillField('mrn', mrn);
+  }
+
+  async fillDiagnosisDate(date: string) {
+    return this.fillField('diagnosisDate', date);
+  }
+
+  async fillClinicalNotes(notes: string) {
+    return this.fillField('clinicalNotes', notes);
+  }
+
+  async fillEmail(email: string) {
+    return this.fillField('email', email);
+  }
 
   async saveProfile(): Promise<void> {
     // Save button locators
     const saveButtons = [
       this.page.getByRole('button', { name: 'Save changes' }),
       this.page.getByRole('button', { name: 'Save Profile' }),
-      this.page.getByRole('button', { name: 'Save' })
+      this.page.getByRole('button', { name: 'Save' }),
     ];
 
     // Wait for the PUT request to complete after clicking save
@@ -116,5 +129,4 @@ export class ProfilePage {
       throw new Error('Edit button should not be visible for this user - security violation!');
     }
   }
- 
 }

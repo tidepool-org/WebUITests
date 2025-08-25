@@ -14,11 +14,7 @@ export const getPatientDataSchema: EndpointSchema = {
       size: 'number',
     },
   },
-  validationFields: [
-    'data',
-    'meta.count',
-    'meta.size',
-  ],
+  validationFields: ['data', 'meta.count', 'meta.size'],
 };
 
 /**
@@ -37,10 +33,7 @@ export const uploadPatientDataSchema: EndpointSchema = {
     id: 'string',
     success: 'boolean',
   },
-  validationFields: [
-    'id',
-    'success',
-  ],
+  validationFields: ['id', 'success'],
 };
 
 /**
@@ -60,10 +53,5 @@ export const getPatientSettingsSchema: EndpointSchema = {
     },
     siteChangeSource: 'string',
   },
-  validationFields: [
-    'bgTarget.low',
-    'bgTarget.high',
-    'units.bg',
-    'siteChangeSource',
-  ],
+  validationFields: ['bgTarget.low', 'bgTarget.high', 'units.bg', 'siteChangeSource'],
 };

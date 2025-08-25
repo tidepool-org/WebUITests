@@ -146,15 +146,15 @@ jobs:
                 command: node utilities/browserstackEvidenceDownload.js
                 when: always
             - run:
-                name: Get API token
-                command: |
-                  echo export token=$(curl -H "Content-Type: application/json" -X POST --data "{ \"client_id\": \"$CLIENT_ID\",\"client_secret\": \"$CLIENT_SECRET\" }" https://xray.cloud.getxray.app/api/v1/authenticate| tr -d '"') >> $BASH_ENV
-                  source $BASH_ENV
+                name: Build TypeScript utilities
+                command: npm run build
                 when: always
             - run:
-                name: Send Results to XRAY
-                command: 'curl -H "Content-Type: text/xml" -H "Authorization: Bearer $token" --data @test-output/test-results.xml  "https://xray.cloud.getxray.app/api/v1/import/execution/junit?testExecKey=<< pipeline.parameters.testExecKey >>"'
+                name: Upload Results to Xray (JSON)
+                command: node utilities/upload-to-xray.js test-results/last-run.json
                 when: always
+                environment:
+                  TEST_EXECUTION_KEY: << pipeline.parameters.testExecKey >>
             - run:
                 name: Add Test Evidence to JIRA
                 command: node utilities/sendTestEvidenceToJira.js
@@ -273,15 +273,15 @@ jobs:
                 command: node utilities/browserstackEvidenceDownload.js
                 when: always
             - run:
-                name: Get API token
-                command: |
-                  echo export token=$(curl -H "Content-Type: application/json" -X POST --data "{ \"client_id\": \"$CLIENT_ID\",\"client_secret\": \"$CLIENT_SECRET\" }" https://xray.cloud.getxray.app/api/v1/authenticate| tr -d '"') >> $BASH_ENV
-                  source $BASH_ENV
+                name: Build TypeScript utilities
+                command: npm run build
                 when: always
             - run:
-                name: Send Results to XRAY
-                command: 'curl -H "Content-Type: text/xml" -H "Authorization: Bearer $token" --data @test-output/test-results.xml  "https://xray.cloud.getxray.app/api/v1/import/execution/junit?testExecKey=<< pipeline.parameters.testExecKey >>"'
+                name: Upload Results to Xray (JSON)
+                command: node utilities/upload-to-xray.js test-results/last-run.json
                 when: always
+                environment:
+                  TEST_EXECUTION_KEY: << pipeline.parameters.testExecKey >>
             - run:
                 name: Add Test Evidence to JIRA
                 command: node utilities/sendTestEvidenceToJira.js

@@ -13,13 +13,13 @@ import { loginSchema, logoutSchema, refreshTokenSchema } from './auth-endpoints'
 /**
  * Centralized endpoint registry for all API validation
  * This allows network helpers to work with any endpoint by name
- * 
+ *
  * ADDING NEW ENDPOINTS:
  * 1. Define the endpoint schema in the appropriate *-endpoints.ts file
  * 2. Include validationFields array for data consistency checking
  * 3. Add the endpoint to this registry
  * 4. The validationFields will automatically be used by NetworkHelper methods
- * 
+ *
  * VALIDATION FIELDS:
  * - Use dot notation for nested fields (e.g., 'patient.fullName')
  * - Include all fields that should be validated for data consistency

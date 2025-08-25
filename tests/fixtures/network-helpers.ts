@@ -154,7 +154,10 @@ export class NetworkHelper {
   /**
    * Save all captures to a JSON file
    */
-  async saveCapturesTo(filename: string, testInfo?: import('@playwright/test').TestInfo): Promise<void> {
+  async saveCapturesTo(
+    filename: string,
+    testInfo?: import('@playwright/test').TestInfo,
+  ): Promise<void> {
     const logDir = path.join(process.cwd(), 'log');
     if (!fs.existsSync(logDir)) {
       fs.mkdirSync(logDir, { recursive: true });
@@ -242,7 +245,7 @@ export class NetworkHelper {
     endpoint: string,
     method: string,
     fileName: string,
-    testInfo?: import('@playwright/test').TestInfo
+    testInfo?: import('@playwright/test').TestInfo,
   ): Promise<void> {
     const responseData = {
       _request: {
@@ -260,7 +263,7 @@ export class NetworkHelper {
         body: jsonContent,
         contentType: 'application/json',
       });
-      
+
       // Also save to test-results for organized viewing (like screenshots)
       const testResultsDir = path.join(testInfo.outputDir, 'attachments');
       await fs.promises.mkdir(testResultsDir, { recursive: true });
@@ -296,7 +299,7 @@ export class NetworkHelper {
           request.url,
           schema.method,
           fileName,
-          (globalThis as any).testInfo
+          (globalThis as any).testInfo,
         );
       }
     }
@@ -324,16 +327,16 @@ export class NetworkHelper {
       const fileName = `step-api-${stepName}-${endpointName.replace(/[^a-z0-9]/gi, '-')}-${timestamp}.json`;
 
       console.log(`✅ Saved ${endpointName} response for dependent tests`);
-      
+
       // Use Playwright's automatic attachment instead of file system
-      const testInfo = (globalThis as any).testInfo;
+      const { testInfo } = globalThis as any;
       if (testInfo && typeof testInfo.attach === 'function') {
         await testInfo.attach(fileName, {
           body: JSON.stringify(capture, null, 2),
           contentType: 'application/json',
         });
       }
-      
+
       return capture;
     }
 
@@ -378,13 +381,8 @@ export class NetworkHelper {
     requiredFields: string[] = ['fullName'], // Only require fullName by default, but allow override
   ): void {
     // Use provided fields or fall back to a basic set for backward compatibility
-    const defaultFields = [
-      'fullName',
-      'patient.fullName',
-      'patient.birthday',
-      'email',
-    ];
-    
+    const defaultFields = ['fullName', 'patient.fullName', 'patient.birthday', 'email'];
+
     const fieldsToCheck = fieldsToValidate || defaultFields;
     const producerData = producerCapture.responseBody;
     const consumerData = consumerCapture.responseBody;
@@ -410,7 +408,7 @@ export class NetworkHelper {
 
       // Check if this field is marked as required
       const isRequired = requiredFields.includes(fieldPath);
-      
+
       if (isRequired) {
         if (producerValue === undefined || producerValue === null) {
           throw new Error(`Required field ${fieldPath} is missing in producer data`);
@@ -468,15 +466,13 @@ export class NetworkHelper {
     const consumerSchema = getEndpointSchema(consumerEndpointName);
 
     // Use provided fields, or consumer endpoint validation fields, or producer endpoint validation fields
-    const validationFields = fieldsToValidate || 
-                            consumerSchema.validationFields || 
-                            producerSchema.validationFields ||
-                            ['fullName', 'email'];
+    const validationFields = fieldsToValidate ||
+      consumerSchema.validationFields ||
+      producerSchema.validationFields || ['fullName', 'email'];
 
     // Use consumer endpoint required fields, or producer endpoint required fields, or default
-    const requiredFields = consumerSchema.requiredFields || 
-                          producerSchema.requiredFields || 
-                          ['fullName'];
+    const requiredFields = consumerSchema.requiredFields ||
+      producerSchema.requiredFields || ['fullName'];
 
     const producerCapture = this.getLatestCaptureMatching(
       producerSchema.method,
@@ -495,7 +491,12 @@ export class NetworkHelper {
       throw new Error(`No ${consumerEndpointName} capture found for consumer validation`);
     }
 
-    this.validateDataConsistency(producerCapture, consumerCapture, validationFields, requiredFields);
+    this.validateDataConsistency(
+      producerCapture,
+      consumerCapture,
+      validationFields,
+      requiredFields,
+    );
   }
 
   /**
@@ -523,11 +524,10 @@ export class NetworkHelper {
   ): Promise<void> {
     // Get the endpoint schema to determine validation fields
     const consumerSchema = getEndpointSchema(consumerEndpointName);
-    
+
     // Use provided fields, or endpoint-specific fields, or fall back to basic fields
-    const validationFields = fieldsToValidate || 
-                            consumerSchema.validationFields || 
-                            ['fullName', 'patient.fullName', 'email'];
+    const validationFields = fieldsToValidate ||
+      consumerSchema.validationFields || ['fullName', 'patient.fullName', 'email'];
 
     // Use endpoint-specific required fields, or default to fullName for backward compatibility
     const requiredFields = consumerSchema.requiredFields || ['fullName'];
@@ -556,7 +556,7 @@ export class NetworkHelper {
           description: `Data consistency comparison for ${consumerEndpointName}`,
           timestamp: new Date().toISOString(),
           fieldsValidated: validationFields,
-          requiredFields: requiredFields,
+          requiredFields,
         },
         original: {
           url: producerCapture.url,
@@ -579,18 +579,23 @@ export class NetworkHelper {
       const fileName = `step-${stepNumber.toString().padStart(2, '0')}-${stepNameForFile}-comparison.json`;
 
       // Save the comparison data using the unified approach
-      const testInfo = (globalThis as any).testInfo;
+      const { testInfo } = globalThis as any;
       await this.saveApiResponse(
         comparisonData,
         consumerCapture.url,
         consumerCapture.method,
         fileName,
-        testInfo
+        testInfo,
       );
     }
 
     // Validate data consistency using the determined validation fields and required fields
-    this.validateDataConsistency(producerCapture, consumerCapture, validationFields, requiredFields);
+    this.validateDataConsistency(
+      producerCapture,
+      consumerCapture,
+      validationFields,
+      requiredFields,
+    );
   }
 }
 

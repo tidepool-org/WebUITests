@@ -17,15 +17,10 @@ export const loginSchema: EndpointSchema = {
     emails: 'object',
     roles: 'object',
   },
-  validationFields: [
-    'userid',
-    'username',
-    'emails',
-    'roles',
-  ],
+  validationFields: ['userid', 'username', 'emails', 'roles'],
   requiredFields: [
-    'userid',    // Auth endpoints require userid instead of fullName
-    'username',  // Username is also critical for auth
+    'userid', // Auth endpoints require userid instead of fullName
+    'username', // Username is also critical for auth
   ],
 };
 
@@ -52,11 +47,8 @@ export const refreshTokenSchema: EndpointSchema = {
     userid: 'string',
     username: 'string',
   },
-  validationFields: [
-    'userid',
-    'username',
-  ],
+  validationFields: ['userid', 'username'],
   requiredFields: [
-    'userid',    // Token refresh must return userid
+    'userid', // Token refresh must return userid
   ],
 };

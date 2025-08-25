@@ -34,7 +34,7 @@ export const TEST_TAGS = {
   // User Types
   PATIENT: '@patient',
   CLINICIAN: '@clinician',
- 
+
   // User-Subtypes
   CUSTODIAL: '@custodial',
   SHARED_MEMBER: '@shared_member',
