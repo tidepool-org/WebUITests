@@ -17,6 +17,8 @@ class ClinicianDashboardPage {
   // Locators for the Add Patient Dialog
   readonly addPatientDialog: Locator;
 
+  readonly addPatientDialog_heading: Locator;
+
   readonly addPatientDialog_fullNameInput: Locator;
 
   readonly addPatientDialog_birthdateInput: Locator;
@@ -28,6 +30,13 @@ class ClinicianDashboardPage {
 
   readonly bringDataDialog_doneButton: Locator;
 
+  //Locators for the Patient Options Dropdown (First find)
+  readonly patientOptionsButton: Locator;
+
+  readonly removePatientButton: Locator;
+
+  readonly removePatientConfirm: Locator;
+
   constructor(page: Page) {
     this.page = page;
 
@@ -37,7 +46,8 @@ class ClinicianDashboardPage {
     this.patientListTable = page.getByRole('table', { name: 'peopletablelabel' });
 
     // Add Patient Dialog locators
-    this.addPatientDialog = page.getByRole('dialog', { name: /Add New Patient Account/i });
+    this.addPatientDialog = page.getByRole('dialog');
+    this.addPatientDialog_heading = this.addPatientDialog.getByRole('heading', { name: 'Add New Patient Account' });
     this.addPatientDialog_fullNameInput = this.addPatientDialog.getByRole('textbox', {
       name: 'Full Name',
     });
@@ -48,9 +58,14 @@ class ClinicianDashboardPage {
       name: 'Add Patient',
     });
 
-    // Bring Data Dialog locators
-    this.bringDataDialog = page.getByRole('dialog', { name: /Bring Data into Tidepool/i });
+    // Bring Data Dialog locators (robust: find dialog containing heading)
+    this.bringDataDialog = page.getByRole('dialog').filter({ has: page.getByRole('heading', { name: 'Bring Data into Tidepool' }) });
     this.bringDataDialog_doneButton = this.bringDataDialog.getByRole('button', { name: 'Done' });
+
+    //Patient Options Dropdown
+    this.patientOptionsButton = this.patientListTable.getByRole('button', { name: /info|\.\.\./i }).first();
+    this.removePatientButton = this.page.getByRole('button', { name: /remove patient/i }).first();
+    this.removePatientConfirm = this.page.getByRole('button', { name: /^Remove$/i });
   }
 
   /**
@@ -70,6 +85,8 @@ class ClinicianDashboardPage {
    */
   async submitAddPatientDialog(): Promise<void> {
     await this.addPatientDialog_addButton.click();
+    // Small wait for capture reasons
+    await this.page.waitForTimeout(500);
   }
 
   /**
@@ -108,6 +125,20 @@ class ClinicianDashboardPage {
    */
   async waitForLoadState(): Promise<void> {
     await this.addNewPatientButton.waitFor({ state: 'visible' });
+  }
+
+  async openFirstPatientOptionsDropdown(): Promise<void> {
+    await this.patientOptionsButton.click();
+    // Small wait for screenshot
+    await this.page.waitForTimeout(500);
+  }
+
+  async clickRemovePatientMenuItem(): Promise<void> {
+    await this.removePatientButton.click();
+  }
+
+  async confirmRemovePatient(): Promise<void> {
+    await this.removePatientConfirm.click();
   }
 }
 
