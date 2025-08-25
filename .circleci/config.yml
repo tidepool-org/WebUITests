@@ -291,3 +291,4 @@ workflows:
   commit-workflow:
     jobs:
       - code-quality-check
+      - test
