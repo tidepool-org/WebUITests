@@ -27,7 +27,7 @@ test.describe('Personal Accounts allow access and modification of profile detail
         await api.startCapture();
         await page.goto('/data');
         await test.patient.setup(page);
-
+        });
         // Step 2: Navigate to profile
         await test.step('When user navigates to Profile page', async () => {
           await test.patient.navigateTo('Profile', page);
@@ -90,7 +90,7 @@ test.describe('Personal Accounts allow access and modification of profile detail
         );
 
         await api.stopCapture();
-      });
+      
     },
   );
 });

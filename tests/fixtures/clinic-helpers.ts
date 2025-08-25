@@ -33,7 +33,7 @@ async function setupClinicianSession(page: Page): Promise<ClinicianNav> {
   // Navigate to login and setup clinic session if needed
   if (!page.url().includes('clinic-workspace')) {
     await page.goto('/login');
-    // Add any necessary login steps here
+    await navigateToWorkspaceSelection(page);
   }
 
   console.log('🏥 Clinic session setup complete');
