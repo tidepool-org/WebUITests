@@ -64,7 +64,7 @@ jobs:
       # Run tests with parallel execution
       - run:
           name: Run Playwright Tests
-          command: npm run test --shard=$CIRCLE_NODE_INDEX/$CIRCLE_NODE_TOTAL
+          command: npm run test --shard=$((CIRCLE_NODE_INDEX + 1))/$CIRCLE_NODE_TOTAL
 
       # Store test results and artifacts
       - store_artifacts:
@@ -73,69 +73,73 @@ jobs:
           path: test-results
       - store_test_results:
           path: test-output/test-results.xml
-      # Main and Develop branch notifications - always notify with branch name
-      - slack/notify:
-          event: fail
-          branch_pattern: main
-          mentions: '<@UG56AQFK2>'
-          custom: |
-            {
-              "blocks": [
-                {
-                  "type": "section",
-                  "text": {
-                    "type": "mrkdwn",
-                    "text": ":x: *Tidepool Web UI Tests Failed on Main Branch* \n\n:link: <${CIRCLE_BUILD_URL}|View Build Details>"
+      # Only send notifications from the first node to avoid duplicates  
+      - when:
+          condition:
+            equal: ["0", "${CIRCLE_NODE_INDEX}"]
+          steps:
+            - slack/notify:
+                event: fail
+                branch_pattern: main
+                mentions: '<@UG56AQFK2>'
+                custom: |
+                  {
+                    "blocks": [
+                      {
+                        "type": "section",
+                        "text": {
+                          "type": "mrkdwn",
+                          "text": ":x: *Tidepool Web UI Tests Failed on Main Branch* \n\n:link: <${CIRCLE_BUILD_URL}|View Build Details>"
+                        }
+                      }
+                    ]
                   }
-                }
-              ]
-            }
-      - slack/notify:
-          event: pass
-          branch_pattern: main
-          custom: |
-            {
-              "blocks": [
-                {
-                  "type": "section",
-                  "text": {
-                    "type": "mrkdwn",
-                    "text": ":white_check_mark: *Tidepool Web UI Tests Passed on Main Branch* \n\n:link: <${CIRCLE_BUILD_URL}|View Build Details>"
+            - slack/notify:
+                event: pass
+                branch_pattern: main
+                custom: |
+                  {
+                    "blocks": [
+                      {
+                        "type": "section",
+                        "text": {
+                          "type": "mrkdwn",
+                          "text": ":white_check_mark: *Tidepool Web UI Tests Passed on Main Branch* \n\n:link: <${CIRCLE_BUILD_URL}|View Build Details>"
+                        }
+                      }
+                    ]
                   }
-                }
-              ]
-            }
-      - slack/notify:
-          event: fail
-          branch_pattern: develop
-          mentions: '<@UG56AQFK2>'
-          custom: |
-            {
-              "blocks": [
-                {
-                  "type": "section",
-                  "text": {
-                    "type": "mrkdwn",
-                    "text": ":x: *Tidepool Web UI Tests Failed on Develop Branch* \n\n:link: <${CIRCLE_BUILD_URL}|View Build Details>"
+            - slack/notify:
+                event: fail
+                branch_pattern: develop
+                mentions: '<@UG56AQFK2>'
+                custom: |
+                  {
+                    "blocks": [
+                      {
+                        "type": "section",
+                        "text": {
+                          "type": "mrkdwn",
+                          "text": ":x: *Tidepool Web UI Tests Failed on Develop Branch* \n\n:link: <${CIRCLE_BUILD_URL}|View Build Details>"
+                        }
+                      }
+                    ]
                   }
-                }
-              ]
-            }
-      - slack/notify:
-          event: pass
-          branch_pattern: develop
-          custom: |
-            {
-              "blocks": [
-                {
-                  "type": "section",
-                  "text": {
-                    "type": "mrkdwn",
-                    "text": ":white_check_mark: *Tidepool Web UI Tests Passed on Develop Branch* \n\n:link: <${CIRCLE_BUILD_URL}|View Build Details>"
+            - slack/notify:
+                event: pass
+                branch_pattern: develop
+                custom: |
+                  {
+                    "blocks": [
+                      {
+                        "type": "section",
+                        "text": {
+                          "type": "mrkdwn",
+                          "text": ":white_check_mark: *Tidepool Web UI Tests Passed on Develop Branch* \n\n:link: <${CIRCLE_BUILD_URL}|View Build Details>"
+                        }
+                      }
+                    ]
                   }
-                }
-              ]
-            }
       - unless:
           condition:
             and:
@@ -155,10 +159,6 @@ jobs:
                 when: always
                 environment:
                   TEST_EXECUTION_KEY: << pipeline.parameters.testExecKey >>
-            - run:
-                name: Add Test Evidence to JIRA
-                command: node utilities/sendTestEvidenceToJira.js
-                when: always
 
   scheduled-test:
     working_directory: ~/tidepool-org/webuitests
@@ -191,7 +191,7 @@ jobs:
       # Run tests with parallel execution
       - run:
           name: Run Playwright Tests
-          command: npm run test --shard=$CIRCLE_NODE_INDEX/$CIRCLE_NODE_TOTAL
+          command: npm run test --shard=$((CIRCLE_NODE_INDEX + 1))/$CIRCLE_NODE_TOTAL
 
       # Store test results and artifacts
       - store_artifacts:
@@ -222,46 +222,50 @@ jobs:
             echo "export TIME=$TIME" >> $BASH_ENV
           when: always
 
-      # Detailed Slack notifications for scheduled runs
-      - slack/notify:
-          event: fail
-          mentions: '<@UG56AQFK2>'
-          custom: |
-            {
-              "blocks": [
-                {
-                  "type": "section",
-                  "text": {
-                    "type": "mrkdwn",
-                    "text": "*:x: Scheduled Tidepool Web UI Tests Failed* :sad_tapani: \n\n :pencil:*Summary* \n\n *$PASSED_TESTS/$TOTAL_TESTS* tests passed \n *$FAILURES* tests failed \n Total time: *$TIME* seconds"
+      # Only send notifications from the first node to avoid duplicates
+      - when:
+          condition:
+            equal: ["0", "${CIRCLE_NODE_INDEX}"]
+          steps:
+            - slack/notify:
+                event: fail
+                mentions: '<@UG56AQFK2>'
+                custom: |
+                  {
+                    "blocks": [
+                      {
+                        "type": "section",
+                        "text": {
+                          "type": "mrkdwn",
+                          "text": "*:x: Scheduled Tidepool Web UI Tests Failed* :sad_tapani: \n\n :pencil:*Summary* \n\n *$PASSED_TESTS/$TOTAL_TESTS* tests passed \n *$FAILURES* tests failed \n Total time: *$TIME* seconds"
+                        }
+                      },
+                      {
+                        "type": "divider"
+                      },
+                      {
+                        "type": "section",
+                        "text": {
+                          "type": "mrkdwn",
+                          "text": ":link: *<${CIRCLE_BUILD_URL}|View CircleCI Build Details>*"
+                        }
+                      }
+                    ]
                   }
-                },
-                {
-                  "type": "divider"
-                },
-                {
-                  "type": "section",
-                  "text": {
-                    "type": "mrkdwn",
-                    "text": ":link: *<${CIRCLE_BUILD_URL}|View CircleCI Build Details>*"
+            - slack/notify:
+                event: pass
+                custom: |
+                  {
+                    "blocks": [
+                      {
+                        "type": "section",
+                        "text": {
+                          "type": "mrkdwn",
+                          "text": "*:white_check_mark: Scheduled Tidepool Web UI Tests Passed!* :catjam:  \n\n :pencil:*Summary:* \n *$PASSED_TESTS/$TOTAL_TESTS* tests passed \n Total time: *$TIME* seconds \n\n :link: *<${CIRCLE_BUILD_URL}|View CircleCI Build Details>*"
+                        }
+                      }
+                    ]
                   }
-                }
-              ]
-            }
-      - slack/notify:
-          event: pass
-          custom: |
-            {
-              "blocks": [
-                {
-                  "type": "section",
-                  "text": {
-                    "type": "mrkdwn",
-                    "text": "*:white_check_mark: Scheduled Tidepool Web UI Tests Passed!* :catjam:  \n\n :pencil:*Summary:* \n *$PASSED_TESTS/$TOTAL_TESTS* tests passed \n Total time: *$TIME* seconds \n\n :link: *<${CIRCLE_BUILD_URL}|View CircleCI Build Details>*"
-                  }
-                }
-              ]
-            }
 
       - unless:
           condition:
