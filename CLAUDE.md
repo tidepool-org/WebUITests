@@ -10,19 +10,29 @@ This is a Playwright-based UI testing suite for Tidepool's web application, supp
 
 ### Testing Commands
 - `npm test` - Run all tests on qa1 environment
-- `TARGET_ENV=qa2 playwright test` - Run tests on qa2 environment
-- `TARGET_ENV=production playwright test` - Run tests on production
+- `npm run test:qa2` - Run tests on qa2 environment
+- `npm run test:prd` - Run tests on production
+- `npm run test:smoke` - Run only smoke tests
+- `npm run test:critical` - Run only critical tests
+- `npm run test:api` - Run only API tests
+- `npm run test:ui` - Run only UI tests
+- `npm run test:patient` - Run only patient tests
+- `npm run test:clinician` - Run only clinician tests
 - `npm run debug` - Debug tests with Playwright's debug mode
-- `playwright test --project=chromium-patient` - Run only patient tests
-- `playwright test --project=chromium-clinician` - Run only clinician tests
+- `playwright test tests/specific-test.spec.ts` - Run a single test file
+- `TARGET_ENV=qa2 TEST_TAGS='@smoke @critical' npm test` - Run tests with environment and tags
 
 ### Code Quality Commands
+- `npm run check` - Run both linting and TypeScript checking
 - `npm run lint` - Run ESLint on TypeScript files
 - `npm run lint:fix` - Run ESLint with auto-fix
+- `npm run typecheck` - Run TypeScript compiler check
+- `npm run build` - Compile TypeScript files
 - `npm run format` - Format code with Prettier
 
-### Report Generation
+### Report Generation and Integration
 - `npm run merge-reports` - Merge XML test reports from different test suites
+- `npm run upload-to-xray` - Upload test results to Xray (requires credentials)
 
 ## Architecture Overview
 
@@ -43,13 +53,21 @@ The codebase follows the Page Object Model (POM) pattern with a clear separation
 
 ### Environment Management
 - **`utilities/env.ts`** - Centralized environment configuration using Zod validation
-- Supports environments: qa1, qa2, qa3, qa4, qa5, production
+- Supports environments: qa1, qa2, qa3, qa4, qa5, prd, int
 - Environment variables validated at startup
+- **`utilities/test-runner.js`** - Dynamic test execution with environment and tag filtering
 
 ### Key Configuration Files
-- **`playwright.config.ts`** - Playwright configuration with dual project setup (local + BrowserStack)
+- **`playwright.config.ts`** - Playwright configuration with dual project setup (local + BrowserStack), includes JSON and Xray reporters
 - **`tsconfig.json`** - TypeScript configuration with path mapping for imports
-- **`eslint.config.mjs`** - ESLint configuration using Airbnb Extended rules
+- **`eslint.config.mjs`** - ESLint configuration using Airbnb Extended rules, includes test automation exceptions
+- **`.circleci/config.yml`** - CI/CD pipeline with dynamic environment and tag support
+
+### Test Result Reporting
+- **JSON Reporter**: Generates `test-results/last-run.json` with rich test data
+- **Xray Integration**: `utilities/xray-json-reporter.ts` uploads test results with step-by-step evidence
+- **HTML Reports**: Interactive reports in `playwright-report/`
+- **CircleCI Integration**: Automated test result submission to Xray using testExecKey parameter
 
 ## Project-Specific Patterns
 
@@ -78,13 +96,21 @@ Tests automatically detect BrowserStack environment variables and switch between
 - Dynamic test data generation (e.g., timestamps) to avoid test conflicts
 - Environment-specific URL mapping
 
+### Test Tagging System
+- **`tests/fixtures/test-tags.ts`** - Comprehensive tag system with validation
+- **Required Categories**: User Types (@patient, @clinician), Test Types (@api, @ui, @smoke), Priorities (@critical, @high, @medium, @low)
+- **Tag Filtering**: Supports AND logic (space-separated) and OR logic (comma-separated)
+- **Dynamic Execution**: Use `TEST_TAGS` environment variable for selective test runs
+
 ## Development Notes
 
 ### Adding New Tests
-1. Create test files in appropriate directory (`tests/clinician/` or `tests/patient/`)
+1. Create test files in appropriate directory (`tests/clinician/`, `tests/patient/`, `tests/claimed/`, `tests/personal/`)
 2. Import custom fixtures: `import { expect, test } from '@fixtures/base'`
 3. Use page objects with path aliases: `import LoginPage from '@pom/LoginPage'`
 4. Follow the Given-When-Then pattern with `test.step()` blocks
+5. Add test tags using `createValidatedTags()` from `@fixtures/test-tags`
+6. Use project-specific imports for specialized fixtures (e.g., `network-helpers`, `patient-helpers`)
 
 ### Creating Page Objects
 1. Extend the pattern established in existing page objects
@@ -96,5 +122,14 @@ Tests automatically detect BrowserStack environment variables and switch between
 Required environment variables:
 - `PATIENT_USERNAME` / `PATIENT_PASSWORD`
 - `CLINICIAN_USERNAME` / `CLINICIAN_PASSWORD`
-- `TARGET_ENV` (qa1, qa2, qa3, qa4, qa5, production)
+- `TARGET_ENV` (qa1, qa2, qa3, qa4, qa5, prd, int)
 - Optional: `BROWSERSTACK_USERNAME` / `BROWSERSTACK_ACCESS_KEY`
+- Optional: `XRAY_CLIENT_ID` / `XRAY_CLIENT_SECRET` (for Xray integration)
+- Optional: `TEST_TAGS` (for filtering tests by tags)
+
+### Project Structure Understanding
+The test suite is organized by user authentication state:
+- **`tests/personal/`** - Tests for personal (individual) patient accounts
+- **`tests/claimed/`** - Tests for claimed patient accounts (connected to clinicians)  
+- **`tests/clinician/`** - Tests for clinician user flows
+Each directory has separate authentication setup and isolated test execution.
