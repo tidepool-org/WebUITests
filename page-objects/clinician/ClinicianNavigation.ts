@@ -33,7 +33,7 @@ export default class ClinicianNav {
   >;
 
   readonly pages: Record<
-    'PatientList' | 'WorkspaceSettings' | 'AddPatient' | 'Profile' | 'ProfileEdit',
+    'PatientList' | 'WorkspaceSettings' | 'ManageWorkspaces' | 'AddPatient' | 'Profile' | 'ProfileEdit',
     PageNavVerify
   >;
 
@@ -121,6 +121,14 @@ export default class ClinicianNav {
         link: page.getByRole('link', { name: 'Workspace Settings' }),
         verifyURL: 'clinic-workspace/workspace/settings',
         verifyElement: page.getByRole('heading', { name: 'Workspace Settings' }),
+      },
+      ManageWorkspaces: {
+        name: 'ManageWorkspaces',
+        link: page
+          .locator('#navigationMenu button.navigation-menu-option')
+          .filter({ hasText: 'Manage Workspaces' }),
+        verifyURL: 'workspaces',
+        verifyElement: page.getByText('Welcome To Tidepool'), // Should land back on the workspace selection page
       },
       AddPatient: {
         name: 'AddPatient',
