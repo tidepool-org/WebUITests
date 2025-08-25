@@ -45,7 +45,7 @@ export class ProfilePage {
       const options = await diagnosisCombo.locator('option').all();
 
       // Find current index by checking option values
-      for (let i = 0; i < options.length; i++) {
+      for (let i = 0; i < options.length; i += 1) {
         const optionValue = await options[i].getAttribute('value');
         if (optionValue === currentValue) {
           return i;

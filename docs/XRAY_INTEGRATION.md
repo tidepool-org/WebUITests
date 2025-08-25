@@ -1,11 +1,13 @@
 # Xray Integration Documentation
 
 ## Overview
+
 This project uses a unified JSON-based Xray integration that captures rich test data from Playwright and uploads it to Xray with step-by-step evidence including screenshots, videos, and test annotations.
 
 ## Architecture
 
 ### 1. **Playwright Configuration** (`playwright.config.ts`)
+
 - **JSON Reporter**: Generates `test-results/last-run.json` with complete test data
 - **Xray JSON Reporter**: Custom reporter that automatically uploads to Xray
 - **Legacy XML Reporter**: Still available for backward compatibility
@@ -20,7 +22,9 @@ reporter: [
 ```
 
 ### 2. **Xray JSON Reporter** (`utilities/xray-json-reporter.ts`)
+
 **Features:**
+
 - Maps Playwright test steps to Xray test steps with individual evidence
 - Attaches screenshots per step (e.g., `step-01-given-clinician-has-been-logged-in.png`)
 - Includes test tags, annotations, and custom properties
@@ -28,18 +32,22 @@ reporter: [
 - Supports test execution key parameter for linking to existing test executions
 
 **Data Mapping:**
+
 - **Test Steps**: Extracts from `Step Duration:` annotations
 - **Evidence**: Screenshots, videos, JSON responses per step
 - **Status**: Pass/Fail/Pending with detailed failure messages
 - **Metadata**: Environment, build info, test tags
 
 ### 3. **CircleCI Integration** (`.circleci/config.yml`)
+
 **Simplified Workflow:**
+
 1. Run tests → Generate `test-results/last-run.json`
 2. Build TypeScript utilities
 3. Upload to Xray using `node utilities/upload-to-xray.js`
 
 **Environment Variables:**
+
 - `TEST_EXECUTION_KEY`: Links results to existing Xray test execution
 - `XRAY_CLIENT_ID`: Xray API authentication
 - `XRAY_CLIENT_SECRET`: Xray API authentication
@@ -48,6 +56,7 @@ reporter: [
 ## Usage
 
 ### Local Development
+
 ```bash
 # Run tests and auto-upload to Xray (if credentials available)
 npm test
@@ -60,13 +69,17 @@ npm run build
 ```
 
 ### CI/CD Pipeline
+
 Tests automatically upload to Xray when:
+
 - `XRAY_CLIENT_ID` and `XRAY_CLIENT_SECRET` are available
 - `TEST_EXECUTION_KEY` parameter is provided
 - JSON results file exists
 
 ### Test Tagging
+
 Use test tags to organize and filter results in Xray:
+
 ```typescript
 {
   tag: createValidatedTags([
@@ -81,6 +94,7 @@ Use test tags to organize and filter results in Xray:
 ## Xray JSON Format
 
 ### Test Execution Structure
+
 ```json
 {
   "info": {
@@ -95,6 +109,7 @@ Use test tags to organize and filter results in Xray:
 ```
 
 ### Individual Test Structure
+
 ```json
 {
   "testInfo": {
@@ -130,24 +145,27 @@ Use test tags to organize and filter results in Xray:
 
 ## Benefits Over Legacy XML
 
-| Feature | XML (Legacy) | JSON (New) |
-|---------|-------------|------------|
-| Test Steps | ❌ Basic only | ✅ Full step breakdown |
-| Screenshots | ❌ Separate API calls | ✅ Embedded per step |
-| Videos | ❌ Not supported | ✅ Embedded evidence |
-| Custom Properties | ❌ Limited | ✅ Rich metadata |
-| Test Tags | ❌ Basic | ✅ Full tag system |
-| Debugging Info | ❌ Minimal | ✅ Comprehensive |
+| Feature           | XML (Legacy)          | JSON (New)             |
+| ----------------- | --------------------- | ---------------------- |
+| Test Steps        | ❌ Basic only         | ✅ Full step breakdown |
+| Screenshots       | ❌ Separate API calls | ✅ Embedded per step   |
+| Videos            | ❌ Not supported      | ✅ Embedded evidence   |
+| Custom Properties | ❌ Limited            | ✅ Rich metadata       |
+| Test Tags         | ❌ Basic              | ✅ Full tag system     |
+| Debugging Info    | ❌ Minimal            | ✅ Comprehensive       |
 
 ## Migration Notes
 
 ### Current State
+
 - **JSON**: Primary integration with rich evidence
 - **XML**: Available for backward compatibility
 - **Duplicate Steps**: Removed from CircleCI
 
 ### Future Cleanup
+
 Once fully validated, remove:
+
 - `xrayOptions` configuration in `playwright.config.ts`
 - `['junit', xrayOptions]` reporter
 - Legacy `utilities/xray-reporter.ts` file
@@ -155,12 +173,14 @@ Once fully validated, remove:
 ## Troubleshooting
 
 ### Common Issues
+
 1. **Missing JSON file**: Ensure `json` reporter is enabled in Playwright config
 2. **Upload failures**: Check Xray credentials and network connectivity
 3. **Step evidence missing**: Verify step naming conventions in test annotations
 4. **TypeScript compilation**: Run `npm run build` before upload
 
 ### Debug Information
+
 - Generated JSON saved to `test-results/xray-execution.json`
 - Full logs available in CircleCI build output
 - Test step timing and evidence captured in annotations

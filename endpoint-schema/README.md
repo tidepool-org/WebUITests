@@ -22,6 +22,7 @@ tests/
 ### 1. Network Helper (`tests/fixtures/network-helpers.ts`)
 
 The `NetworkHelper` class provides:
+
 - **Request/Response Capture**: Automatically intercepts and captures all network traffic
 - **Schema Validation**: Validates API responses against predefined schemas
 - **Filtering**: Filter captures by URL patterns, HTTP methods, etc.
@@ -31,6 +32,7 @@ The `NetworkHelper` class provides:
 ### 2. Endpoint Schemas (`endpoint-schema/`)
 
 Schema files define the expected structure of API endpoints:
+
 - **URL Patterns**: Regular expressions to match API endpoints
 - **HTTP Methods**: Expected HTTP methods (GET, POST, PUT, DELETE)
 - **Status Codes**: Expected response status codes
@@ -39,6 +41,7 @@ Schema files define the expected structure of API endpoints:
 ### 3. Test Implementation
 
 Tests can:
+
 - Capture all network traffic during user interactions
 - Validate specific API calls against schemas
 - Assert on response data and structure
@@ -53,19 +56,19 @@ import { getUserProfileSchema } from '../../../endpoint-schema/profile-endpoints
 
 test('should validate profile API', async ({ page }) => {
   const networkHelper = createNetworkHelper(page);
-  
+
   // Register schemas
   networkHelper.registerSchema('getUserProfile', getUserProfileSchema);
-  
+
   // Start capturing
   await networkHelper.startCapture();
-  
+
   // Perform user actions
   await test.patient.navigateTo('Profile', page);
-  
+
   // Validate API calls
   await networkHelper.validateCapture('profileRequest', 'getUserProfile');
-  
+
   // Stop capturing
   await networkHelper.stopCapture();
 });
@@ -82,6 +85,7 @@ test('should validate profile API', async ({ page }) => {
 ## Schema Definition Examples
 
 ### Profile GET Endpoint
+
 ```typescript
 export const getUserProfileSchema: EndpointSchema = {
   url: /\/v1\/users\/[^\/]+$/,
@@ -92,13 +96,14 @@ export const getUserProfileSchema: EndpointSchema = {
     username: 'string',
     profile: {
       fullName: 'string',
-      patient: 'object'
-    }
-  }
+      patient: 'object',
+    },
+  },
 };
 ```
 
 ### Profile Update Endpoint
+
 ```typescript
 export const updateUserProfileSchema: EndpointSchema = {
   url: /\/v1\/users\/[^\/]+$/,
@@ -107,13 +112,13 @@ export const updateUserProfileSchema: EndpointSchema = {
   requestSchema: {
     profile: {
       fullName: 'string',
-      patient: 'object'
-    }
+      patient: 'object',
+    },
   },
   responseSchema: {
     userid: 'string',
-    profile: 'object'
-  }
+    profile: 'object',
+  },
 };
 ```
 
@@ -129,6 +134,7 @@ export const updateUserProfileSchema: EndpointSchema = {
 - `clearCaptures()`: Clear all captured data
 
 This structure makes it easy to:
+
 - Add new endpoint schemas as the API evolves
 - Create comprehensive API validation tests
 - Debug network-related issues

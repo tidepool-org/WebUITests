@@ -143,9 +143,12 @@ export const test: TestType<
       let currentStepName = '';
 
       // Make step counter accessible globally for network helper
-      (globalThis as any).__stepCounter = {
+      (globalThis as any).stepCounter = {
         get: () => stepCounter,
-        increment: () => ++stepCounter,
+        increment: () => {
+          stepCounter += 1;
+          return stepCounter;
+        },
         getDirectory: () => screenshotDir,
         getCurrentStepName: () => currentStepName,
         setCurrentStepName: (name: string) => {
@@ -169,7 +172,7 @@ export const test: TestType<
       ) {
         return originalStep.call(this, name, async (stepInfo: TestStepInfo) => {
           // Set current step name for network helpers (clean name without [no-screenshot])
-          const stepCounterObj = (globalThis as any).__stepCounter;
+          const stepCounterObj = (globalThis as any).stepCounter;
           if (stepCounterObj) {
             const cleanName = name.replace(/\s*\[no-screenshot\]\s*/g, '').trim();
             stepCounterObj.setCurrentStepName(cleanName);
@@ -209,7 +212,9 @@ export const test: TestType<
                 await fs.promises.writeFile(screenshotPath, screenshot);
               }
             }
-          } catch (error) {}
+          } catch (error) {
+            // Screenshot capture failed, continue without screenshot
+          }
 
           return result;
         });
@@ -231,7 +236,7 @@ export const test: TestType<
       ) {
         return originalStep.call(this, name, async (stepInfo: TestStepInfo) => {
           // Set current step name for network helpers (clean name)
-          const stepCounterObj = (globalThis as any).__stepCounter;
+          const stepCounterObj = (globalThis as any).stepCounter;
           if (stepCounterObj) {
             stepCounterObj.setCurrentStepName(name);
           }

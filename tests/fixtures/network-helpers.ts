@@ -283,7 +283,7 @@ export class NetworkHelper {
 
     if (request?.responseBody) {
       // Access the shared step counter from the stepScreenshoter fixture
-      const stepCounterObj = (globalThis as any).__stepCounter;
+      const stepCounterObj = (globalThis as any).stepCounter;
       if (stepCounterObj) {
         const stepNumber = stepCounterObj.increment();
         const currentStepName = stepCounterObj.getCurrentStepName();
@@ -446,8 +446,8 @@ export class NetworkHelper {
    * @param path - The dot-notation path (e.g., 'patient.birthday')
    * @returns The value at the path or undefined
    */
-  private getNestedValue(obj: any, path: string): any {
-    return path.split('.').reduce((current, key) => current?.[key], obj);
+  private getNestedValue(obj: any, propertyPath: string): any {
+    return propertyPath.split('.').reduce((current, key) => current?.[key], obj);
   }
 
   /**
@@ -544,7 +544,7 @@ export class NetworkHelper {
     }
 
     // Generate comparison JSON file similar to validateEndpointResponse
-    const stepCounterObj = (globalThis as any).__stepCounter;
+    const stepCounterObj = (globalThis as any).stepCounter;
     if (stepCounterObj) {
       // Increment for JSON file naming (this is correct behavior)
       const stepNumber = stepCounterObj.increment();

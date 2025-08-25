@@ -392,6 +392,7 @@ async function executeNavigationStrategy(state: NavigationState): Promise<boolea
       // Check condition if present
       if (step.condition && !(await step.condition(state))) {
         console.log(`Skipping step ${step.name} - condition not met`);
+        // eslint-disable-next-line no-continue
         continue;
       }
 

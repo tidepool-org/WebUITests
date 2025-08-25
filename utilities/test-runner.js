@@ -113,6 +113,7 @@ function main() {
     console.error(
       '❌ Error: playwright.config.ts not found. Please run this script from the project root.',
     );
+    // eslint-disable-next-line n/no-process-exit
     process.exit(1);
   }
 
@@ -126,13 +127,15 @@ function main() {
   // Handle process events
   playwrightProcess.on('error', error => {
     console.error(`❌ Failed to start Playwright: ${error.message}`);
-    process.exit(1);
+    throw new Error(`Failed to start Playwright: ${error.message}`);
   });
 
   playwrightProcess.on('close', code => {
     const emoji = code === 0 ? '✅' : '❌';
     console.log(`${emoji} Playwright tests completed with exit code: ${code}`);
-    process.exit(code);
+    if (code !== 0) {
+      throw new Error(`Playwright tests failed with exit code: ${code}`);
+    }
   });
 
   // Handle graceful shutdown
