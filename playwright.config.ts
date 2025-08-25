@@ -2,6 +2,7 @@ import { defineConfig, devices } from '@playwright/test';
 import path from 'node:path';
 import env from './utilities/env';
 
+// Legacy XML options - can be removed when fully migrated to JSON
 const xrayOptions = {
   embedAnnotationsAsProperties: true,
   textContentAnnotations: ['test_description', 'testrun_comment'],
@@ -44,7 +45,9 @@ export default defineConfig({
 
   reporter: [
     ['html', { open: 'never', outputFolder: 'playwright-report' }],
+    ['json', { outputFile: 'test-results/last-run.json' }],
     ['junit', xrayOptions],
+    ['./utilities/xray-json-reporter.ts'],
   ],
 
   use: {
