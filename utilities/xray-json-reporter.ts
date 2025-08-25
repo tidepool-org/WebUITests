@@ -9,11 +9,11 @@ interface XrayTestStep {
   result?: string;
   status: 'PASS' | 'FAIL' | 'PENDING';
   actualResult?: string;
-  evidences?: Array<{
+  evidences?: {
     data: string;
     filename: string;
     contentType: string;
-  }>;
+  }[];
 }
 
 interface XrayTest {
@@ -26,11 +26,11 @@ interface XrayTest {
   };
   status: 'PASS' | 'FAIL' | 'PENDING' | 'EXECUTING';
   comment?: string;
-  evidences?: Array<{
+  evidences?: {
     data: string;
     filename: string;
     contentType: string;
-  }>;
+  }[];
   steps?: XrayTestStep[];
   examples?: string[];
 }
@@ -64,8 +64,9 @@ class XrayJsonReporter {
     separator: '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
   };
 
-  private startTime: string = '';
-  private endTime: string = '';
+  private startTime = '';
+
+  private endTime = '';
 
   /**
    * Authenticates with Xray API using client credentials
@@ -99,6 +100,15 @@ class XrayJsonReporter {
   }
 
   /**
+   * Maps Playwright test status to Xray status
+   */
+  private getTestStatus(status: string): 'PASS' | 'FAIL' | 'PENDING' {
+    if (status === 'passed') return 'PASS';
+    if (status === 'skipped') return 'PENDING';
+    return 'FAIL';
+  }
+
+  /**
    * Converts file to base64 string for Xray evidence
    */
   private async fileToBase64(filePath: string): Promise<string> {
@@ -116,17 +126,15 @@ class XrayJsonReporter {
    */
   private async extractSteps(annotations: any[], attachments: any[]): Promise<XrayTestStep[]> {
     const steps: XrayTestStep[] = [];
-    const stepAnnotations = annotations.filter(ann => 
-      ann.type.startsWith('Step Duration:')
-    );
+    const stepAnnotations = annotations.filter(ann => ann.type.startsWith('Step Duration:'));
 
     for (const stepAnn of stepAnnotations) {
       const stepName = stepAnn.type.replace('Step Duration: ', '');
       const duration = stepAnn.description;
-      
+
       // Find associated step attachments
-      const stepAttachments = attachments.filter(att => 
-        att.name.toLowerCase().includes(stepName.toLowerCase().substring(0, 20))
+      const stepAttachments = attachments.filter(att =>
+        att.name.toLowerCase().includes(stepName.toLowerCase().substring(0, 20)),
       );
 
       const step: XrayTestStep = {
@@ -134,7 +142,7 @@ class XrayJsonReporter {
         data: `Duration: ${duration}`,
         result: stepName.includes('Then') ? stepName : undefined,
         status: 'PASS', // Will be updated based on test result
-        evidences: []
+        evidences: [],
       };
 
       // Add evidence for this step
@@ -143,7 +151,7 @@ class XrayJsonReporter {
           step.evidences?.push({
             data: await this.fileToBase64(attachment.path),
             filename: path.basename(attachment.path),
-            contentType: attachment.contentType || 'application/octet-stream'
+            contentType: attachment.contentType || 'application/octet-stream',
           });
         }
       }
@@ -158,8 +166,8 @@ class XrayJsonReporter {
    * Maps Playwright test result to Xray test format
    */
   private async mapPlaywrightTestToXray(
-    testCase: TestCase, 
-    testResult: TestResult
+    testCase: TestCase,
+    testResult: TestResult,
   ): Promise<XrayTest> {
     const tags = (testCase as any).tags || [];
     const annotations = testResult.annotations || [];
@@ -175,7 +183,7 @@ class XrayJsonReporter {
     }
 
     // Collect test-level evidence (screenshots, videos)
-    const testEvidences: Array<{data: string; filename: string; contentType: string}> = [];
+    const testEvidences: { data: string; filename: string; contentType: string }[] = [];
     for (const attachment of attachments) {
       if (attachment.path && fs.existsSync(attachment.path)) {
         // Add main test evidence (final screenshots, videos, etc.)
@@ -183,7 +191,7 @@ class XrayJsonReporter {
           testEvidences.push({
             data: await this.fileToBase64(attachment.path),
             filename: attachment.name,
-            contentType: attachment.contentType || 'application/octet-stream'
+            contentType: attachment.contentType || 'application/octet-stream',
           });
         }
       }
@@ -194,13 +202,12 @@ class XrayJsonReporter {
         summary: testCase.title,
         type: 'Generic',
         projectKey: 'XT', // Could be made configurable
-        labels: tags
+        labels: tags,
       },
-      status: testResult.status === 'passed' ? 'PASS' : 
-               testResult.status === 'skipped' ? 'PENDING' : 'FAIL',
+      status: this.getTestStatus(testResult.status),
       comment: testResult.error?.message,
       evidences: testEvidences,
-      steps: steps.length > 0 ? steps : undefined
+      steps: steps.length > 0 ? steps : undefined,
     };
 
     return xrayTest;
@@ -231,12 +238,12 @@ class XrayJsonReporter {
         testExecutionKey: testExecKey !== 'none' ? testExecKey : undefined,
         startDate: playwrightResult.stats?.startTime || new Date().toISOString(),
         finishDate: new Date(
-          new Date(playwrightResult.stats?.startTime || Date.now()).getTime() + 
-          (playwrightResult.stats?.duration || 0)
+          new Date(playwrightResult.stats?.startTime || Date.now()).getTime() +
+            (playwrightResult.stats?.duration || 0),
         ).toISOString(),
-        testEnvironments: [targetEnv]
+        testEnvironments: [targetEnv],
       },
-      tests
+      tests,
     };
 
     return xrayResult;
@@ -268,20 +275,17 @@ class XrayJsonReporter {
   async uploadToXray(xrayResult: XrayExecutionResult): Promise<void> {
     try {
       console.log(`${this.styles.info} Uploading test execution to Xray...`);
-      
+
       const token = await this.authenticateWithXray();
-      
-      const response = await fetch(
-        'https://xray.cloud.getxray.app/api/v2/import/execution',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(xrayResult),
-        }
-      );
+
+      const response = await fetch('https://xray.cloud.getxray.app/api/v2/import/execution', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(xrayResult),
+      });
 
       if (!response.ok) {
         const errorText = await response.text();
@@ -289,7 +293,9 @@ class XrayJsonReporter {
       }
 
       const result = await response.json();
-      console.log(`${this.styles.success} Successfully uploaded to Xray. Execution Key: ${result.key}`);
+      console.log(
+        `${this.styles.success} Successfully uploaded to Xray. Execution Key: ${result.key}`,
+      );
     } catch (error) {
       console.error(`${this.styles.error} Failed to upload to Xray:`, error);
       throw error;
@@ -301,22 +307,17 @@ class XrayJsonReporter {
    */
   async processAndUpload(playwrightJsonPath: string): Promise<void> {
     if (!(env.XRAY_CLIENT_ID && env.XRAY_CLIENT_SECRET)) {
-      console.log(
-        `${this.styles.warning} No Xray credentials found, skipping upload to JIRA Xray`
-      );
+      console.log(`${this.styles.warning} No Xray credentials found, skipping upload to JIRA Xray`);
       return;
     }
 
     try {
       console.log(`${this.styles.info} Processing Playwright results...`);
       const xrayResult = await this.convertPlaywrightJsonToXray(playwrightJsonPath);
-      
+
       // Save converted result for debugging
-      fs.writeFileSync(
-        'test-results/xray-execution.json', 
-        JSON.stringify(xrayResult, null, 2)
-      );
-      
+      fs.writeFileSync('test-results/xray-execution.json', JSON.stringify(xrayResult, null, 2));
+
       await this.uploadToXray(xrayResult);
       console.log(`${this.styles.upload} Xray upload completed successfully`);
     } catch (error) {
@@ -349,7 +350,7 @@ class XrayJsonReporter {
     console.log(`\n${this.styles.separator}`);
     console.log(`${this.styles.info} Test Run Summary:`);
     console.log(
-      `Status: ${result.status === 'passed' ? this.styles.success : this.styles.error} ${result.status}`
+      `Status: ${result.status === 'passed' ? this.styles.success : this.styles.error} ${result.status}`,
     );
     console.log(`Duration: ${result.duration}ms`);
     console.log(`${this.styles.separator}\n`);

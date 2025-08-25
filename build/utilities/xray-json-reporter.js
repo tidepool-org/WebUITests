@@ -54,6 +54,16 @@ class XrayJsonReporter {
         }
     }
     /**
+     * Maps Playwright test status to Xray status
+     */
+    getTestStatus(status) {
+        if (status === 'passed')
+            return 'PASS';
+        if (status === 'skipped')
+            return 'PENDING';
+        return 'FAIL';
+    }
+    /**
      * Converts file to base64 string for Xray evidence
      */
     async fileToBase64(filePath) {
@@ -82,7 +92,7 @@ class XrayJsonReporter {
                 data: `Duration: ${duration}`,
                 result: stepName.includes('Then') ? stepName : undefined,
                 status: 'PASS', // Will be updated based on test result
-                evidences: []
+                evidences: [],
             };
             // Add evidence for this step
             for (const attachment of stepAttachments) {
@@ -90,7 +100,7 @@ class XrayJsonReporter {
                     step.evidences?.push({
                         data: await this.fileToBase64(attachment.path),
                         filename: node_path_1.default.basename(attachment.path),
-                        contentType: attachment.contentType || 'application/octet-stream'
+                        contentType: attachment.contentType || 'application/octet-stream',
                     });
                 }
             }
@@ -121,7 +131,7 @@ class XrayJsonReporter {
                     testEvidences.push({
                         data: await this.fileToBase64(attachment.path),
                         filename: attachment.name,
-                        contentType: attachment.contentType || 'application/octet-stream'
+                        contentType: attachment.contentType || 'application/octet-stream',
                     });
                 }
             }
@@ -131,13 +141,12 @@ class XrayJsonReporter {
                 summary: testCase.title,
                 type: 'Generic',
                 projectKey: 'XT', // Could be made configurable
-                labels: tags
+                labels: tags,
             },
-            status: testResult.status === 'passed' ? 'PASS' :
-                testResult.status === 'skipped' ? 'PENDING' : 'FAIL',
+            status: this.getTestStatus(testResult.status),
             comment: testResult.error?.message,
             evidences: testEvidences,
-            steps: steps.length > 0 ? steps : undefined
+            steps: steps.length > 0 ? steps : undefined,
         };
         return xrayTest;
     }
@@ -163,9 +172,9 @@ class XrayJsonReporter {
                 startDate: playwrightResult.stats?.startTime || new Date().toISOString(),
                 finishDate: new Date(new Date(playwrightResult.stats?.startTime || Date.now()).getTime() +
                     (playwrightResult.stats?.duration || 0)).toISOString(),
-                testEnvironments: [targetEnv]
+                testEnvironments: [targetEnv],
             },
-            tests
+            tests,
         };
         return xrayResult;
     }
