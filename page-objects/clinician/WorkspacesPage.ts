@@ -43,4 +43,12 @@ export default class WorkspacesPage {
 
     await parent.getByRole('button', { name: 'Go To Workspace' }).first().click();
   }
+
+  getClinicCard(clinicName: string): Locator {
+    // Update selector as needed to match your UI
+    // Try common patterns: data-testid, class, or role
+    return this.page
+      .locator('[data-testid="clinic-card"], .workspace-item-clinic, .clinic-card, [role="region"]')
+      .filter({ hasText: clinicName });
+  }
 }

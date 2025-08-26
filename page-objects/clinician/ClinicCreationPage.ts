@@ -13,7 +13,7 @@ export default class ClinicCreationPage {
   // Form input fields
   clinicNameInput: Locator;
 
-  teamTypeDropdown: Locator;
+  clinicTypeDropdown: Locator;
 
   countryDropdown: Locator;
 
@@ -51,22 +51,20 @@ export default class ClinicCreationPage {
 
     // Form input fields
     this.clinicNameInput = page.getByLabel('Clinic Name');
-    this.teamTypeDropdown = page.getByRole('combobox', { name: 'What best describes your team?' });
-    this.countryDropdown = page.getByRole('combobox', { name: 'Country' });
-    this.stateDropdown = page.getByRole('combobox', { name: 'State' });
+    this.clinicTypeDropdown = page.locator('select[name="clinicType"]');
+    this.countryDropdown = page.locator('select[name="country"]');
+    this.stateDropdown = page.locator("select[name='state']");
     this.addressInput = page.getByLabel('Address');
     this.cityInput = page.getByLabel('City');
     this.zipCodeInput = page.getByLabel('Zip code');
     this.websiteInput = page.getByLabel('Website (optional)');
 
     // Blood glucose units radio buttons
-    this.mgdlRadio = page.getByLabel('mg/dL');
-    this.mmolRadio = page.getByLabel('mmol/L');
+    this.mgdlRadio = page.getByRole('radio', { name: 'mg/dL' });
+    this.mmolRadio = page.getByRole('radio', { name: 'mmol/L' });
 
     // Acknowledgement checkbox
-    this.adminAcknowledgeCheckbox = page.getByRole('checkbox', {
-      name: 'By creating this clinic, your Tidepool account will become the default administrator',
-    });
+    this.adminAcknowledgeCheckbox = page.getByRole('checkbox', { name: 'admin' });
 
     // Action buttons
     this.backButton = page.getByRole('button', { name: 'Back' });
@@ -92,7 +90,7 @@ export default class ClinicCreationPage {
    */
   async fillClinicForm({
     clinicName,
-    teamType = 'Provider Practice',
+    clinicType = 'Provider Practice',
     state = 'California',
     address = '123 Test Street',
     city = 'Test City',
@@ -100,7 +98,7 @@ export default class ClinicCreationPage {
     website = '',
   }: {
     clinicName: string;
-    teamType?: string;
+    clinicType?: string;
     state?: string;
     address?: string;
     city?: string;
@@ -110,8 +108,8 @@ export default class ClinicCreationPage {
     // Fill in clinic name
     await this.clinicNameInput.fill(clinicName);
 
-    // Select team type
-    await this.teamTypeDropdown.selectOption(teamType);
+    // Select clinic type
+    await this.clinicTypeDropdown.selectOption(clinicType);
 
     // Select state (US is selected by default)
     await this.stateDropdown.selectOption(state);

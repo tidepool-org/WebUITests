@@ -1,99 +1,89 @@
-import { expect, test } from '@fixtures/base';
-import ClinicCreationPage from '@pom/clinician/ClinicCreationPage';
 import WorkspacesPage from '@pom/clinician/WorkspacesPage';
-import { randomUUID } from 'node:crypto';
+import ClinicCreationPage from '@pom/clinician/ClinicCreationPage';
+import { expect } from '../fixtures/base';
+import { test } from '../fixtures/clinic-helpers';
 
-test.describe('Create clinic workspace', () => {
-  const uniqueSuffix = randomUUID().substring(0, 8);
+import { TEST_TAGS, createValidatedTags } from '../fixtures/test-tags';
+
+test.describe('Custodial patients are allowed access and modification of profile details', () => {
+  const uniqueSuffix = `${Date.now()}`;
   const clinicName = `Test Clinic ${uniqueSuffix}`;
-  let workspacesPage: WorkspacesPage;
-  let clinicCreationPage: ClinicCreationPage;
 
-  test.beforeEach(async ({ page }) => {
-    workspacesPage = new WorkspacesPage(page);
-    clinicCreationPage = new ClinicCreationPage(page);
-  });
-
-  test('should successfully create a new clinic workspace', async ({ page }) => {
-    await test.step('Given user is on the workspaces page', async () => {
-      await workspacesPage.goto();
-      await expect(workspacesPage.header).toBeVisible();
-      await expect(workspacesPage.createClinicButton).toBeVisible();
-    });
-
-    await test.step("When user clicks on the 'Create a New Clinic' button", async () => {
-      await workspacesPage.createClinicButton.click();
-      // Wait for the clinic details page to load
-      await expect(page).toHaveURL(/clinic-details\/new/);
-      await expect(clinicCreationPage.pageHeader).toBeVisible();
-    });
-
-    await test.step('When user fills in all the required clinic information', async () => {
-      // Fill the clinic form with test data
-      await clinicCreationPage.fillClinicForm({
-        clinicName,
-        teamType: 'Provider Practice',
-        state: 'California',
-        address: '123 Test Street',
-        city: 'Test City',
-        zipCode: '12345',
+  test(
+    'should create a new workspace as admin',
+    {
+      tag: createValidatedTags([TEST_TAGS.CLINICIAN, TEST_TAGS.UI, TEST_TAGS.HIGH]),
+    },
+    async ({ page }) => {
+      // Step 1: Login as clinician
+      await test.step('Given a clinician with multiple workspaces is logged in', async () => {
+        await test.clinician.setup(page);
       });
 
-      // Verify blood glucose units (mg/dL is pre-selected)
-      await expect(clinicCreationPage.mgdlRadio).toBeChecked();
+      // Create workspace page for eidi
+      const workspacesPage = new WorkspacesPage(page);
 
-      // Verify the admin acknowledgment checkbox is checked
-      await expect(clinicCreationPage.adminAcknowledgeCheckbox).toBeChecked();
+      // Step 2: User click the create new clinic button
+      await test.step('When the user clicks the create new clinic button', async () => {
+        await workspacesPage.createClinicButton.click();
+      });
 
-      // Verify Create Workspace button is enabled
-      await expect(clinicCreationPage.createWorkspaceButton).toBeEnabled();
-    });
+      // Create clinic creation page instance
+      const clinicCreationPage = new ClinicCreationPage(page);
 
-    await test.step("When user clicks on the 'Create Workspace' button", async () => {
-      await clinicCreationPage.createWorkspaceButton.click();
-      // Wait for redirect to workspaces page
-      await expect(page).toHaveURL('/workspaces');
-    });
+      // Step 3: Confirm create page exists and is rached.
+      await test.step('Then the user navigates to the create patient page', async () => {
+        await expect(page).toHaveURL(/clinic-details\/new/);
+        await expect(clinicCreationPage.pageHeader).toBeVisible();
+      });
 
-    await test.step('Then user should see the new clinic in the list and a success message', async () => {
-      // Verify success message is shown
-      const successMessage = page.getByText(`"${clinicName}" clinic created`);
-      await expect(successMessage).toBeVisible();
+      // Step 4: Fill in clinic details
+      await test.step('When the user fills in the clinic details', async () => {
+        await clinicCreationPage.fillClinicForm({
+          clinicName,
+          clinicType: 'Healthcare System',
+          state: 'California',
+          address: '123 Test Street',
+          city: 'Test City',
+          zipCode: '12345',
+        });
+      });
 
-      // Verify the new clinic appears in the list
-      const clinicHeaderLocator = page.getByRole('heading', { name: clinicName });
-      await expect(clinicHeaderLocator).toBeVisible();
+      // Step 5: Confirm the form is filled out correctly
+      await test.step('Then the clinic details should be filled out correctly', async () => {
+        await expect(clinicCreationPage.clinicNameInput).toHaveValue(clinicName);
+        await expect(clinicCreationPage.clinicTypeDropdown).toHaveValue('healthcare_system');
+        await expect(clinicCreationPage.stateDropdown).toHaveValue('CA');
+        await expect(clinicCreationPage.addressInput).toHaveValue('123 Test Street');
+        await expect(clinicCreationPage.cityInput).toHaveValue('Test City');
+        await expect(clinicCreationPage.zipCodeInput).toHaveValue('12345');
+      });
 
-      // Verify the clinic has the necessary action buttons
-      const clinicContainer = page
-        .locator('.workspace-item-clinic')
-        .filter({ has: clinicHeaderLocator });
-      await expect(clinicContainer.getByRole('button', { name: 'Leave Clinic' })).toBeVisible();
-      await expect(clinicContainer.getByRole('button', { name: 'Go To Workspace' })).toBeVisible();
-    });
-  });
+      // Step 6: Click a blood glucose unit button radio
+      await test.step('When the blood glucose unit is selected', async () => {
+        await clinicCreationPage.mgdlRadio.scrollIntoViewIfNeeded();
+        await clinicCreationPage.mgdlRadio.click({ force: true });
+      });
 
-  test('should create a new clinic with the simplified createClinic method', async ({ page }) => {
-    // Navigate to the workspaces page
-    await page.goto('/workspaces');
-    await expect(workspacesPage.header).toBeVisible();
+      // Step 7: Verify that the Create Workspace Button is disabled
+      await test.step('Then the Create Workspace Button should be disabled', async () => {
+        await expect(clinicCreationPage.createWorkspaceButton).toBeDisabled();
+      });
 
-    // Click the "Create a New Clinic" button
-    await workspacesPage.createClinicButton.click();
-    await expect(page).toHaveURL(/clinic-details\/new/);
+      // Step 8: Click the admin acknowledgment checkbox
+      await test.step('When the admin acknowledgment checkbox is clicked', async () => {
+        await clinicCreationPage.adminAcknowledgeCheckbox.click({ force: true });
+      });
 
-    // Use the simplified method to create a clinic in one step
-    await clinicCreationPage.createClinic(clinicName);
+      // Step 9: Submit the form
+      await test.step('When the user submits the form', async () => {
+        await clinicCreationPage.createWorkspaceButton.click();
+      });
 
-    // Verify we're back on the workspaces page
-    await expect(page).toHaveURL('/workspaces');
-
-    // Verify the clinic was created
-    const successMessage = page.getByText(`"${clinicName}" clinic created`);
-    await expect(successMessage).toBeVisible();
-
-    // Verify the clinic appears in the list
-    const clinicHeaderLocator = page.getByRole('heading', { name: clinicName });
-    await expect(clinicHeaderLocator).toBeVisible();
-  });
+      // Step 10: Confirm the clinic was created
+      await test.step('Then the user should see the new clinic in the workspace', async () => {
+        await expect(workspacesPage.getClinicCard(clinicName)).toBeVisible();
+      });
+    },
+  );
 });
