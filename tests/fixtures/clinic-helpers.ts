@@ -1,19 +1,11 @@
 import { test as base } from '@fixtures/base';
 import type { Page } from '@playwright/test';
-import ClinicianNav from '../../page-objects/clinician/ClinicianNavigation';
+import ClinicianNav, {
+  WORKSPACE_NAMES,
+  WorkspaceKey,
+} from '../../page-objects/clinician/ClinicianNavigation';
 import ClinicianDashboardPage from '../../page-objects/clinician/ClinicianDashboardPage';
 import AccountNav from '../../page-objects/account/AccountNavigation';
-
-// Type definitions for workspace keys (matching the page object)
-export type WorkspaceKey =
-  | 'AdminClinicBase'
-  | 'AdminClinicEnterprise'
-  | 'MemberClinicBase'
-  | 'MemberClinicEnterprise'
-  | 'NonMemberClinicBase'
-  | 'NonMemberClinicEnterprise'
-  | 'PartnerClinicBase'
-  | 'PartnerClinicEnterprise';
 
 // Type definitions for page keys (matching the page object)
 export type PageKey =
@@ -23,22 +15,9 @@ export type PageKey =
   | 'Profile'
   | 'ProfileEdit';
 
-/**
- * Initialize clinician navigation helpers after login
- */
-async function setupClinicianSession(page: Page): Promise<ClinicianNav> {
-  // Wait for clinician navigation to be available
-  const nav = new ClinicianNav(page);
-
-  // Navigate to login and setup clinic session if needed
-  if (!page.url().includes('clinic-workspace')) {
-    await page.goto('/login');
-    await navigateToWorkspaceSelection(page);
-  }
-
-  console.log('🏥 Clinic session setup complete');
-  return nav;
-}
+export const ALL_WORKSPACE_KEYS: WorkspaceKey[] = WORKSPACE_NAMES.map(name =>
+  name.replace(/[^a-zA-Z0-9]/g, ''),
+);
 
 /**
  * Navigate to workspace selection page
@@ -59,6 +38,23 @@ async function navigateToWorkspaceSelection(page: Page): Promise<void> {
   });
 
   // console.log('✅ Navigated to workspace selection page');
+}
+
+/**
+ * Initialize clinician navigation helpers after login
+ */
+async function setupClinicianSession(page: Page): Promise<ClinicianNav> {
+  // Wait for clinician navigation to be available
+  const nav = new ClinicianNav(page);
+
+  // Navigate to login and setup clinic session if needed
+  if (!page.url().includes('clinic-workspace')) {
+    await page.goto('/login');
+    await navigateToWorkspaceSelection(page);
+  }
+
+  console.log('🏥 Clinic session setup complete');
+  return nav;
 }
 
 /**
@@ -175,6 +171,47 @@ async function executeAcrossWorkspaces(
 }
 
 /**
+ * Find and access any available patient (fastest option)
+ * @param page - The Playwright page object
+ * @returns The full name of the first patient that was accessed
+ */
+async function findAndAccessAnyPatient(page: Page): Promise<string> {
+  const dashboard = new ClinicianDashboardPage(page);
+
+  try {
+    // Clear search to show all patients
+    await dashboard.searchInput.click();
+    await dashboard.searchInput.fill(' ');
+    await page.waitForTimeout(500);
+    await dashboard.searchInput.fill('');
+    await page.waitForTimeout(1500);
+
+    let allCells = await dashboard.patientListTable.getByRole('cell').all();
+
+    // If no cells, try pressing Enter on empty search
+    if (allCells.length === 0) {
+      await dashboard.searchInput.press('Enter');
+      await page.waitForTimeout(1500);
+      allCells = await dashboard.patientListTable.getByRole('cell').all();
+    }
+
+    // Find the first cell that looks like a patient name
+    for (const cell of allCells) {
+      const cellText = await cell.textContent();
+      if (cellText && cellText.trim().length > 3 && cellText.includes(' ')) {
+        await cell.click();
+        await page.waitForTimeout(800);
+        return cellText.trim();
+      }
+    }
+
+    throw new Error('No patient names found in table');
+  } catch (error) {
+    throw new Error(`Failed to find any patient: ${error}`);
+  }
+}
+
+/**
  * Find and access any patient whose name contains the search term (optimized version)
  * @param searchTerm - Partial name to search for (e.g., "Custodial")
  * @param page - The Playwright page object
@@ -182,11 +219,6 @@ async function executeAcrossWorkspaces(
  */
 async function findAndAccessPatientByPartialName(searchTerm: string, page: Page): Promise<string> {
   const dashboard = new ClinicianDashboardPage(page);
-
-  // If empty search term, find any available patient
-  if (!searchTerm || searchTerm.trim() === '') {
-    return findAndAccessAnyPatient(page);
-  }
 
   // Strategy 1: Fill search field THEN click Show All (proven fastest method)
   try {
@@ -243,47 +275,6 @@ async function findAndAccessPatientByPartialName(searchTerm: string, page: Page)
     throw new Error(
       `No patient found containing "${searchTerm}" and no fallback patients available`,
     );
-  }
-}
-
-/**
- * Find and access any available patient (fastest option)
- * @param page - The Playwright page object
- * @returns The full name of the first patient that was accessed
- */
-async function findAndAccessAnyPatient(page: Page): Promise<string> {
-  const dashboard = new ClinicianDashboardPage(page);
-
-  try {
-    // Clear search to show all patients
-    await dashboard.searchInput.click();
-    await dashboard.searchInput.fill(' ');
-    await page.waitForTimeout(500);
-    await dashboard.searchInput.fill('');
-    await page.waitForTimeout(1500);
-
-    let allCells = await dashboard.patientListTable.getByRole('cell').all();
-
-    // If no cells, try pressing Enter on empty search
-    if (allCells.length === 0) {
-      await dashboard.searchInput.press('Enter');
-      await page.waitForTimeout(1500);
-      allCells = await dashboard.patientListTable.getByRole('cell').all();
-    }
-
-    // Find the first cell that looks like a patient name
-    for (const cell of allCells) {
-      const cellText = await cell.textContent();
-      if (cellText && cellText.trim().length > 3 && cellText.includes(' ')) {
-        await cell.click();
-        await page.waitForTimeout(800);
-        return cellText.trim();
-      }
-    }
-
-    throw new Error('No patient names found in table');
-  } catch (error) {
-    throw new Error(`Failed to find any patient: ${error}`);
   }
 }
 

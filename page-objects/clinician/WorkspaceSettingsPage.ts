@@ -1,19 +1,33 @@
 import { Locator, Page } from '@playwright/test';
+import ClinicCreationPage from './ClinicCreationPage';
 
-export default class ClinicAdminPage {
-  readonly clinicDetailsHeader: Locator;
+export default class WorkspaceSettingsPage {
+  // Workspace Settings
+  readonly workspaceSettingsHeader: Locator;
+
+  readonly workspaceDetailsSection: Locator;
 
   readonly editDetailsButton: Locator;
+
+  readonly clinicName: Locator;
+
+  readonly clinicType: Locator;
+
+  readonly clinicAddress: Locator;
+
+  readonly clinicWebsite: Locator;
+
+  readonly clinicPreferredBloodGlucose: Locator;
+
+  // Edit Workspace Settings Modal
+
+  readonly editWorkspaceModal: Locator;
 
   readonly editClinicModal: Locator;
 
   readonly editClinicModalTitle: Locator;
 
-  readonly addressInput: Locator;
-
   readonly saveChangesButton: Locator;
-
-  readonly clinicDetailsSection: Locator; // The section displaying clinic details on the main page
 
   url = '/clinic-admin';
 
@@ -23,25 +37,27 @@ export default class ClinicAdminPage {
 
   constructor(page: Page) {
     this.page = page;
-    this.clinicDetailsHeader = page.getByText('Workspace Settings');
-    // Assuming the edit button is specifically associated with the details section
-    this.editDetailsButton = page.getByRole('button', { name: 'Edit' });
+    // Workspace Settings
+    this.workspaceSettingsHeader = page.getByText('Workspace Settings');
+    this.workspaceDetailsSection = page.locator('#clinicWorkspaceDetails');
+    this.editDetailsButton = page.locator('#clinic-profile-edit-trigger');
+    this.clinicName = page.locator('#clinicName');
+    this.clinicType = page.locator('#clinicType').filter({ hasText: 'Type' });
+    this.clinicAddress = page.locator('#clinicAddress');
+    this.clinicWebsite = page.locator('#clinicWebsite');
+    this.clinicPreferredBloodGlucose = page.locator('#clinicPreferredBloodGlucoseUnits');
+
+    this.editWorkspaceModal = page.getByRole('dialog');
     this.editClinicModal = page.getByRole('dialog'); // General dialog selector
     this.editClinicModalTitle = this.editClinicModal.getByRole('heading', {
       name: 'Edit Workspace Details',
     });
-    this.addressInput = this.editClinicModal.getByLabel('Address', { exact: true }); // Use exact label match
     this.saveChangesButton = this.editClinicModal.getByRole('button', { name: 'Save Changes' });
     // Assuming the details are within a specific container section related to the header
-    this.clinicDetailsSection = page.locator('div:has(> span:text-is("Workspace Settings")) + div');
   }
 
-  /**
-   * Waits for essential elements of the Clinic Admin page to be loaded.
-   */
   async waitForLoadState(): Promise<void> {
     await this.page.waitForLoadState(); // Wait for base elements like header/footer
-    await this.clinicDetailsHeader.waitFor({ state: 'visible', timeout: 40000 });
-    await this.editDetailsButton.waitFor({ state: 'visible', timeout: 10000 });
+    await this.workspaceSettingsHeader.waitFor({ state: 'visible', timeout: 40000 });
   }
 }
