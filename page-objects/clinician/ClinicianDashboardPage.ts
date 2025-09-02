@@ -14,6 +14,10 @@ class ClinicianDashboardPage {
 
   readonly patientListTable: Locator;
 
+  readonly patientListTable_rows: Locator;
+
+  readonly showAllToggle: Locator;
+
   // Locators for the Add Patient Dialog
   readonly addPatientDialog: Locator;
 
@@ -30,7 +34,7 @@ class ClinicianDashboardPage {
 
   readonly bringDataDialog_doneButton: Locator;
 
-  //Locators for the Patient Options Dropdown (First find)
+  // Locators for the Patient Options Dropdown (First find)
   readonly patientOptionsButton: Locator;
 
   readonly removePatientButton: Locator;
@@ -43,11 +47,15 @@ class ClinicianDashboardPage {
     // Main page locators
     this.addNewPatientButton = page.getByRole('button', { name: 'Add New Patient' });
     this.searchInput = page.getByRole('textbox', { name: 'Search' });
-    this.patientListTable = page.getByRole('table', { name: 'peopletablelabel' });
+    this.patientListTable = page.locator('table#peopleTable');
+    this.patientListTable_rows = page.getByRole('row');
+    this.showAllToggle = page.getByLabel('Toggle visibility');
 
     // Add Patient Dialog locators
     this.addPatientDialog = page.getByRole('dialog');
-    this.addPatientDialog_heading = this.addPatientDialog.getByRole('heading', { name: 'Add New Patient Account' });
+    this.addPatientDialog_heading = this.addPatientDialog.getByRole('heading', {
+      name: 'Add New Patient Account',
+    });
     this.addPatientDialog_fullNameInput = this.addPatientDialog.getByRole('textbox', {
       name: 'Full Name',
     });
@@ -59,11 +67,15 @@ class ClinicianDashboardPage {
     });
 
     // Bring Data Dialog locators (robust: find dialog containing heading)
-    this.bringDataDialog = page.getByRole('dialog').filter({ has: page.getByRole('heading', { name: 'Bring Data into Tidepool' }) });
+    this.bringDataDialog = page
+      .getByRole('dialog')
+      .filter({ has: page.getByRole('heading', { name: 'Bring Data into Tidepool' }) });
     this.bringDataDialog_doneButton = this.bringDataDialog.getByRole('button', { name: 'Done' });
 
-    //Patient Options Dropdown
-    this.patientOptionsButton = this.patientListTable.getByRole('button', { name: /info|\.\.\./i }).first();
+    // Patient Options Dropdown
+    this.patientOptionsButton = this.patientListTable
+      .getByRole('button', { name: /info|\.\.\./i })
+      .first();
     this.removePatientButton = this.page.getByRole('button', { name: /remove patient/i }).first();
     this.removePatientConfirm = this.page.getByRole('button', { name: /^Remove$/i });
   }
@@ -139,6 +151,20 @@ class ClinicianDashboardPage {
 
   async confirmRemovePatient(): Promise<void> {
     await this.removePatientConfirm.click();
+  }
+
+  async getPatientNames(): Promise<string[]> {
+    const rows = await this.patientListTable.locator('tbody tr').all();
+    const names: string[] = [];
+    for (const row of rows) {
+      // Patient name is in the first <th> cell with role='cell' and scope='row'
+      const nameCell = row.locator('th[role="cell"][scope="row"]');
+      // Extract only the first span (patient name)
+      const nameSpan = nameCell.locator('span').first();
+      const name = (await nameSpan.textContent())?.trim() || '';
+      if (name) names.push(name);
+    }
+    return names;
   }
 }
 
