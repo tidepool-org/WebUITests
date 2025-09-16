@@ -1,16 +1,23 @@
 import { Locator, Page } from '@playwright/test';
 
-// Workspace verification interface (matching PatientNavigation format)
-export interface WorkspaceNavVerify {
-  name: string;
-  link: Locator;
-  verifyURL: string;
-  verifyElement: Locator;
-}
+// List of workspace display names
+export const WORKSPACE_NAMES = [
+  'Admin Clinic (Base)',
+  'Admin Clinic (Enterprise)',
+  'Admin Clinic (Essential)',
+  'Admin Clinic (Professional)',
+  'Member Clinic (Base)',
+  'Member Clinic (Enterprise)',
+  'Member Clinic (Essential)',
+  'Member Clinic (Professional)',
+] as const;
 
-// Page navigation verification interface (matching PatientNavigation format)
-export interface PageNavVerify {
-  name: string;
+// Key generator for workspace names
+const workspaceKey = (name: string) => name.replace(/[^a-zA-Z0-9]/g, '');
+export type WorkspaceKey = ReturnType<typeof workspaceKey>;
+
+// Unified navigation verification interface
+export interface NavVerify {
   link: Locator;
   verifyURL: string;
   verifyElement: Locator;
@@ -18,126 +25,64 @@ export interface PageNavVerify {
 }
 
 export default class ClinicianNav {
-  readonly page: Page;
-
-  readonly workspaces: Record<
-    | 'AdminClinicBase'
-    | 'AdminClinicEnterprise'
-    | 'MemberClinicBase'
-    | 'MemberClinicEnterprise'
-    | 'NonMemberClinicBase'
-    | 'NonMemberClinicEnterprise'
-    | 'PartnerClinicBase'
-    | 'PartnerClinicEnterprise',
-    WorkspaceNavVerify
-  >;
+  readonly workspaces: Record<WorkspaceKey, NavVerify>;
 
   readonly pages: Record<
-    'PatientList' | 'WorkspaceSettings' | 'ManageWorkspaces' | 'AddPatient' | 'Profile' | 'ProfileEdit',
-    PageNavVerify
+    | 'PatientList'
+    | 'WorkspaceSettings'
+    | 'ManageWorkspaces'
+    | 'AddPatient'
+    | 'Profile'
+    | 'ProfileEdit',
+    NavVerify
   >;
 
   constructor(page: Page) {
-    this.page = page;
+    if (!page || typeof page.getByRole !== 'function') {
+      throw new Error(
+        '[ClinicianNav] Invalid Playwright Page object passed to ClinicianNav constructor.',
+      );
+    }
 
-    // Define hardcoded workspace configurations (matching PatientNavigation approach)
-    this.workspaces = {
-      AdminClinicBase: {
-        name: 'Admin Clinic (Base)',
-        link: page
-          .locator('#navigationMenu button')
-          .filter({ hasText: 'Admin Clinic (Base) Workspace' }),
-        verifyURL: 'clinic-workspace',
-        verifyElement: page.locator('h4').filter({ hasText: 'Admin Clinic (Base)' }),
-      },
-      AdminClinicEnterprise: {
-        name: 'Admin Clinic (Enterprise)',
-        link: page
-          .locator('#navigationMenu button')
-          .filter({ hasText: 'Admin Clinic (Enterprise) Workspace' }),
-        verifyURL: 'clinic-workspace',
-        verifyElement: page.locator('h4').filter({ hasText: 'Admin Clinic (Enterprise)' }),
-      },
-      MemberClinicBase: {
-        name: 'Member Clinic (Base)',
-        link: page
-          .locator('#navigationMenu button')
-          .filter({ hasText: 'Member Clinic (Base) Workspace' }),
-        verifyURL: 'clinic-workspace',
-        verifyElement: page.locator('h4').filter({ hasText: 'Member Clinic (Base)' }),
-      },
-      MemberClinicEnterprise: {
-        name: 'Member Clinic (Enterprise)',
-        link: page
-          .locator('#navigationMenu button')
-          .filter({ hasText: 'Member Clinic (Enterprise) Workspace' }),
-        verifyURL: 'clinic-workspace',
-        verifyElement: page.locator('h4').filter({ hasText: 'Member Clinic (Enterprise)' }),
-      },
-      NonMemberClinicBase: {
-        name: 'Non-Member Clinic (Base)',
-        link: page
-          .locator('#navigationMenu button')
-          .filter({ hasText: 'Non-Member Clinic (Base) Workspace' }),
-        verifyURL: 'clinic-workspace',
-        verifyElement: page.locator('h4').filter({ hasText: 'Non-Member Clinic (Base)' }),
-      },
-      NonMemberClinicEnterprise: {
-        name: 'Non-Member Clinic (Enterprise)',
-        link: page
-          .locator('#navigationMenu button')
-          .filter({ hasText: 'Non-Member Clinic (Enterprise) Workspace' }),
-        verifyURL: 'clinic-workspace',
-        verifyElement: page.locator('h4').filter({ hasText: 'Non-Member Clinic (Enterprise)' }),
-      },
-      PartnerClinicBase: {
-        name: 'Partner Clinic (Base)',
-        link: page
-          .locator('#navigationMenu button')
-          .filter({ hasText: 'Partner Clinic (Base) Workspace' }),
-        verifyURL: 'clinic-workspace',
-        verifyElement: page.locator('h4').filter({ hasText: 'Partner Clinic (Base)' }),
-      },
-      PartnerClinicEnterprise: {
-        name: 'Partner Clinic (Enterprise)',
-        link: page
-          .locator('#navigationMenu button')
-          .filter({ hasText: 'Partner Clinic (Enterprise) Workspace' }),
-        verifyURL: 'clinic-workspace',
-        verifyElement: page.locator('h4').filter({ hasText: 'Partner Clinic (Enterprise)' }),
-      },
-    };
+    const WORKSPACE_VERIFY_URL = 'clinic-workspace';
+    this.workspaces = Object.fromEntries(
+      WORKSPACE_NAMES.map(name => [
+        workspaceKey(name),
+        {
+          link: page
+            .locator('.workspace-item-clinic')
+            .filter({ hasText: name })
+            .getByRole('button', { name: 'Go To Workspace' }),
+          verifyURL: WORKSPACE_VERIFY_URL,
+          verifyElement: page.locator('h4').filter({ hasText: name }),
+        },
+      ]),
+    ) as Record<WorkspaceKey, NavVerify>;
 
-    // Define clinician page navigation (matching PatientNavigation format)
     this.pages = {
       PatientList: {
-        name: 'PatientList',
-        link: page.getByRole('link', { name: 'Patients' }),
+        link: page.getByRole('tab', { name: 'Patient List' }),
         verifyURL: 'clinic-workspace/patients',
         verifyElement: page.getByRole('heading', { name: 'Patients' }),
       },
       WorkspaceSettings: {
-        name: 'WorkspaceSettings',
-        link: page.getByRole('link', { name: 'Workspace Settings' }),
+        link: page.getByRole('button', { name: 'Workspace Settings' }),
         verifyURL: 'clinic-workspace/workspace/settings',
         verifyElement: page.getByRole('heading', { name: 'Workspace Settings' }),
       },
       ManageWorkspaces: {
-        name: 'ManageWorkspaces',
         link: page
           .locator('#navigationMenu button.navigation-menu-option')
           .filter({ hasText: 'Manage Workspaces' }),
         verifyURL: 'workspaces',
-        verifyElement: page.getByText('Welcome To Tidepool'), // Should land back on the workspace selection page
+        verifyElement: page.getByText('Welcome To Tidepool'),
       },
       AddPatient: {
-        name: 'AddPatient',
         link: page.getByRole('button', { name: 'Add Patient' }),
         verifyURL: 'clinic-workspace/patients/add',
         verifyElement: page.getByRole('heading', { name: 'Add Patient' }),
       },
       Profile: {
-        name: 'Profile',
         link: page
           .getByRole('button', { name: 'Patient Profile Profile' })
           .or(page.getByRole('tab', { name: 'Profile' }))
@@ -149,7 +94,6 @@ export default class ClinicianNav {
           .or(page.getByRole('button', { name: 'Edit Profile' })),
       },
       ProfileEdit: {
-        name: 'ProfileEdit',
         link: page
           .getByRole('button', { name: 'Edit' })
           .or(page.getByRole('button', { name: 'Edit Profile' })),

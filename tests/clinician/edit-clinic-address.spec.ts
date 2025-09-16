@@ -1,50 +1,128 @@
-import { expect, test } from '@fixtures/base';
-import ClinicAdminPage from '@pom/clinician/WorkspaceSettingsPage';
-import WorkspacesPage from '@pom/clinician/WorkspacesPage';
+import { expect } from '@fixtures/base';
+import { test, ALL_WORKSPACE_KEYS } from '@fixtures/clinic-helpers';
+import { TEST_TAGS, createValidatedTags } from '@fixtures/test-tags';
+import WorkspaceSettingsPage from '@pom/clinician/WorkspaceSettingsPage';
+import ClinicCreationPage from '@pom/clinician/ClinicCreationPage';
 
-test.describe('Edit clinic address', () => {
-  const newAddress = `123 Test Street ${Date.now()}`; // Unique address for test run
-  let clinicAdminPage: ClinicAdminPage;
-  let workspacesPage: WorkspacesPage;
+import type { WorkspaceKey } from '@pom/clinician/ClinicianNavigation';
 
-  test.beforeEach(async ({ page }) => {
-    clinicAdminPage = new ClinicAdminPage(page);
-    workspacesPage = new WorkspacesPage(page);
+ALL_WORKSPACE_KEYS.forEach((workspace: WorkspaceKey) => {
+  test.describe('Clinic admin given edit permissions to Workspace Details. Clinic Members have view only access', () => {
+    test(
+      `should allow navigation to workspace details and edit workspace: "[${workspace}]"`,
+      {
+        tag: createValidatedTags([TEST_TAGS.CLINICIAN, TEST_TAGS.UI, TEST_TAGS.MEDIUM]),
+      },
+      async ({ page }) => {
+        // Step 1: Log in to clinician account and setup network capture
+        await test.step('Given clinician has been logged in', async () => {
+          await test.clinician.setup(page);
+        });
 
-    await test.step('Given user has navigated to the Clinic Admin page', async () => {
-      await workspacesPage.goto();
-      await workspacesPage.visitFirstClinic();
-      await page.goto('/clinic-admin');
-      await clinicAdminPage.waitForLoadState(); // Wait for clinic admin page elements
-      await clinicAdminPage.clinicDetailsHeader.waitFor({ state: 'visible' });
-    });
-  });
+        // Step 2: Navigate to currently tested workspace
+        await test.step(`When user navigates to workspace ${workspace}`, async () => {
+          await test.clinician.navigateToWorkspace(workspace, page);
+        });
 
-  test('should successfully edit the clinic address', async ({ page }) => {
-    await test.step('When user clicks the "Edit" button for workspace details', async () => {
-      await clinicAdminPage.editDetailsButton.click();
-      await clinicAdminPage.editClinicModal.waitFor({ state: 'visible' });
-    });
+        // Step 3: Navigate to workspace settings
+        await test.step('When user navigates to workspace settings', async () => {
+          await test.clinician.navigateTo('WorkspaceSettings', page);
+        });
 
-    await test.step('Then user sees the modal for Editing workspace details', async () => {
-      await expect(clinicAdminPage.editClinicModalTitle).toBeVisible();
-      await expect(clinicAdminPage.addressInput).toBeVisible();
-    });
+        // Create workspace settings page
+        const workspaceSettings = new WorkspaceSettingsPage(page);
 
-    await test.step('When user changes the address', async () => {
-      await clinicAdminPage.addressInput.fill(newAddress);
-    });
+        // Step 4a: Workspace details view from by a member user does not have edit button
+        if (workspace.includes('Member')) {
+          await test.step('Then edit button is not present for Member users', async () => {
+            await expect(workspaceSettings.editDetailsButton).toBeHidden();
+          });
+          return;
+        }
 
-    await test.step('When user clicks on "Save changes"', async () => {
-      await clinicAdminPage.saveChangesButton.click();
-      await clinicAdminPage.editClinicModal.waitFor({ state: 'hidden' }); // Wait for modal to close
-    });
+        // Step 4b: Workspace details view from admin user has edit button and it is clickable
+        await test.step('Then edit button is present and clickable for Admin users', async () => {
+          await expect(workspaceSettings.editDetailsButton).toBeVisible();
+          await workspaceSettings.editDetailsButton.click();
+          await page.waitForTimeout(500);
+        });
 
-    await test.step('Then user sees the updated address on the page', async () => {
-      // Wait for the details section to potentially update
-      await page.waitForTimeout(1000); // Small wait for potential DOM update
-      const detailsText = clinicAdminPage.clinicDetailsSection;
-      await expect(detailsText).toContainText(newAddress);
-    });
+        // Create clinic creation page
+        const clinicCreation = new ClinicCreationPage(page);
+        // Define clinic details for compare and reset reasons
+        const currentClinicName = await clinicCreation.clinicNameInput.inputValue();
+        const currentDate = Date.now();
+        const newAddress = `Street # ${currentDate}`;
+        const newCity = `City ${currentDate}`;
+        const newZipCode = `Zip ${currentDate}`;
+        const newWebsite = `https://www.clinic-${currentDate}.com`;
+
+        // Step 5: Edit all Workspace details fields
+        await test.step('When user edits all workspace details fields', async () => {
+          await clinicCreation.fillClinicForm({
+            clinicName: `${currentClinicName} Edited`,
+            clinicType: 'Healthcare System',
+            state: 'Oregon',
+            address: newAddress,
+            city: newCity,
+            zipCode: newZipCode,
+            website: newWebsite,
+          });
+          await clinicCreation.mmolRadio.check({ force: true });
+        });
+
+        // Step 6: Save changes
+        await test.step('When user saves changes', async () => {
+          await workspaceSettings.saveChangesButton.click();
+          await page.waitForTimeout(500);
+        });
+
+        // Step 7: Confirm changes
+        await test.step('Then modal is dismissed and workspace details are updated', async () => {
+          await workspaceSettings.waitForLoadState();
+          await expect(workspaceSettings.clinicName).toHaveText(`${currentClinicName} Edited`);
+          await expect(workspaceSettings.clinicType).toContainText('Healthcare System');
+          await expect(workspaceSettings.clinicAddress).toContainText(newAddress);
+          await expect(workspaceSettings.clinicAddress).toContainText('OR');
+          await expect(workspaceSettings.clinicAddress).toContainText(newCity);
+          await expect(workspaceSettings.clinicAddress).toContainText(newZipCode);
+          await expect(workspaceSettings.clinicWebsite).toContainText(newWebsite);
+          await expect(workspaceSettings.clinicPreferredBloodGlucose).toContainText('mmol/L');
+        });
+
+        // Step 8: Click edit details button
+        await test.step('When user clicks edit details button', async () => {
+          await workspaceSettings.editDetailsButton.click();
+          await page.waitForTimeout(500);
+        });
+
+        // Step 9: Return clinic details to default values for navigation reasons/reset
+        await test.step('When user resets Workspace details fields', async () => {
+          await clinicCreation.fillClinicForm({
+            clinicName: currentClinicName,
+          });
+          await clinicCreation.mgdlRadio.check({ force: true });
+        });
+
+        // Step 10: Save changes
+        await test.step('When user saves changes', async () => {
+          await workspaceSettings.saveChangesButton.click();
+          await page.waitForTimeout(500);
+        });
+
+        // Step 11: Confirm reset to previous state
+        await test.step('Then modal is dismissed and workspace details return to default state', async () => {
+          await workspaceSettings.waitForLoadState();
+          await expect(workspaceSettings.clinicName).toHaveText(currentClinicName);
+          await expect(workspaceSettings.clinicType).toContainText('Provider Practice');
+          await expect(workspaceSettings.clinicAddress).toContainText('123 Test Street');
+          await expect(workspaceSettings.clinicAddress).toContainText('CA');
+          await expect(workspaceSettings.clinicAddress).toContainText('Test City');
+          await expect(workspaceSettings.clinicAddress).toContainText('12345');
+          await expect(workspaceSettings.clinicWebsite).toContainText(newWebsite);
+          await expect(workspaceSettings.clinicPreferredBloodGlucose).toContainText('mg/dL');
+        });
+      },
+    );
   });
 });
