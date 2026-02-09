@@ -34,7 +34,7 @@
   },
   "homepage": "https://github.com/tidepool-org/nightwatchtests#readme",
   "dependencies": {
-    "axios": "1.6.7",
+    "axios": "1.13.5",
     "dayjs": "1.11.10",
     "dotenv": "16.4.5",
     "eslint-config-airbnb": "19.0.4",
