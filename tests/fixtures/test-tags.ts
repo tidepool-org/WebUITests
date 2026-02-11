@@ -34,7 +34,7 @@ export const TEST_TAGS = {
   // User Types
   PATIENT: '@patient',
   CLINICIAN: '@clinician',
- 
+
   // User-Subtypes
   CUSTODIAL: '@custodial',
   SHARED_MEMBER: '@shared_member',
@@ -48,10 +48,10 @@ export const TEST_TAGS = {
   REGRESSION: '@regression',
 
   // Priority
-  CRITICAL: '@critical',
-  HIGH: '@high',
-  MEDIUM: '@medium',
-  LOW: '@low',
+  PRIORITY_CRITICAL: '@critical',
+  PRIORITY_HIGH: '@high',
+  PRIORITY_MEDIUM: '@medium',
+  PRIORITY_LOW: '@low',
 
   // Endpoint API Testing
   API_PROFILE: '@api_profile',
@@ -62,7 +62,12 @@ export const TEST_TAGS = {
 export const TAG_CATEGORIES = {
   USER_TYPES: [TEST_TAGS.PATIENT, TEST_TAGS.CLINICIAN],
   TEST_TYPES: [TEST_TAGS.API, TEST_TAGS.UI, TEST_TAGS.SMOKE, TEST_TAGS.REGRESSION],
-  PRIORITIES: [TEST_TAGS.CRITICAL, TEST_TAGS.HIGH, TEST_TAGS.MEDIUM, TEST_TAGS.LOW],
+  PRIORITIES: [
+    TEST_TAGS.PRIORITY_CRITICAL,
+    TEST_TAGS.PRIORITY_HIGH,
+    TEST_TAGS.PRIORITY_MEDIUM,
+    TEST_TAGS.PRIORITY_LOW,
+  ],
 };
 
 /**
@@ -96,7 +101,8 @@ export function validateRequiredTags(tags: string[]) {
 export function createValidatedTags(tags: string[]) {
   const validation = validateRequiredTags(tags);
   if (!validation.isValid) {
-    throw new Error(`Test tags validation failed: ${validation.message}`);
+    const errorMessage = `Test tags validation failed: ${validation.message}`;
+    throw new Error(errorMessage);
   }
   return tags;
 }

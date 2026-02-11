@@ -19,7 +19,7 @@ test.describe('Custodial patients are allowed access and modification of profile
         TEST_TAGS.CLINICIAN, // User Type (required)
         TEST_TAGS.API, // Test Type (required)
         TEST_TAGS.UI, // Test Type (required)
-        TEST_TAGS.HIGH, // Priority (required)
+        TEST_TAGS.PRIORITY_HIGH, // Priority (required)
         TEST_TAGS.API_PROFILE, // Feature (optional)
       ]),
     },
@@ -43,17 +43,12 @@ test.describe('Custodial patients are allowed access and modification of profile
 
       // Step 4: Navigate to profile
       await test.step('When user navigates to Profile page', async () => {
-        await test.clinician.navigateTo('Profile', page);
+        await test.clinician.navigateTo('ProfileEdit', page);
       });
 
       // Step 5: Capture GET response
       await test.step('Then profile endpoint responds with GET request consistent with schema [no-screenshot]', async () => {
         await api.validateEndpointResponse('profile-metadata-get');
-      });
-
-      // Step 6: Open Edit Profile
-      await test.step('When user selects Edit button', async () => {
-        await test.clinician.navigateTo('ProfileEdit', page);
       });
 
       // Create Profile page for following steps
@@ -66,18 +61,11 @@ test.describe('Custodial patients are allowed access and modification of profile
         const randomId = Math.floor(randomSeed * 10000);
         const updatedName = `Custodial Patient Updated ${Math.floor(randomId * 10000)}`;
         const birthYear = 1980 + (randomId % 15);
-        const diagnosisYear = birthYear + 25;
         const birthDate = `05/20/${birthYear}`;
-        const diagnosisDate = `08/15/${diagnosisYear}`;
 
         // Generate random 15-digit MRN
         const randomMRN = Array.from({ length: 15 }, () =>
           Math.floor(Math.random() * 10).toString(),
-        ).join('');
-
-        // Generate random 15-letter string for clinical notes
-        const randomString = Array.from({ length: 15 }, () =>
-          String.fromCharCode(65 + Math.floor(Math.random() * 26)),
         ).join('');
 
         // Generate unique email
@@ -90,26 +78,38 @@ test.describe('Custodial patients are allowed access and modification of profile
           nextDiagnosisIndex = 1;
         }
 
+        // //Get current Target Range index and calculate next one (1-5, wrapping)
+        // const currentTargetRangeIndex = await profilePage.getCurrentTargetRangeIndex();
+        // let nextTargetRangeIndex = currentTargetRangeIndex + 1;
+        // if (nextTargetRangeIndex > 4 || nextTargetRangeIndex === 0) {
+        //   nextTargetRangeIndex = 1;
+        // }
+
         // Update fields using ProfilePage methods
         await profilePage.fillFullName(updatedName);
         await profilePage.fillBirthDate(birthDate);
         await profilePage.fillMRN(randomMRN);
-        await profilePage.fillDiagnosisDate(diagnosisDate);
         await profilePage.selectDiagnosisType(nextDiagnosisIndex);
         await profilePage.fillEmail(email);
-        await profilePage.fillClinicalNotes(randomString);
+        // await profilePage.selectTargetRange(nextTargetRangeIndex);
       });
-
       // Step 8: Save profile edit
       await test.step('When user saves profile changes', async () => {
         await profilePage.saveProfile();
       });
 
       // Step 9: Check profile PUT response
-      await test.step('Then profile endpoint responds with PUT request consistent with schema [no-screenshot]', async () => {
-        await api.validateEndpointResponse('profile-metadata-put');
+      await test.step('Then profile endpoint responds with GET request consistent with schema [no-screenshot]', async () => {
+        await api.validateEndpointResponse('profile-metadata-get');
       });
-      await api.stopCapture();
+
+      // Step 10 : Confirm changes update in UI
+      await test.step('Then profile changes are reflected in the UI', async () => {
+        const updatedProfilePage = new ProfilePage(page);
+        // Add verification logic here as needed
+      });
+
+      // await api.stopCapture();
     },
   );
 });

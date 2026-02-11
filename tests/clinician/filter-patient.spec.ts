@@ -10,7 +10,7 @@ ALL_WORKSPACE_KEYS.forEach((workspace: WorkspaceKey) => {
     test(
       `should filter patients correctly in workspace: "[${workspace}]"`,
       {
-        tag: createValidatedTags([TEST_TAGS.CLINICIAN, TEST_TAGS.UI, TEST_TAGS.MEDIUM]),
+        tag: createValidatedTags([TEST_TAGS.CLINICIAN, TEST_TAGS.UI, TEST_TAGS.PRIORITY_MEDIUM]),
       },
       async ({ page }) => {
         // Step 1: Log in to clinician account
@@ -23,7 +23,7 @@ ALL_WORKSPACE_KEYS.forEach((workspace: WorkspaceKey) => {
           await test.clinician.navigateToWorkspace(workspace, page);
         });
 
-        // Define the dasphboard
+        // Define the dashboard
         const dashboard = new ClinicianDashboardPage(page);
 
         // Step 3: Click the Show All toggle button
@@ -32,10 +32,16 @@ ALL_WORKSPACE_KEYS.forEach((workspace: WorkspaceKey) => {
           await page.waitForTimeout(1000);
         });
 
-        // Define patient list for filtering
-        let patientNames = await dashboard.getPatientNames();
+        // Step 4: Define patient list for filtering
+        let patientNames: string[] = [];
+        await (test as any).stepNoScreenshot(
+          'When user views the patient list contents',
+          async () => {
+            patientNames = await dashboard.getPatientNames();
+          },
+        );
 
-        // Step 4: Get first two patient names
+        // Step 5: Get first two patient names
         await test.step('Then at least 2 patient names display in patient list', async () => {
           expect(patientNames.length).toBeGreaterThanOrEqual(2);
         });
@@ -44,41 +50,51 @@ ALL_WORKSPACE_KEYS.forEach((workspace: WorkspaceKey) => {
         const patientA = patientNames[0];
         const patientB = patientNames[1];
 
-        // Step 5: Click the Show All toggle button
+        // Step 6: Click the Show All toggle button
         await test.step('When user clicks the Show All toggle button', async () => {
           await dashboard.showAllToggle.click();
           await page.waitForTimeout(1000);
         });
 
-        // Step 6: Search for patient A
+        // Step 7: Search for patient A
         await test.step(`When user searches for patient A: ${patientA}`, async () => {
           await dashboard.searchInput.fill(patientA);
           await page.waitForTimeout(2000);
         });
 
-        // Refresh Patient list for filtering
-        patientNames = await dashboard.getPatientNames();
+        // Step 8:Refresh Patient list for filtering
+        await (test as any).stepNoScreenshot(
+          'When user views the patient list contents',
+          async () => {
+            patientNames = await dashboard.getPatientNames();
+          },
+        );
 
-        // Step 7: Verify patient A displays in the list
+        // Step 9: Verify patient A displays in the list
         await test.step(`Then patient A: ${patientA} displays in the list`, async () => {
           expect(patientNames).toContain(patientA);
         });
 
-        // Step 8: Verify patient B does not display in the list
+        // Step 10: Verify patient B does not display in the list
         await test.step(`Then patient B: ${patientB} does not display in the list`, async () => {
           expect(patientNames).not.toContain(patientB);
         });
 
-        // Step 9: Clear the search box
+        // Step 11: Clear the search box
         await test.step('When user clears the search box', async () => {
           await dashboard.searchInput.fill('');
           await page.waitForTimeout(4000);
         });
 
-        // Refresh Patient list for filtering
-        patientNames = await dashboard.getPatientNames();
+        // Step 12: Refresh Patient list for filtering
+        await (test as any).stepNoScreenshot(
+          'When user views the patient list contents',
+          async () => {
+            patientNames = await dashboard.getPatientNames();
+          },
+        );
 
-        // Step 10: Verify both patients display in the list
+        // Step 13: Verify both patients display in the list
         await test.step('Then both patients display in the list', async () => {
           expect(patientNames).toContain(patientA);
           expect(patientNames).toContain(patientB);

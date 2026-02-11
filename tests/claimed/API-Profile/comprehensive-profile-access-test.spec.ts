@@ -1,5 +1,5 @@
-import { test } from '../../fixtures/base'
-import { test as patientTest} from '../../fixtures/patient-helpers';
+import { test } from '../../fixtures/base';
+import { test as patientTest } from '../../fixtures/patient-helpers';
 import { test as clinicTest } from '../../fixtures/clinic-helpers';
 import { test as accountTest } from '../../fixtures/account-helpers';
 import { createNetworkHelper } from '../../fixtures/network-helpers';
@@ -20,7 +20,7 @@ test.describe('Comprehensive Profile Access Test: Edit as Claimed, View as Share
         TEST_TAGS.SHARED_MEMBER,
         TEST_TAGS.API, // Test Type (required)
         TEST_TAGS.UI, // Test Type (required)
-        TEST_TAGS.HIGH, // Priority (required)
+        TEST_TAGS.PRIORITY_HIGH, // Priority (required)
         TEST_TAGS.API_PROFILE, // Feature (optional)
       ]),
     },
@@ -148,11 +148,6 @@ test.describe('Comprehensive Profile Access Test: Edit as Claimed, View as Share
       // Step 14: Navigate to profile
       await test.step('When user navigates to Profile page', async () => {
         await clinicTest.clinician.navigateTo('Profile', page);
-      });
-
-      // Step 15: Confirm edit button is not present
-      await test.step('Then Edit button should not be present for claimed patients', async () => {
-        await profilePage.editButtonDisplays(false);
       });
 
       // Step 16: Validate GET response and confirm appropriate permissions

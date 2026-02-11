@@ -1,11 +1,9 @@
 import { test } from '../../fixtures/base';
 import { test as patientTest } from '../../fixtures/patient-helpers';
-import { test as accountTest} from '../../fixtures/account-helpers'
+import { test as accountTest } from '../../fixtures/account-helpers';
 import { createNetworkHelper } from '../../fixtures/network-helpers';
 import { TEST_TAGS, createValidatedTags } from '../../fixtures/test-tags';
 import { AccountSettingsPage } from '../../../page-objects/account/AccountSettingsPage';
-
-
 
 test.describe('Clinician Account Settings Access', () => {
   // API Test cases require this to capture network activity
@@ -15,17 +13,15 @@ test.describe('Clinician Account Settings Access', () => {
     'should allow navigation to account settings and capture GET response',
     {
       tag: createValidatedTags([
-        TEST_TAGS.PATIENT, 
-        TEST_TAGS.CLAIMED, 
+        TEST_TAGS.PATIENT,
+        TEST_TAGS.CLAIMED,
         TEST_TAGS.API,
         TEST_TAGS.UI,
-        TEST_TAGS.HIGH,
+        TEST_TAGS.PRIORITY_HIGH,
         TEST_TAGS.API_USER,
       ]),
     },
     async ({ page }) => {
-
-
       // Step 1: Log in to clinician account and setup network capture
       await test.step('Given clinician has been logged in', async () => {
         api = createNetworkHelper(page);
@@ -39,7 +35,7 @@ test.describe('Clinician Account Settings Access', () => {
         await accountTest.account.navigateTo('AccountSettings', page);
       });
 
-      // Step 3: Validate profile GET response 
+      // Step 3: Validate profile GET response
       await (test as any).stepNoScreenshot(
         'Then profile endpoint responds with GET request consistent with schema ',
         async () => {
@@ -47,10 +43,9 @@ test.describe('Clinician Account Settings Access', () => {
         },
       );
 
-      //Setup for Account Settings page and previous email for reset
+      // Setup for Account Settings page and previous email for reset
       const accountSettingsPage = new AccountSettingsPage(page);
       let originalEmail = '';
-
 
       // Step 4: Read and change email field to temporary value
       await test.step('When user updates the email field', async () => {
@@ -69,16 +64,23 @@ test.describe('Clinician Account Settings Access', () => {
       });
 
       // Step 7: Validate PUT request and email value
-      await (test as any).stepNoScreenshot('Then PUT request is validated and email is set to new value', async () => {
-        await api.validateEndpointResponse('profile-metadata-put');
-        const putCapture = api.getCaptures().find(
-          (req: any) => req.method === 'PUT' && req.url.includes('/profile')
-        );
-        if (!putCapture) throw new Error('No PUT /profile request captured');
-        if (!putCapture.requestBody || !putCapture.requestBody.email || putCapture.requestBody.email !== 'qa+TempEdit@tidepool.org') {
-          throw new Error('PUT request did not set email to qa+TempEdit@tidepool.org');
-        }
-      });
+      await (test as any).stepNoScreenshot(
+        'Then PUT request is validated and email is set to new value',
+        async () => {
+          await api.validateEndpointResponse('profile-metadata-put');
+          const putCapture = api
+            .getCaptures()
+            .find((req: any) => req.method === 'PUT' && req.url.includes('/profile'));
+          if (!putCapture) throw new Error('No PUT /profile request captured');
+          if (
+            !putCapture.requestBody ||
+            !putCapture.requestBody.email ||
+            putCapture.requestBody.email !== 'qa+TempEdit@tidepool.org'
+          ) {
+            throw new Error('PUT request did not set email to qa+TempEdit@tidepool.org');
+          }
+        },
+      );
 
       // Step 8: Change email field to temporary value
       await test.step('When user sets the email field to the previous value', async () => {
@@ -95,17 +97,24 @@ test.describe('Clinician Account Settings Access', () => {
         await accountSettingsPage.saveConfirm.waitFor({ state: 'visible', timeout: 5000 });
       });
 
-       // Step 7: Validate PUT request and email value
-      await (test as any).stepNoScreenshot('Then PUT request is validated and email is set to new value', async () => {
-        await api.validateEndpointResponse('profile-metadata-put');
-        const putCapture = api.getCaptures().find(
-          (req: any) => req.method === 'PUT' && req.url.includes('/profile')
-        );
-        if (!putCapture) throw new Error('No PUT /profile request captured');
-        if (!putCapture.requestBody || !putCapture.requestBody.email || putCapture.requestBody.email !== originalEmail) {
-          throw new Error('PUT request did not set email to originalEmail');
-        }
-      });
+      // Step 7: Validate PUT request and email value
+      await (test as any).stepNoScreenshot(
+        'Then PUT request is validated and email is set to new value',
+        async () => {
+          await api.validateEndpointResponse('profile-metadata-put');
+          const putCapture = api
+            .getCaptures()
+            .find((req: any) => req.method === 'PUT' && req.url.includes('/profile'));
+          if (!putCapture) throw new Error('No PUT /profile request captured');
+          if (
+            !putCapture.requestBody ||
+            !putCapture.requestBody.email ||
+            putCapture.requestBody.email !== originalEmail
+          ) {
+            throw new Error('PUT request did not set email to originalEmail');
+          }
+        },
+      );
 
       await api.stopCapture();
     },
