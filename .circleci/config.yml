@@ -13,6 +13,9 @@ parameters:
   testTags:
     type: string
     default: ''
+  xrayProjectKey:
+    type: string
+    default: 'SAND'
 jobs:
   code-quality-check:
     working_directory: ~/tidepool-org/webuitests
@@ -42,6 +45,7 @@ jobs:
       TEST_EXECUTION_KEY: << pipeline.parameters.testExecKey >>
       TARGET_ENV: << pipeline.parameters.testEnvironment >>
       TEST_TAGS: << pipeline.parameters.testTags >>
+      XRAY_PROJECT_KEY: << pipeline.parameters.xrayProjectKey >>
     steps:
       - checkout
       - node/install
@@ -62,18 +66,18 @@ jobs:
           command: npx playwright install --with-deps
 
       # Run tests with parallel execution
+      # TARGET_ENV and TEST_TAGS are already set as environment variables above
       - run:
           name: Run Playwright Tests
-          command: npm run test --shard=$((CIRCLE_NODE_INDEX + 1))/$CIRCLE_NODE_TOTAL
+          command: npm test -- --shard=$((CIRCLE_NODE_INDEX + 1))/$CIRCLE_NODE_TOTAL
 
       # Store test results and artifacts
       - store_artifacts:
           path: playwright-report
       - store_artifacts:
           path: test-results
-      - store_test_results:
-          path: test-output/test-results.xml
-      # Only send notifications from the first node to avoid duplicates  
+
+      # Only send notifications from the first node to avoid duplicates
       - when:
           condition:
             equal: ["0", "${CIRCLE_NODE_INDEX}"]
@@ -140,25 +144,6 @@ jobs:
                       }
                     ]
                   }
-      - unless:
-          condition:
-            and:
-              - equal: ['testParallel', << pipeline.parameters.testEnvironment >>]
-          steps:
-            - run:
-                name: Gather Test Evidence
-                command: node utilities/browserstackEvidenceDownload.js
-                when: always
-            - run:
-                name: Build TypeScript utilities
-                command: npm run build
-                when: always
-            - run:
-                name: Upload Results to Xray (JSON)
-                command: node utilities/upload-to-xray.js test-results/last-run.json
-                when: always
-                environment:
-                  TEST_EXECUTION_KEY: << pipeline.parameters.testExecKey >>
 
   scheduled-test:
     working_directory: ~/tidepool-org/webuitests
@@ -169,6 +154,7 @@ jobs:
       TEST_EXECUTION_KEY: << pipeline.parameters.testExecKey >>
       TARGET_ENV: << pipeline.parameters.testEnvironment >>
       TEST_TAGS: << pipeline.parameters.testTags >>
+      XRAY_PROJECT_KEY: << pipeline.parameters.xrayProjectKey >>
     steps:
       - checkout
       - node/install
@@ -189,38 +175,16 @@ jobs:
           command: npx playwright install --with-deps
 
       # Run tests with parallel execution
+      # TARGET_ENV and TEST_TAGS are already set as environment variables above
       - run:
           name: Run Playwright Tests
-          command: npm run test --shard=$((CIRCLE_NODE_INDEX + 1))/$CIRCLE_NODE_TOTAL
+          command: npm test -- --shard=$((CIRCLE_NODE_INDEX + 1))/$CIRCLE_NODE_TOTAL
 
       # Store test results and artifacts
       - store_artifacts:
           path: playwright-report
       - store_artifacts:
           path: test-results
-      - store_test_results:
-          path: test-output/test-results.xml
-
-      - run:
-          name: Install xmllint
-          command: apt-get update && apt-get install -y libxml2-utils
-          when: always
-
-      # Parse test results for detailed Slack notification
-      - run:
-          name: Parse Test Results
-          command: |
-            TOTAL_TESTS=$(xmllint --xpath "string(/testsuites/@tests)" test-output/test-results.xml)
-            FAILURES=$(xmllint --xpath "string(/testsuites/@failures)" test-output/test-results.xml)
-            ERRORS=$(xmllint --xpath "string(/testsuites/@errors)" test-output/test-results.xml)
-            PASSED_TESTS=$((TOTAL_TESTS - FAILURES - ERRORS))
-            TIME=$(xmllint --xpath "string(/testsuites/@time)" test-output/test-results.xml)
-            echo "export TOTAL_TESTS=$TOTAL_TESTS" >> $BASH_ENV
-            echo "export PASSED_TESTS=$PASSED_TESTS" >> $BASH_ENV
-            echo "export FAILURES=$FAILURES" >> $BASH_ENV
-            echo "export ERRORS=$ERRORS" >> $BASH_ENV
-            echo "export TIME=$TIME" >> $BASH_ENV
-          when: always
 
       # Only send notifications from the first node to avoid duplicates
       - when:
@@ -266,22 +230,6 @@ jobs:
                       }
                     ]
                   }
-
-      - unless:
-          condition:
-            and:
-              - equal: [<< pipeline.parameters.testEnvironment >>]
-          steps:
-            - run:
-                name: Build TypeScript utilities
-                command: npm run build
-                when: always
-            - run:
-                name: Upload Results to Xray (JSON)
-                command: node utilities/upload-to-xray.js test-results/last-run.json
-                when: always
-                environment:
-                  TEST_EXECUTION_KEY: << pipeline.parameters.testExecKey >>
 
 workflows:
   commit-workflow:

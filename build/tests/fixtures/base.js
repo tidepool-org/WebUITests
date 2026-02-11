@@ -130,9 +130,12 @@ exports.test = test_1.test.extend({
             // Store current step name for network helpers
             let currentStepName = '';
             // Make step counter accessible globally for network helper
-            globalThis.__stepCounter = {
+            globalThis.stepCounter = {
                 get: () => stepCounter,
-                increment: () => ++stepCounter,
+                increment: () => {
+                    stepCounter += 1;
+                    return stepCounter;
+                },
                 getDirectory: () => screenshotDir,
                 getCurrentStepName: () => currentStepName,
                 setCurrentStepName: (name) => {
@@ -151,7 +154,7 @@ exports.test = test_1.test.extend({
             const newStep = function newStepScreenshot(name, fn) {
                 return originalStep.call(this, name, async (stepInfo) => {
                     // Set current step name for network helpers (clean name without [no-screenshot])
-                    const stepCounterObj = globalThis.__stepCounter;
+                    const stepCounterObj = globalThis.stepCounter;
                     if (stepCounterObj) {
                         const cleanName = name.replace(/\s*\[no-screenshot\]\s*/g, '').trim();
                         stepCounterObj.setCurrentStepName(cleanName);
@@ -186,7 +189,9 @@ exports.test = test_1.test.extend({
                             }
                         }
                     }
-                    catch (error) { }
+                    catch (error) {
+                        // Screenshot capture failed, continue without screenshot
+                    }
                     return result;
                 });
             };
@@ -198,7 +203,7 @@ exports.test = test_1.test.extend({
             const stepNoScreenshot = function stepNoScreenshot(name, fn) {
                 return originalStep.call(this, name, async (stepInfo) => {
                     // Set current step name for network helpers (clean name)
-                    const stepCounterObj = globalThis.__stepCounter;
+                    const stepCounterObj = globalThis.stepCounter;
                     if (stepCounterObj) {
                         stepCounterObj.setCurrentStepName(name);
                     }

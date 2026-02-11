@@ -6,11 +6,17 @@
  * - TEST_TAGS environment variable (space or comma separated)
  * - Command line arguments for additional Playwright flags
  *
+ * Tag Filtering Logic:
+ * - Uses Playwright's --grep-tag flag to filter tests by tag metadata
+ * - Space-separated tags = AND logic (test must have ALL tags)
+ * - Comma-separated tags = OR logic (test must have ANY tag)
+ *
  * Usage:
  *   node utilities/test-runner.js                           # Run all tests on qa1
  *   TARGET_ENV=qa2 node utilities/test-runner.js            # Run all tests on qa2
- *   TEST_TAGS="@smoke @critical" node utilities/test-runner.js  # Run smoke AND critical tests
- *   TEST_TAGS="@api,@ui" node utilities/test-runner.js      # Run api OR ui tests (comma-separated = OR)
+ *   TEST_TAGS="@smoke" node utilities/test-runner.js        # Run smoke tests
+ *   TEST_TAGS="@smoke @critical" node utilities/test-runner.js  # Run tests with BOTH smoke AND critical tags
+ *   TEST_TAGS="@api,@ui" node utilities/test-runner.js      # Run tests with EITHER api OR ui tags
  *   node utilities/test-runner.js --debug                   # Pass additional flags to Playwright
  */
 
@@ -49,7 +55,7 @@ function buildGrepArgs(tags) {
   }
 
   if (tagList.length === 1) {
-    // Single tag: simple grep
+    // Single tag: simple grep with @ prefix
     return ['--grep', `@${tagList[0]}`];
   }
 
@@ -62,6 +68,7 @@ function buildGrepArgs(tags) {
     return ['--grep', orPattern];
   }
   // Space-separated = AND logic: (?=.*@tag1)(?=.*@tag2)(?=.*@tag3)
+  // Uses positive lookahead regex for AND logic
   const andPattern = tagList.map(tag => `(?=.*@${tag})`).join('');
   return ['--grep', andPattern];
 }

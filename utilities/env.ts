@@ -17,6 +17,9 @@ const envSchema = z.object({
   TARGET_ENV: z.enum(['qa1', 'qa2', 'qa3', 'qa4', 'qa5', 'production', 'prd', 'int']),
   XRAY_CLIENT_ID: z.string().optional(),
   XRAY_CLIENT_SECRET: z.string().optional(),
+  XRAY_PROJECT_KEY: z.string().default('SAND'),
+  JIRA_EMAIL: z.string().optional(),
+  JIRA_API_KEY: z.string().optional(),
 });
 
 const env = envSchema.safeParse(process.env);

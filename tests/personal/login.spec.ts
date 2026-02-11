@@ -4,6 +4,7 @@ import LoginPage from 'page-objects/LoginPage';
 import WorkspacesPage from '@pom/clinician/WorkspacesPage';
 import { TEST_TAGS, createValidatedTags } from '@fixtures/test-tags';
 import env from '../../utilities/env';
+import { TEST_TAGS, createValidatedTags } from '../fixtures/test-tags';
 
 // make sure we don't have any cookies or origins
 test.use({ storageState: { cookies: [], origins: [] } });
@@ -22,11 +23,22 @@ test.describe('Login into application', () => {
         await loginPage.goto();
         await loginPage.login(env.CLINICIAN_USERNAME, env.CLINICIAN_PASSWORD);
       });
+      await test.step('When user is logged into application', async () => {
+        await loginPage.goto();
+        await loginPage.login(env.CLINICIAN_USERNAME, env.CLINICIAN_PASSWORD);
+      });
 
       await test.step('Then the user is redirected to workspaces page', async () => {
         const workspacesPage = new WorkspacesPage(page);
         await page.waitForURL(workspacesPage.url);
+      await test.step('Then the user is redirected to workspaces page', async () => {
+        const workspacesPage = new WorkspacesPage(page);
+        await page.waitForURL(workspacesPage.url);
 
+        await expect(workspacesPage.header).toBeVisible();
+      });
+    },
+  );
         await expect(workspacesPage.header).toBeVisible();
       });
     },
@@ -40,9 +52,13 @@ test.describe('Login into application', () => {
     async ({ page }) => {
       const loginPage = new LoginPage(page);
 
-      await test.step('When user attempts to login with invalid credentials', async () => {
+      await test.step('When user attempts to login with invalid username', async () => {
         await loginPage.goto();
 
+        // Enter email
+        await page.fill('#username', 'invalid@email.com');
+        await page.click('#kc-login');
+      });
         // Enter email
         await page.fill('#username', 'invalid@email.com');
         await page.click('#kc-login');
@@ -66,10 +82,10 @@ test.describe('Login into application', () => {
     async ({ page }) => {
       const loginPage = new LoginPage(page);
 
-      await test.step('When user attempts to login with invalid email format', async () => {
+      await test.step('When user attempts to login with unrecognized email', async () => {
         await loginPage.goto();
 
-        // Enter invalid email format
+        // Enter unrecognized email
         await page.fill('#username', 'invalidemail');
         await page.click('#kc-login');
       });
@@ -83,9 +99,18 @@ test.describe('Login into application', () => {
       });
     },
   );
+      await test.step('Then email validation error should be displayed', async () => {
+        // Check for email validation error message
+        await expect(page.locator('#input-error-username')).toBeVisible();
+        await expect(page.locator('#input-error-username')).toContainText(
+          "This email doesn't belong to an account yet.",
+        );
+      });
+    },
+  );
 
   test(
-    'should show error message with invalid credentials 1',
+    'should show error message with invalid password',
     {
       tag: createValidatedTags([TEST_TAGS.PATIENT, TEST_TAGS.UI, TEST_TAGS.PRIORITY_MEDIUM]),
     },
@@ -96,7 +121,17 @@ test.describe('Login into application', () => {
         await loginPage.goto();
         await loginPage.login(env.CLINICIAN_USERNAME, `${env.CLINICIAN_PASSWORD}1`);
       });
+      await test.step('When user is logged into application', async () => {
+        await loginPage.goto();
+        await loginPage.login(env.CLINICIAN_USERNAME, `${env.CLINICIAN_PASSWORD}1`);
+      });
 
+      await test.step('Then error message should be displayed', async () => {
+        await expect(page.locator('#input-error')).toBeVisible();
+        await expect(page.locator('#input-error')).toContainText('Invalid password.');
+      });
+    },
+  );
       await test.step('Then error message should be displayed', async () => {
         await expect(page.locator('#input-error')).toBeVisible();
         await expect(page.locator('#input-error')).toContainText('Invalid password.');

@@ -129,6 +129,42 @@ async function executeAcrossWorkspaces(workspaceConfigs, action, page) {
     }
 }
 /**
+ * Find and access any available patient (fastest option)
+ * @param page - The Playwright page object
+ * @returns The full name of the first patient that was accessed
+ */
+async function findAndAccessAnyPatient(page) {
+    const dashboard = new ClinicianDashboardPage_1.default(page);
+    try {
+        // Clear search to show all patients
+        await dashboard.searchInput.click();
+        await dashboard.searchInput.fill(' ');
+        await page.waitForTimeout(500);
+        await dashboard.searchInput.fill('');
+        await page.waitForTimeout(1500);
+        let allCells = await dashboard.patientListTable.getByRole('cell').all();
+        // If no cells, try pressing Enter on empty search
+        if (allCells.length === 0) {
+            await dashboard.searchInput.press('Enter');
+            await page.waitForTimeout(1500);
+            allCells = await dashboard.patientListTable.getByRole('cell').all();
+        }
+        // Find the first cell that looks like a patient name
+        for (const cell of allCells) {
+            const cellText = await cell.textContent();
+            if (cellText && cellText.trim().length > 3 && cellText.includes(' ')) {
+                await cell.click();
+                await page.waitForTimeout(800);
+                return cellText.trim();
+            }
+        }
+        throw new Error('No patient names found in table');
+    }
+    catch (error) {
+        throw new Error(`Failed to find any patient: ${error}`);
+    }
+}
+/**
  * Find and access any patient whose name contains the search term (optimized version)
  * @param searchTerm - Partial name to search for (e.g., "Custodial")
  * @param page - The Playwright page object
@@ -189,42 +225,6 @@ async function findAndAccessPatientByPartialName(searchTerm, page) {
     }
     catch (fallbackError) {
         throw new Error(`No patient found containing "${searchTerm}" and no fallback patients available`);
-    }
-}
-/**
- * Find and access any available patient (fastest option)
- * @param page - The Playwright page object
- * @returns The full name of the first patient that was accessed
- */
-async function findAndAccessAnyPatient(page) {
-    const dashboard = new ClinicianDashboardPage_1.default(page);
-    try {
-        // Clear search to show all patients
-        await dashboard.searchInput.click();
-        await dashboard.searchInput.fill(' ');
-        await page.waitForTimeout(500);
-        await dashboard.searchInput.fill('');
-        await page.waitForTimeout(1500);
-        let allCells = await dashboard.patientListTable.getByRole('cell').all();
-        // If no cells, try pressing Enter on empty search
-        if (allCells.length === 0) {
-            await dashboard.searchInput.press('Enter');
-            await page.waitForTimeout(1500);
-            allCells = await dashboard.patientListTable.getByRole('cell').all();
-        }
-        // Find the first cell that looks like a patient name
-        for (const cell of allCells) {
-            const cellText = await cell.textContent();
-            if (cellText && cellText.trim().length > 3 && cellText.includes(' ')) {
-                await cell.click();
-                await page.waitForTimeout(800);
-                return cellText.trim();
-            }
-        }
-        throw new Error('No patient names found in table');
-    }
-    catch (error) {
-        throw new Error(`Failed to find any patient: ${error}`);
     }
 }
 /**

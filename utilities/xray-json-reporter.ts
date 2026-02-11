@@ -2,78 +2,44 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { FullConfig, FullResult, Suite, TestCase, TestResult } from '@playwright/test/reporter';
 import env from './env';
-
-interface XrayTestStep {
-  action: string;
-  data?: string;
-  result?: string;
-  status: 'PASS' | 'FAIL' | 'PENDING';
-  actualResult?: string;
-  evidences?: {
-    data: string;
-    filename: string;
-    contentType: string;
-  }[];
-}
-
-interface XrayTest {
-  testKey?: string;
-  testInfo: {
-    summary: string;
-    type: 'Manual' | 'Cucumber' | 'Generic';
-    projectKey: string;
-    labels?: string[];
-  };
-  status: 'PASS' | 'FAIL' | 'PENDING' | 'EXECUTING';
-  comment?: string;
-  evidences?: {
-    data: string;
-    filename: string;
-    contentType: string;
-  }[];
-  steps?: XrayTestStep[];
-  examples?: string[];
-}
-
-interface XrayExecutionResult {
-  info: {
-    summary: string;
-    description: string;
-    version?: string;
-    testPlanKey?: string;
-    testExecutionKey?: string;
-    startDate: string;
-    finishDate: string;
-    testEnvironments?: string[];
-  };
-  tests: XrayTest[];
-}
+import {
+  XrayTestStepDefinition,
+  XrayTestStepResult,
+  XrayTest,
+  XrayExecutionResult,
+  XrayEvidence,
+  XrayImportResponse,
+} from './xray-types';
 
 /**
- * Unified Xray JSON Reporter for Playwright
- * Maps rich Playwright test data to Xray's JSON format with step-by-step evidence
+ * Xray JSON Reporter for Playwright
+ * Maps Playwright test data to Xray Cloud JSON format and uploads results
  */
 class XrayJsonReporter {
   private styles = {
-    success: '✅',
-    error: '❌',
-    info: 'ℹ️',
-    warning: '⛔️',
-    upload: '🚀',
-    test: '🧪',
-    separator: '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+    success: '\u2705',
+    error: '\u274C',
+    info: '\u2139\uFE0F',
+    warning: '\u26A0\uFE0F',
+    upload: '\uD83D\uDE80',
+    test: '\uD83E\uDDEA',
+    evidence: '\uD83D\uDCCE',
+    separator:
+      '\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501',
   };
-
-  private startTime = '';
-
-  private endTime = '';
 
   /**
    * Authenticates with Xray API using client credentials
    */
   async authenticateWithXray(): Promise<string> {
+    const startAuth = Date.now();
     try {
-      console.log(`${this.styles.info} Authenticating with Xray...`);
+      console.log(`${this.styles.info} Authenticating with Xray Cloud API...`);
+
+      if (!env.XRAY_CLIENT_ID || !env.XRAY_CLIENT_SECRET) {
+        throw new Error('XRAY_CLIENT_ID and XRAY_CLIENT_SECRET are required for authentication');
+      }
+
       const response = await fetch('https://xray.cloud.getxray.app/api/v1/authenticate', {
         method: 'POST',
         headers: {
@@ -87,12 +53,23 @@ class XrayJsonReporter {
 
       if (!response.ok) {
         const errorText = await response.text();
-        throw new Error(`HTTP error! status: ${response.status}, Response: ${errorText}`);
+        throw new Error(
+          `Authentication failed (HTTP ${response.status}): ${errorText || 'No error details'}`,
+        );
       }
 
       const token = await response.text();
-      console.log(`${this.styles.success} Successfully authenticated with Xray`);
-      return token.replace(/"/g, ''); // Remove quotes from token
+      const cleanToken = token.replace(/"/g, '');
+
+      if (!cleanToken || cleanToken.length < 10) {
+        throw new Error(`Invalid token received: ${cleanToken.substring(0, 20)}...`);
+      }
+
+      const authDuration = Date.now() - startAuth;
+      console.log(
+        `${this.styles.success} Successfully authenticated with Xray (${authDuration}ms)`,
+      );
+      return cleanToken;
     } catch (error) {
       console.error(`${this.styles.error} Failed to authenticate with Xray:`, error);
       throw error;
@@ -100,12 +77,13 @@ class XrayJsonReporter {
   }
 
   /**
-   * Maps Playwright test status to Xray status
+   * Maps Playwright test status to Xray Cloud status
+   * Note: Xray Cloud uses PASSED/FAILED, Xray Server uses PASS/FAIL
    */
-  private getTestStatus(status: string): 'PASS' | 'FAIL' | 'PENDING' {
-    if (status === 'passed') return 'PASS';
-    if (status === 'skipped') return 'PENDING';
-    return 'FAIL';
+  private getTestStatus(status: string): 'PASSED' | 'FAILED' | 'TODO' | 'EXECUTING' {
+    if (status === 'passed') return 'PASSED';
+    if (status === 'skipped') return 'TODO';
+    return 'FAILED';
   }
 
   /**
@@ -122,44 +100,175 @@ class XrayJsonReporter {
   }
 
   /**
-   * Extracts step information from test annotations
+   * Determines if an attachment should be included as evidence
+   * Videos are only included for failed tests; other files check size threshold
    */
-  private async extractSteps(annotations: any[], attachments: any[]): Promise<XrayTestStep[]> {
-    const steps: XrayTestStep[] = [];
-    const stepAnnotations = annotations.filter(ann => ann.type.startsWith('Step Duration:'));
-
-    for (const stepAnn of stepAnnotations) {
-      const stepName = stepAnn.type.replace('Step Duration: ', '');
-      const duration = stepAnn.description;
-
-      // Find associated step attachments
-      const stepAttachments = attachments.filter(att =>
-        att.name.toLowerCase().includes(stepName.toLowerCase().substring(0, 20)),
-      );
-
-      const step: XrayTestStep = {
-        action: stepName,
-        data: `Duration: ${duration}`,
-        result: stepName.includes('Then') ? stepName : undefined,
-        status: 'PASS', // Will be updated based on test result
-        evidences: [],
-      };
-
-      // Add evidence for this step
-      for (const attachment of stepAttachments) {
-        if (attachment.path && fs.existsSync(attachment.path)) {
-          step.evidences?.push({
-            data: await this.fileToBase64(attachment.path),
-            filename: path.basename(attachment.path),
-            contentType: attachment.contentType || 'application/octet-stream',
-          });
-        }
-      }
-
-      steps.push(step);
+  private shouldIncludeEvidence(attachment: any, testStatus: string, contentType: string): boolean {
+    const filePath = attachment.path;
+    if (!filePath || !fs.existsSync(filePath)) {
+      return false;
     }
 
-    return steps;
+    // Videos: Only for failed tests
+    if (contentType.includes('video')) {
+      return testStatus !== 'passed';
+    }
+
+    return true;
+  }
+
+  private isGivenStep(stepName: string): boolean {
+    return stepName.toLowerCase().startsWith('given ');
+  }
+
+  private isWhenStep(stepName: string): boolean {
+    return stepName.toLowerCase().startsWith('when ');
+  }
+
+  private isThenStep(stepName: string): boolean {
+    const lower = stepName.toLowerCase();
+    return lower.startsWith('then ') || lower.startsWith('and ');
+  }
+
+  private parseDuration(duration: string): number {
+    const match = duration.match(/(\d+)/);
+    return match ? parseInt(match[1], 10) : 0;
+  }
+
+  /**
+   * Collects inline evidence for given step indices
+   */
+  private async collectStepEvidence(
+    indices: number[],
+    attachments: any[],
+    testStatus: string,
+  ): Promise<XrayEvidence[]> {
+    const evidence: XrayEvidence[] = [];
+
+    for (const stepIndex of indices) {
+      const stepNumber = stepIndex + 1;
+      const stepPattern = `step-${stepNumber.toString().padStart(2, '0')}`;
+      const stepAttachments = attachments.filter(att =>
+        att.name.toLowerCase().includes(stepPattern),
+      );
+
+      for (const attachment of stepAttachments) {
+        if (attachment.path && fs.existsSync(attachment.path)) {
+          const contentType = attachment.contentType || 'application/octet-stream';
+
+          if (this.shouldIncludeEvidence(attachment, testStatus, contentType)) {
+            const base64Data = await this.fileToBase64(attachment.path);
+            if (base64Data) {
+              evidence.push({
+                data: base64Data,
+                filename: path.basename(attachment.path),
+                contentType,
+              });
+            }
+          }
+        }
+      }
+    }
+
+    return evidence;
+  }
+
+  /**
+   * Extracts step information from test annotations with Given/When/Then logic:
+   * - Given: standalone step (action only)
+   * - When: step with action, result = all consecutive Then steps that follow
+   * - Then/And: combined as result of the preceding When step
+   *
+   * Returns both step definitions (for testInfo.steps) and step results (for test.steps)
+   */
+  private async extractSteps(
+    annotations: any[],
+    attachments: any[],
+    testStatus: string,
+  ): Promise<{
+    stepDefinitions: XrayTestStepDefinition[];
+    stepResults: XrayTestStepResult[];
+  }> {
+    const stepDefinitions: XrayTestStepDefinition[] = [];
+    const stepResults: XrayTestStepResult[] = [];
+    const stepAnnotations = annotations.filter(ann => ann.type.startsWith('Step Duration:'));
+
+    if (stepAnnotations.length === 0) {
+      return { stepDefinitions, stepResults };
+    }
+
+    let pendingWhen: { name: string; duration: number; index: number } | null = null;
+    let pendingThens: { name: string; duration: number; index: number }[] = [];
+
+    const flushPendingWhen = async () => {
+      if (!pendingWhen) return;
+
+      const stepDef: XrayTestStepDefinition = {
+        action: pendingWhen.name,
+        data: `Duration: ${pendingWhen.duration + pendingThens.reduce((sum, t) => sum + t.duration, 0)}ms`,
+      };
+
+      if (pendingThens.length > 0) {
+        stepDef.result = pendingThens.map(t => t.name).join('\n');
+      }
+
+      stepDefinitions.push(stepDef);
+
+      const stepResult: XrayTestStepResult = {
+        status: 'PASSED',
+      };
+
+      const allIndices = [pendingWhen.index, ...pendingThens.map(t => t.index)];
+      const evidence = await this.collectStepEvidence(allIndices, attachments, testStatus);
+      if (evidence.length > 0) {
+        stepResult.evidence = evidence;
+      }
+
+      stepResults.push(stepResult);
+      pendingWhen = null;
+      pendingThens = [];
+    };
+
+    const addStandaloneStep = async (stepName: string, duration: number, index: number) => {
+      stepDefinitions.push({
+        action: stepName,
+        data: `Duration: ${duration}ms`,
+      });
+
+      const stepResult: XrayTestStepResult = {
+        status: 'PASSED',
+      };
+
+      const evidence = await this.collectStepEvidence([index], attachments, testStatus);
+      if (evidence.length > 0) {
+        stepResult.evidence = evidence;
+      }
+
+      stepResults.push(stepResult);
+    };
+
+    for (let i = 0; i < stepAnnotations.length; i += 1) {
+      const stepAnn = stepAnnotations[i];
+      const stepName = stepAnn.type.replace('Step Duration: ', '');
+      const duration = this.parseDuration(stepAnn.description);
+
+      if (this.isGivenStep(stepName)) {
+        await flushPendingWhen();
+        await addStandaloneStep(stepName, duration, i);
+      } else if (this.isWhenStep(stepName)) {
+        await flushPendingWhen();
+        pendingWhen = { name: stepName, duration, index: i };
+      } else if (this.isThenStep(stepName)) {
+        pendingThens.push({ name: stepName, duration, index: i });
+      } else {
+        await flushPendingWhen();
+        await addStandaloneStep(stepName, duration, i);
+      }
+    }
+
+    await flushPendingWhen();
+
+    return { stepDefinitions, stepResults };
   }
 
   /**
@@ -169,48 +278,58 @@ class XrayJsonReporter {
     testCase: TestCase,
     testResult: TestResult,
   ): Promise<XrayTest> {
-    const tags = (testCase as any).tags || [];
     const annotations = testResult.annotations || [];
     const attachments = testResult.attachments || [];
+    const testStatus = testResult.status;
 
-    // Extract steps from annotations
-    const steps = await this.extractSteps(annotations, attachments);
+    const { stepDefinitions, stepResults } = await this.extractSteps(
+      annotations,
+      attachments,
+      testStatus,
+    );
 
-    // Mark failed steps if test failed
-    if (testResult.status !== 'passed' && steps.length > 0) {
-      steps[steps.length - 1].status = 'FAIL';
-      steps[steps.length - 1].actualResult = testResult.error?.message || 'Test failed';
+    // Mark last step as failed if test failed
+    if (testStatus !== 'passed' && stepResults.length > 0) {
+      stepResults[stepResults.length - 1].status = 'FAILED';
+      stepResults[stepResults.length - 1].actualResult = testResult.error?.message || 'Test failed';
     }
 
-    // Collect test-level evidence (screenshots, videos)
-    const testEvidences: { data: string; filename: string; contentType: string }[] = [];
+    // Collect test-level evidence (not step-level)
+    const testEvidence: XrayEvidence[] = [];
+
     for (const attachment of attachments) {
-      if (attachment.path && fs.existsSync(attachment.path)) {
-        // Add main test evidence (final screenshots, videos, etc.)
-        if (attachment.name.includes('screenshot') || attachment.name.includes('video')) {
-          testEvidences.push({
-            data: await this.fileToBase64(attachment.path),
-            filename: attachment.name,
-            contentType: attachment.contentType || 'application/octet-stream',
-          });
+      if (
+        attachment.path &&
+        fs.existsSync(attachment.path) &&
+        !attachment.name.toLowerCase().includes('step-')
+      ) {
+        const contentType = attachment.contentType || 'application/octet-stream';
+
+        if (this.shouldIncludeEvidence(attachment, testStatus, contentType)) {
+          const base64Data = await this.fileToBase64(attachment.path);
+          if (base64Data) {
+            testEvidence.push({
+              data: base64Data,
+              filename: attachment.name,
+              contentType,
+            });
+          }
         }
       }
     }
 
-    const xrayTest: XrayTest = {
+    return {
       testInfo: {
         summary: testCase.title,
-        type: 'Generic',
-        projectKey: 'XT', // Could be made configurable
-        labels: tags,
+        type: 'Manual',
+        projectKey: env.XRAY_PROJECT_KEY || 'SAND',
+        steps: stepDefinitions.length > 0 ? stepDefinitions : undefined,
       },
-      status: this.getTestStatus(testResult.status),
+      status: this.getTestStatus(testStatus),
       comment: testResult.error?.message,
-      evidences: testEvidences,
-      steps: steps.length > 0 ? steps : undefined,
+      evidence: testEvidence.length > 0 ? testEvidence : undefined,
+      steps: stepResults.length > 0 ? stepResults : undefined,
     };
-
-    return xrayTest;
   }
 
   /**
@@ -222,7 +341,6 @@ class XrayJsonReporter {
 
     const tests: XrayTest[] = [];
 
-    // Process all test suites
     for (const suite of playwrightResult.suites || []) {
       await this.processSuite(suite, tests);
     }
@@ -230,30 +348,31 @@ class XrayJsonReporter {
     const testExecKey = process.env.TEST_EXECUTION_KEY || process.env.testExecKey;
     const targetEnv = process.env.TARGET_ENV || 'qa1';
 
-    const xrayResult: XrayExecutionResult = {
+    const passedCount = tests.filter(t => t.status === 'PASSED').length;
+    const failedCount = tests.filter(t => t.status === 'FAILED').length;
+    const todoCount = tests.filter(t => t.status === 'TODO').length;
+
+    const hasExistingExecution = testExecKey && testExecKey !== 'none' && testExecKey.trim() !== '';
+
+    return {
+      testExecutionKey: hasExistingExecution ? testExecKey : undefined,
       info: {
         summary: `Playwright Test Execution - ${new Date().toISOString()}`,
-        description: `Automated test execution for ${targetEnv} environment`,
-        version: '1.0',
-        testExecutionKey: testExecKey !== 'none' ? testExecKey : undefined,
+        description: `Automated test execution for ${targetEnv} environment\n\nResults: ${passedCount} passed, ${failedCount} failed, ${todoCount} skipped`,
         startDate: playwrightResult.stats?.startTime || new Date().toISOString(),
         finishDate: new Date(
           new Date(playwrightResult.stats?.startTime || Date.now()).getTime() +
             (playwrightResult.stats?.duration || 0),
         ).toISOString(),
-        testEnvironments: [targetEnv],
       },
       tests,
     };
-
-    return xrayResult;
   }
 
   /**
    * Recursively processes test suites
    */
   private async processSuite(suite: any, tests: XrayTest[]): Promise<void> {
-    // Process specs in this suite
     for (const spec of suite.specs || []) {
       for (const test of spec.tests || []) {
         for (const result of test.results || []) {
@@ -263,18 +382,23 @@ class XrayJsonReporter {
       }
     }
 
-    // Process nested suites
     for (const nestedSuite of suite.suites || []) {
       await this.processSuite(nestedSuite, tests);
     }
   }
 
   /**
-   * Uploads Xray execution result to Xray
+   * Uploads Xray execution result to Xray Cloud
    */
-  async uploadToXray(xrayResult: XrayExecutionResult): Promise<void> {
+  async uploadToXray(xrayResult: XrayExecutionResult): Promise<XrayImportResponse | null> {
     try {
+      const uploadStart = Date.now();
+      const payloadSizeKB = (JSON.stringify(xrayResult).length / 1024).toFixed(1);
+
       console.log(`${this.styles.info} Uploading test execution to Xray...`);
+      console.log(
+        `${this.styles.info} Payload: ${xrayResult.tests.length} tests, ${payloadSizeKB} KB`,
+      );
 
       const token = await this.authenticateWithXray();
 
@@ -289,13 +413,18 @@ class XrayJsonReporter {
 
       if (!response.ok) {
         const errorText = await response.text();
-        throw new Error(`HTTP error! status: ${response.status}, Response: ${errorText}`);
+        throw new Error(`Upload failed (HTTP ${response.status}): ${errorText}`);
       }
 
-      const result = await response.json();
+      const result: XrayImportResponse = await response.json();
+      const uploadDuration = Date.now() - uploadStart;
+
+      console.log(`${this.styles.success} Successfully uploaded to Xray (${uploadDuration}ms)`);
       console.log(
-        `${this.styles.success} Successfully uploaded to Xray. Execution Key: ${result.key}`,
+        `${this.styles.success} Test Execution Key: ${result.testExecIssue?.key || 'N/A'}`,
       );
+
+      return result;
     } catch (error) {
       console.error(`${this.styles.error} Failed to upload to Xray:`, error);
       throw error;
@@ -312,14 +441,35 @@ class XrayJsonReporter {
     }
 
     try {
-      console.log(`${this.styles.info} Processing Playwright results...`);
+      const processStart = Date.now();
+      console.log(`\n${this.styles.separator}`);
+      console.log(`${this.styles.info} Processing Playwright results for Xray...`);
+      console.log(`${this.styles.info} Project Key: ${env.XRAY_PROJECT_KEY || 'SAND'}`);
+      console.log(`${this.styles.info} Environment: ${process.env.TARGET_ENV || 'qa1'}`);
+
+      const testExecKey = process.env.TEST_EXECUTION_KEY || process.env.testExecKey;
+      if (testExecKey && testExecKey !== 'none' && testExecKey.trim() !== '') {
+        console.log(`${this.styles.info} Linking to Test Execution: ${testExecKey}`);
+      } else {
+        console.log(`${this.styles.info} Creating new Test Execution`);
+      }
+
       const xrayResult = await this.convertPlaywrightJsonToXray(playwrightJsonPath);
 
       // Save converted result for debugging
       fs.writeFileSync('test-results/xray-execution.json', JSON.stringify(xrayResult, null, 2));
+      console.log(`${this.styles.info} Saved Xray JSON to: test-results/xray-execution.json`);
+
+      if (xrayResult.tests.length === 0) {
+        console.log(`${this.styles.warning} No tests to upload, skipping Xray upload`);
+        return;
+      }
 
       await this.uploadToXray(xrayResult);
-      console.log(`${this.styles.upload} Xray upload completed successfully`);
+
+      const totalDuration = Date.now() - processStart;
+      console.log(`${this.styles.upload} Xray upload completed successfully (${totalDuration}ms)`);
+      console.log(`${this.styles.separator}\n`);
     } catch (error) {
       console.error(`${this.styles.error} Failed to process and upload:`, error);
       throw error;
@@ -327,10 +477,9 @@ class XrayJsonReporter {
   }
 
   /**
-   * Reporter lifecycle methods for direct Playwright integration
+   * Reporter lifecycle methods for Playwright integration
    */
   onBegin(_config: FullConfig, suite: Suite): void {
-    this.startTime = new Date().toISOString();
     console.log(`\n${this.styles.separator}`);
     console.log(`${this.styles.test} Starting test run with ${suite.allTests().length} tests`);
     console.log(`${this.styles.separator}\n`);
@@ -346,7 +495,6 @@ class XrayJsonReporter {
   }
 
   async onEnd(result: FullResult): Promise<void> {
-    this.endTime = new Date().toISOString();
     console.log(`\n${this.styles.separator}`);
     console.log(`${this.styles.info} Test Run Summary:`);
     console.log(
@@ -355,10 +503,12 @@ class XrayJsonReporter {
     console.log(`Duration: ${result.duration}ms`);
     console.log(`${this.styles.separator}\n`);
 
-    // Auto-upload if JSON results are available
-    const jsonPath = 'test-results/last-run.json';
-    if (fs.existsSync(jsonPath)) {
-      await this.processAndUpload(jsonPath);
+    const testExecKey = process.env.TEST_EXECUTION_KEY || process.env.testExecKey;
+    if (env.XRAY_CLIENT_ID && env.XRAY_CLIENT_SECRET && testExecKey && testExecKey !== 'none') {
+      const jsonPath = 'test-results/last-run.json';
+      if (fs.existsSync(jsonPath)) {
+        await this.processAndUpload(jsonPath);
+      }
     }
   }
 }

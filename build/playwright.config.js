@@ -6,13 +6,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const test_1 = require("@playwright/test");
 const node_path_1 = __importDefault(require("node:path"));
 const env_1 = __importDefault(require("./utilities/env"));
-// Legacy XML options - can be removed when fully migrated to JSON
-const xrayOptions = {
-    embedAnnotationsAsProperties: true,
-    textContentAnnotations: ['test_description', 'testrun_comment'],
-    embedAttachmentsAsProperty: 'testrun_evidence',
-    outputFile: 'test-output/test-results.xml',
-};
 // Helper to detect BrowserStack run
 const isBrowserStack = Boolean(process.env.BROWSERSTACK_USERNAME && process.env.BROWSERSTACK_ACCESS_KEY);
 function buildBrowserStackEndpoint(testName) {
@@ -43,7 +36,6 @@ exports.default = (0, test_1.defineConfig)({
     reporter: [
         ['html', { open: 'never', outputFolder: 'playwright-report' }],
         ['json', { outputFile: 'test-results/last-run.json' }],
-        ['junit', xrayOptions],
         ['./utilities/xray-json-reporter.ts'],
     ],
     use: {

@@ -252,7 +252,7 @@ class NetworkHelper {
         const request = this.getLatestCaptureMatching(schema.method, schema.url);
         if (request?.responseBody) {
             // Access the shared step counter from the stepScreenshoter fixture
-            const stepCounterObj = globalThis.__stepCounter;
+            const stepCounterObj = globalThis.stepCounter;
             if (stepCounterObj) {
                 const stepNumber = stepCounterObj.increment();
                 const currentStepName = stepCounterObj.getCurrentStepName();
@@ -371,8 +371,8 @@ class NetworkHelper {
      * @param path - The dot-notation path (e.g., 'patient.birthday')
      * @returns The value at the path or undefined
      */
-    getNestedValue(obj, path) {
-        return path.split('.').reduce((current, key) => current?.[key], obj);
+    getNestedValue(obj, propertyPath) {
+        return propertyPath.split('.').reduce((current, key) => current?.[key], obj);
     }
     /**
      * Validate producer-consumer data consistency for profile endpoints
@@ -435,7 +435,7 @@ class NetworkHelper {
             throw new Error('No base endpoint found');
         }
         // Generate comparison JSON file similar to validateEndpointResponse
-        const stepCounterObj = globalThis.__stepCounter;
+        const stepCounterObj = globalThis.stepCounter;
         if (stepCounterObj) {
             // Increment for JSON file naming (this is correct behavior)
             const stepNumber = stepCounterObj.increment();
