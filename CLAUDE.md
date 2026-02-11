@@ -10,18 +10,21 @@ This is a Playwright-based UI testing suite for Tidepool's web application, supp
 
 ### Testing Commands
 
-- `npm test` - Run all tests on qa1 environment
-- `npm run test:qa2` - Run tests on qa2 environment
-- `npm run test:prd` - Run tests on production
+- `npm test` - Run all tests (uses TARGET_ENV from .env file)
 - `npm run test:smoke` - Run only smoke tests
 - `npm run test:critical` - Run only critical tests
 - `npm run test:api` - Run only API tests
 - `npm run test:ui` - Run only UI tests
 - `npm run test:patient` - Run only patient tests
 - `npm run test:clinician` - Run only clinician tests
+- `npm run test:regression` - Run only regression tests
 - `npm run debug` - Debug tests with Playwright's debug mode
-- `playwright test tests/specific-test.spec.ts` - Run a single test file
-- `TARGET_ENV=qa2 TEST_TAGS='@smoke @critical' npm test` - Run tests with environment and tags
+- `npx playwright test tests/specific-test.spec.ts` - Run a single test file
+
+**Advanced Tag Filtering:**
+- Combine tags with AND logic: `npx playwright test --grep "(?=.*@smoke)(?=.*@ui)"`
+- Combine tags with OR logic: `npx playwright test --grep "@smoke|@critical"`
+- Change environment: Set `TARGET_ENV` in your .env file or export it before running tests
 
 ### Code Quality Commands
 
@@ -59,9 +62,10 @@ The codebase follows the Page Object Model (POM) pattern with a clear separation
 ### Environment Management
 
 - **`utilities/env.ts`** - Centralized environment configuration using Zod validation
+- **`.env` file** - Local environment configuration (set TARGET_ENV and credentials)
 - Supports environments: qa1, qa2, qa3, qa4, qa5, prd, int
-- Environment variables validated at startup
-- **`utilities/test-runner.js`** - Dynamic test execution with environment and tag filtering
+- Environment variables validated at startup via Zod schema
+- CircleCI uses pipeline parameters to set environment variables
 
 ### Key Configuration Files
 
@@ -73,9 +77,13 @@ The codebase follows the Page Object Model (POM) pattern with a clear separation
 ### Test Result Reporting
 
 - **JSON Reporter**: Generates `test-results/last-run.json` with rich test data
-- **Xray Integration**: `utilities/xray-json-reporter.ts` uploads test results with step-by-step evidence
+- **Xray Integration**: `utilities/xray-json-reporter.ts` uploads test results with intelligent evidence handling
+  - Videos only for failed tests (saves storage)
+  - Screenshots and JSON responses for all tests
+  - Configurable project key via `XRAY_PROJECT_KEY` (default: SAND)
+  - Step-level evidence properly mapped to test steps
 - **HTML Reports**: Interactive reports in `playwright-report/`
-- **CircleCI Integration**: Automated test result submission to Xray using testExecKey parameter
+- **CircleCI Integration**: Automated test result submission to Xray with configurable project key
 
 ## Project-Specific Patterns
 
@@ -115,8 +123,11 @@ Tests automatically detect BrowserStack environment variables and switch between
 
 - **`tests/fixtures/test-tags.ts`** - Comprehensive tag system with validation
 - **Required Categories**: User Types (@patient, @clinician), Test Types (@api, @ui, @smoke), Priorities (@critical, @high, @medium, @low)
-- **Tag Filtering**: Supports AND logic (space-separated) and OR logic (comma-separated)
+- **Tag Filtering**:
+  - Space-separated tags = AND logic (test must have ALL tags): `TEST_TAGS='@smoke @ui'`
+  - Comma-separated tags = OR logic (test must have ANY tag): `TEST_TAGS='@smoke,@critical'`
 - **Dynamic Execution**: Use `TEST_TAGS` environment variable for selective test runs
+- **Implementation**: Uses Playwright's `--grep` flag with regex patterns to filter tests by tag metadata
 
 ## Development Notes
 
@@ -140,12 +151,19 @@ Tests automatically detect BrowserStack environment variables and switch between
 
 Required environment variables:
 
-- `PATIENT_USERNAME` / `PATIENT_PASSWORD`
-- `CLINICIAN_USERNAME` / `CLINICIAN_PASSWORD`
+- `PERSONAL_USERNAME` / `PERSONAL_PASSWORD` - Personal patient account
+- `CLAIMED_USERNAME` / `CLAIMED_PASSWORD` - Claimed patient account
+- `SHARED_USERNAME` / `SHARED_PASSWORD` - Shared patient account
+- `CLINICIAN_USERNAME` / `CLINICIAN_PASSWORD` - Clinician account
 - `TARGET_ENV` (qa1, qa2, qa3, qa4, qa5, prd, int)
-- Optional: `BROWSERSTACK_USERNAME` / `BROWSERSTACK_ACCESS_KEY`
-- Optional: `XRAY_CLIENT_ID` / `XRAY_CLIENT_SECRET` (for Xray integration)
-- Optional: `TEST_TAGS` (for filtering tests by tags)
+- Optional: `BROWSERSTACK_USERNAME` / `BROWSERSTACK_ACCESS_KEY` (for BrowserStack cloud testing)
+
+**Xray Integration (Optional):**
+- `XRAY_CLIENT_ID` / `XRAY_CLIENT_SECRET` - Required for automatic Xray upload after test runs
+- `XRAY_PROJECT_KEY` - Jira project key (default: SAND)
+- `TEST_EXECUTION_KEY` - Link to existing Xray execution, or 'none' to auto-create
+
+**Note:** If `XRAY_CLIENT_ID` and `XRAY_CLIENT_SECRET` are not provided, the Xray reporter will silently skip upload and only generate local JSON reports.
 
 ### Project Structure Understanding
 

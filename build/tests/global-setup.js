@@ -12,7 +12,7 @@ const env_1 = __importDefault(require("../utilities/env"));
 async function loginUserType(role) {
     const browser = await test_1.chromium.launch();
     const context = await browser.newContext({
-        baseURL: process.env.BASE_URL,
+        baseURL: env_1.default.BASE_URL,
     });
     const page = await context.newPage();
     await page.goto(env_1.default.BASE_URL);

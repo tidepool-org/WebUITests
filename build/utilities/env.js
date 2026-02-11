@@ -20,6 +20,10 @@ const envSchema = zod_1.default.object({
     TARGET_ENV: zod_1.default.enum(['qa1', 'qa2', 'qa3', 'qa4', 'qa5', 'production', 'prd', 'int']),
     XRAY_CLIENT_ID: zod_1.default.string().optional(),
     XRAY_CLIENT_SECRET: zod_1.default.string().optional(),
+    XRAY_PROJECT_KEY: zod_1.default.string().default('SAND'),
+    XRAY_EVIDENCE_SIZE_THRESHOLD_KB: zod_1.default.coerce.number().default(100),
+    JIRA_EMAIL: zod_1.default.string().optional(),
+    JIRA_API_KEY: zod_1.default.string().optional(),
 });
 const env = envSchema.safeParse(process.env);
 if (!env.success) {

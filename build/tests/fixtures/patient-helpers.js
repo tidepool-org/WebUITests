@@ -368,6 +368,7 @@ async function executeNavigationStrategy(state) {
             // Check condition if present
             if (step.condition && !(await step.condition(state))) {
                 console.log(`Skipping step ${step.name} - condition not met`);
+                // eslint-disable-next-line no-continue
                 continue;
             }
             console.log(`Executing step: ${step.name}`);

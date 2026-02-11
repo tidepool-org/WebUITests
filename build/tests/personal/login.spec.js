@@ -8,11 +8,19 @@ const base_1 = require("@fixtures/base");
 const LoginPage_1 = __importDefault(require("page-objects/LoginPage"));
 const WorkspacesPage_1 = __importDefault(require("@pom/clinician/WorkspacesPage"));
 const env_1 = __importDefault(require("../../utilities/env"));
+const test_tags_1 = require("../fixtures/test-tags");
 // make sure we don't have any cookies or origins
 base_1.test.use({ storageState: { cookies: [], origins: [] } });
 // Possible testcases: https://tidepool.atlassian.net/jira/software/c/projects/WEB/issues/?jql=project%20%3D%20%22WEB%22%20AND%20type%20%3D%20Test%20AND%20textfields%20~%20%22login%22%20ORDER%20BY%20created%20DESC
 base_1.test.describe('Login into application', () => {
-    (0, base_1.test)('should work with valid credentials for clinician with multiple clinics', async ({ page, }) => {
+    (0, base_1.test)('should work with valid credentials for clinician with multiple clinics', {
+        tag: (0, test_tags_1.createValidatedTags)([
+            test_tags_1.TEST_TAGS.CLINICIAN,
+            test_tags_1.TEST_TAGS.UI,
+            test_tags_1.TEST_TAGS.SMOKE,
+            test_tags_1.TEST_TAGS.CRITICAL,
+        ]),
+    }, async ({ page }) => {
         const loginPage = new LoginPage_1.default(page);
         await base_1.test.step('When user is logged into application', async () => {
             await loginPage.goto();
@@ -24,7 +32,14 @@ base_1.test.describe('Login into application', () => {
             await (0, base_1.expect)(workspacesPage.header).toBeVisible();
         });
     });
-    (0, base_1.test)('should show error message with invalid credentials', async ({ page }) => {
+    (0, base_1.test)('should show error message with invalid credentials', {
+        tag: (0, test_tags_1.createValidatedTags)([
+            test_tags_1.TEST_TAGS.CLINICIAN,
+            test_tags_1.TEST_TAGS.UI,
+            test_tags_1.TEST_TAGS.SMOKE,
+            test_tags_1.TEST_TAGS.HIGH,
+        ]),
+    }, async ({ page }) => {
         const loginPage = new LoginPage_1.default(page);
         await base_1.test.step('When user attempts to login with invalid credentials', async () => {
             await loginPage.goto();
@@ -38,7 +53,14 @@ base_1.test.describe('Login into application', () => {
             await (0, base_1.expect)(page.locator('#input-error-username')).toContainText("This email doesn't belong to an account yet.");
         });
     });
-    (0, base_1.test)('should validate email format', async ({ page }) => {
+    (0, base_1.test)('should validate email format', {
+        tag: (0, test_tags_1.createValidatedTags)([
+            test_tags_1.TEST_TAGS.CLINICIAN,
+            test_tags_1.TEST_TAGS.UI,
+            test_tags_1.TEST_TAGS.REGRESSION,
+            test_tags_1.TEST_TAGS.MEDIUM,
+        ]),
+    }, async ({ page }) => {
         const loginPage = new LoginPage_1.default(page);
         await base_1.test.step('When user attempts to login with invalid email format', async () => {
             await loginPage.goto();
@@ -52,7 +74,14 @@ base_1.test.describe('Login into application', () => {
             await (0, base_1.expect)(page.locator('#input-error-username')).toContainText("This email doesn't belong to an account yet.");
         });
     });
-    (0, base_1.test)('should show error message with invalid credentials 1', async ({ page }) => {
+    (0, base_1.test)('should show error message with invalid credentials 1', {
+        tag: (0, test_tags_1.createValidatedTags)([
+            test_tags_1.TEST_TAGS.CLINICIAN,
+            test_tags_1.TEST_TAGS.UI,
+            test_tags_1.TEST_TAGS.SMOKE,
+            test_tags_1.TEST_TAGS.HIGH,
+        ]),
+    }, async ({ page }) => {
         const loginPage = new LoginPage_1.default(page);
         await base_1.test.step('When user is logged into application', async () => {
             await loginPage.goto();
