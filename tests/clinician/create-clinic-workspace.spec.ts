@@ -12,7 +12,7 @@ test.describe('Custodial patients are allowed access and modification of profile
   test(
     'should create a new workspace as admin',
     {
-      tag: createValidatedTags([TEST_TAGS.CLINICIAN, TEST_TAGS.UI, TEST_TAGS.HIGH]),
+      tag: createValidatedTags([TEST_TAGS.CLINICIAN, TEST_TAGS.UI, TEST_TAGS.PRIORITY_HIGH]),
     },
     async ({ page }) => {
       // Step 1: Login as clinician
@@ -31,7 +31,7 @@ test.describe('Custodial patients are allowed access and modification of profile
       // Create clinic creation page instance
       const clinicCreationPage = new ClinicCreationPage(page);
 
-      // Step 3: Confirm create page exists and is rached.
+      // Step 3: Confirm create page exists and is reached.
       await test.step('Then the user navigates to the create patient page', async () => {
         await expect(page).toHaveURL(/clinic-details\/new/);
         await expect(clinicCreationPage.pageHeader).toBeVisible();

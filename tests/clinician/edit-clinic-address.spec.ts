@@ -11,7 +11,7 @@ ALL_WORKSPACE_KEYS.forEach((workspace: WorkspaceKey) => {
     test(
       `should allow navigation to workspace details and edit workspace: "[${workspace}]"`,
       {
-        tag: createValidatedTags([TEST_TAGS.CLINICIAN, TEST_TAGS.UI, TEST_TAGS.MEDIUM]),
+        tag: createValidatedTags([TEST_TAGS.CLINICIAN, TEST_TAGS.UI, TEST_TAGS.PRIORITY_MEDIUM]),
       },
       async ({ page }) => {
         // Step 1: Log in to clinician account and setup network capture

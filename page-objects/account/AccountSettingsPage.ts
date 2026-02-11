@@ -2,8 +2,11 @@ import { Page, Locator } from '@playwright/test';
 
 export class AccountSettingsPage {
   readonly page: Page;
+
   readonly emailInput: Locator;
+
   readonly saveButton: Locator;
+
   readonly saveConfirm: Locator;
 
   constructor(page: Page) {

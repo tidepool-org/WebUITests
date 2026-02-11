@@ -1,76 +1,105 @@
-import { expect, test } from '@fixtures/base';
+import { expect } from '@fixtures/base';
+import { test, ALL_WORKSPACE_KEYS } from '@fixtures/clinic-helpers';
+import { TEST_TAGS, createValidatedTags } from '@fixtures/test-tags';
 import ClinicianDashboardPage from '@pom/clinician/ClinicianDashboardPage';
-import WorkspacesPage from '@pom/clinician/WorkspacesPage';
 
-test.describe('Filter patients in clinic', () => {
-  // Use unique patient names for each test run
-  const timestamp = Date.now();
-  const patientName1 = `Filter Patient A ${timestamp}`;
-  const patientName2 = `Filter Patient B ${timestamp}`;
-  const patientBirthdate = '01/01/1995'; // Shared birthdate for simplicity
+import type { WorkspaceKey } from '@pom/clinician/ClinicianNavigation';
 
-  let workspacesPage: WorkspacesPage;
-  let clinicWorkspacePage: ClinicianDashboardPage;
+ALL_WORKSPACE_KEYS.forEach((workspace: WorkspaceKey) => {
+  test.describe('Patient filter functionality in workspace', () => {
+    test(
+      `should filter patients correctly in workspace: "[${workspace}]"`,
+      {
+        tag: createValidatedTags([TEST_TAGS.CLINICIAN, TEST_TAGS.UI, TEST_TAGS.PRIORITY_MEDIUM]),
+      },
+      async ({ page }) => {
+        // Step 1: Log in to clinician account
+        await test.step('Given clinician has been logged in', async () => {
+          await test.clinician.setup(page);
+        });
 
-  test.beforeEach(async ({ page }) => {
-    workspacesPage = new WorkspacesPage(page);
-    clinicWorkspacePage = new ClinicianDashboardPage(page);
+        // Step 2: Navigate to workspace
+        await test.step(`When user navigates to workspace: ${workspace}`, async () => {
+          await test.clinician.navigateToWorkspace(workspace, page);
+        });
 
-    await test.step('Given user has been logged in and navigated to base URL', async () => {
-      await workspacesPage.goto();
-      await page.waitForURL(workspacesPage.url);
-      await workspacesPage.header.waitFor({ state: 'visible' });
-    });
+        // Define the dashboard
+        const dashboard = new ClinicianDashboardPage(page);
 
-    await test.step('Given the user is on the first clinic workspace', async () => {
-      await workspacesPage.visitFirstClinic();
-      await clinicWorkspacePage.waitForLoadState(); // Wait for clinic page elements
-    });
+        // Step 3: Click the Show All toggle button
+        await test.step('When user clicks the Show All toggle button', async () => {
+          await dashboard.showAllToggle.click();
+          await page.waitForTimeout(1000);
+        });
 
-    await test.step('Given two patients exist', async () => {
-      // Add first patient
-      await clinicWorkspacePage.openAndFillAddPatientDialog(patientName1, patientBirthdate);
-      await clinicWorkspacePage.submitAddPatientDialog();
-      await clinicWorkspacePage.closeBringDataDialog();
-      // Ensure the first patient is added before adding the second
-      await expect(clinicWorkspacePage.getPatientCellByName(patientName1)).toBeVisible({
-        timeout: 10000,
-      });
+        // Step 4: Define patient list for filtering
+        let patientNames: string[] = [];
+        await (test as any).stepNoScreenshot(
+          'When user views the patient list contents',
+          async () => {
+            patientNames = await dashboard.getPatientNames();
+          },
+        );
 
-      // Add second patient
-      await clinicWorkspacePage.openAndFillAddPatientDialog(patientName2, patientBirthdate);
-      await clinicWorkspacePage.submitAddPatientDialog();
-      await clinicWorkspacePage.closeBringDataDialog();
-      // Ensure the second patient is also added
-      await expect(clinicWorkspacePage.getPatientCellByName(patientName2)).toBeVisible({
-        timeout: 10000,
-      });
-    });
-  });
+        // Step 5: Get first two patient names
+        await test.step('Then at least 2 patient names display in patient list', async () => {
+          expect(patientNames.length).toBeGreaterThanOrEqual(2);
+        });
 
-  test('should successfully filter patients by name', async () => {
-    await test.step("When user filters by the first patient's name", async () => {
-      await clinicWorkspacePage.searchForPatient(patientName1);
-    });
+        // Define patients for later comparison
+        const patientA = patientNames[0];
+        const patientB = patientNames[1];
 
-    await test.step('Then only the first patient should be visible', async () => {
-      const patientCell1 = clinicWorkspacePage.getPatientCellByName(patientName1);
-      const patientCell2 = clinicWorkspacePage.getPatientCellByName(patientName2);
-      await expect(patientCell1).toBeVisible();
-      await expect(patientCell2).not.toBeVisible();
-    });
+        // Step 6: Click the Show All toggle button
+        await test.step('When user clicks the Show All toggle button', async () => {
+          await dashboard.showAllToggle.click();
+          await page.waitForTimeout(1000);
+        });
 
-    await test.step('When user clears the filter', async () => {
-      // Assuming a method like clearPatientSearch exists or searchForPatient('') clears
-      await clinicWorkspacePage.searchForPatient(''); // Clear search by searching for empty string
-      // Or potentially: await clinicWorkspacePage.clearPatientSearch();
-    });
+        // Step 7: Search for patient A
+        await test.step(`When user searches for patient A: ${patientA}`, async () => {
+          await dashboard.searchInput.fill(patientA);
+          await page.waitForTimeout(2000);
+        });
 
-    await test.step('Then both patients should be visible again', async () => {
-      const patientCell1 = clinicWorkspacePage.getPatientCellByName(patientName1);
-      const patientCell2 = clinicWorkspacePage.getPatientCellByName(patientName2);
-      await expect(patientCell1).toBeVisible();
-      await expect(patientCell2).toBeVisible();
-    });
+        // Step 8:Refresh Patient list for filtering
+        await (test as any).stepNoScreenshot(
+          'When user views the patient list contents',
+          async () => {
+            patientNames = await dashboard.getPatientNames();
+          },
+        );
+
+        // Step 9: Verify patient A displays in the list
+        await test.step(`Then patient A: ${patientA} displays in the list`, async () => {
+          expect(patientNames).toContain(patientA);
+        });
+
+        // Step 10: Verify patient B does not display in the list
+        await test.step(`Then patient B: ${patientB} does not display in the list`, async () => {
+          expect(patientNames).not.toContain(patientB);
+        });
+
+        // Step 11: Clear the search box
+        await test.step('When user clears the search box', async () => {
+          await dashboard.searchInput.fill('');
+          await page.waitForTimeout(4000);
+        });
+
+        // Step 12: Refresh Patient list for filtering
+        await (test as any).stepNoScreenshot(
+          'When user views the patient list contents',
+          async () => {
+            patientNames = await dashboard.getPatientNames();
+          },
+        );
+
+        // Step 13: Verify both patients display in the list
+        await test.step('Then both patients display in the list', async () => {
+          expect(patientNames).toContain(patientA);
+          expect(patientNames).toContain(patientB);
+        });
+      },
+    );
   });
 });

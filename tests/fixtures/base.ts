@@ -143,8 +143,10 @@ export const test: TestType<
       let currentStepName = '';
 
       // Make step counter accessible globally for network helper
+      // eslint-disable-next-line no-underscore-dangle
       (globalThis as any).__stepCounter = {
         get: () => stepCounter,
+        // eslint-disable-next-line no-plusplus
         increment: () => ++stepCounter,
         getDirectory: () => screenshotDir,
         getCurrentStepName: () => currentStepName,
@@ -169,6 +171,7 @@ export const test: TestType<
       ) {
         return originalStep.call(this, name, async (stepInfo: TestStepInfo) => {
           // Set current step name for network helpers (clean name without [no-screenshot])
+          // eslint-disable-next-line no-underscore-dangle
           const stepCounterObj = (globalThis as any).__stepCounter;
           if (stepCounterObj) {
             const cleanName = name.replace(/\s*\[no-screenshot\]\s*/g, '').trim();
@@ -201,7 +204,7 @@ export const test: TestType<
                   body: screenshot,
                   contentType: 'image/png',
                 });
-                
+
                 // Also save to test-results for organized viewing (single source)
                 const testResultsDir = path.join(testInfo.outputDir, 'attachments');
                 await fs.promises.mkdir(testResultsDir, { recursive: true });
@@ -209,7 +212,9 @@ export const test: TestType<
                 await fs.promises.writeFile(screenshotPath, screenshot);
               }
             }
-          } catch (error) {}
+          } catch (error) {
+            // Error ignored - screenshot capture is optional
+          }
 
           return result;
         });
@@ -231,6 +236,7 @@ export const test: TestType<
       ) {
         return originalStep.call(this, name, async (stepInfo: TestStepInfo) => {
           // Set current step name for network helpers (clean name)
+          // eslint-disable-next-line no-underscore-dangle
           const stepCounterObj = (globalThis as any).__stepCounter;
           if (stepCounterObj) {
             stepCounterObj.setCurrentStepName(name);

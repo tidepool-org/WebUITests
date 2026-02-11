@@ -1,0 +1,29 @@
+{
+  "overrides": [
+    {
+      "files": ["tests/**/*.spec.ts", "tests/**/*.test.ts"],
+      "rules": {
+        "no-restricted-syntax": [
+          "error",
+          {
+            "selector": "CallExpression[callee.name=\"test\"]:not([callee.object]):not(:has(ObjectExpression Property[key.name=\"tag\"] CallExpression[callee.name=\"createValidatedTags\"]))",
+            "message": "All main test() calls must include a tag property with createValidatedTags([...]) containing User Type, Test Type, and Priority tags."
+          }
+        ]
+      }
+    },
+    {
+      "files": ["tests/fixtures/network-helpers.ts"],
+      "rules": {
+        "no-underscore-dangle": "off",
+        "@typescript-eslint/no-shadow": "off"
+      }
+    },
+    {
+      "files": ["tests/fixtures/patient-helpers.ts"],
+      "rules": {
+        "no-continue": "off"
+      }
+    }
+  ]
+}

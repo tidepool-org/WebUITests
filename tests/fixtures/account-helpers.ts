@@ -59,7 +59,9 @@ async function navigateTo(targetPage: keyof AccountNav['pages'], page: Page): Pr
 
     // Open navigation menu if needed (only for non-AccountNav targets)
     if (targetPage !== 'AccountNav') {
-      const menuVisible = await nav.pages.AccountNav.verifyElement.isVisible({ timeout: 1000 }).catch(() => false);
+      const menuVisible = await nav.pages.AccountNav.verifyElement
+        .isVisible({ timeout: 1000 })
+        .catch(() => false);
       if (!menuVisible) {
         await nav.pages.AccountNav.link.click();
         await nav.pages.AccountNav.verifyElement.waitFor({ state: 'visible', timeout: 3000 });
@@ -69,7 +71,9 @@ async function navigateTo(targetPage: keyof AccountNav['pages'], page: Page): Pr
     // Handle logout specially
     if (targetPage === 'Logout') {
       await pageConfig.link.click();
-      await page.waitForURL(/.*login.*/, { waitUntil: 'domcontentloaded', timeout: 5000 }).catch(() => {});
+      await page
+        .waitForURL(/.*login.*/, { waitUntil: 'domcontentloaded', timeout: 5000 })
+        .catch(() => {});
     } else {
       // Standard navigation - click and verify
       await pageConfig.link.click();
