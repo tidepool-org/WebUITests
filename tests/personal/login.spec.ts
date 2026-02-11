@@ -62,7 +62,7 @@ test.describe('Login into application', () => {
         // Wait for the error message to appear
         await expect(page.locator('#input-error-username')).toBeVisible();
         await expect(page.locator('#input-error-username')).toContainText(
-          "This email doesn't belong to an accountz yet.",
+          "This email doesn't belong to an account yet.",
         );
       });
     },

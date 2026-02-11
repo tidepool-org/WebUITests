@@ -31,10 +31,10 @@ test.describe('Custodial patients are allowed access and modification of profile
         await test.clinician.navigateToWorkspace(CUSTODIAL_WORKSPACE, page);
       });
 
-      //Create pages
+      // Create pages
       const clinicianDashboardPage = new ClinicianDashboardPage(page);
 
-      //Step 3: Click the New Patient button and fill out the form
+      // Step 3: Click the New Patient button and fill out the form
       await test.step('When user clicks the new patient button and fills out the form', async () => {
         await clinicianDashboardPage.openAndFillAddPatientDialog(patientName, patientBirthdate);
       });
@@ -62,7 +62,7 @@ test.describe('Custodial patients are allowed access and modification of profile
       });
 
       // Step 8: Select '...' within the patient row
-      await test.step("When user opens the options dropdown for the patient", async () => {
+      await test.step('When user opens the options dropdown for the patient', async () => {
         await clinicianDashboardPage.openFirstPatientOptionsDropdown();
       });
 
@@ -72,17 +72,17 @@ test.describe('Custodial patients are allowed access and modification of profile
       });
 
       // Step 10: Click Remove button in confirmation dialog
-      await test.step("When user confirms patient removal", async () => {
+      await test.step('When user confirms patient removal', async () => {
         await clinicianDashboardPage.confirmRemovePatient();
       });
 
       // Step 11: Search for the removed patient
-      await test.step("When user searches for the removed patient", async () => {
+      await test.step('When user searches for the removed patient', async () => {
         await clinicianDashboardPage.searchForPatient(patientName);
       });
 
       // Step 12: Verify the deleted patient does not appear in patient list
-      await test.step("Then the deleted patient should not appear in the patient list", async () => {
+      await test.step('Then the deleted patient should not appear in the patient list', async () => {
         const patientCell = clinicianDashboardPage.getPatientCellByName(patientName);
         await expect(patientCell).not.toBeVisible();
       });

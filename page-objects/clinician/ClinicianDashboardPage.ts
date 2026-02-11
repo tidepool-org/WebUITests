@@ -30,7 +30,7 @@ class ClinicianDashboardPage {
 
   readonly bringDataDialog_doneButton: Locator;
 
-  //Locators for the Patient Options Dropdown (First find)
+  // Locators for the Patient Options Dropdown (First find)
   readonly patientOptionsButton: Locator;
 
   readonly removePatientButton: Locator;
@@ -47,7 +47,9 @@ class ClinicianDashboardPage {
 
     // Add Patient Dialog locators
     this.addPatientDialog = page.getByRole('dialog');
-    this.addPatientDialog_heading = this.addPatientDialog.getByRole('heading', { name: 'Add New Patient Account' });
+    this.addPatientDialog_heading = this.addPatientDialog.getByRole('heading', {
+      name: 'Add New Patient Account',
+    });
     this.addPatientDialog_fullNameInput = this.addPatientDialog.getByRole('textbox', {
       name: 'Full Name',
     });
@@ -59,11 +61,15 @@ class ClinicianDashboardPage {
     });
 
     // Bring Data Dialog locators (robust: find dialog containing heading)
-    this.bringDataDialog = page.getByRole('dialog').filter({ has: page.getByRole('heading', { name: 'Bring Data into Tidepool' }) });
+    this.bringDataDialog = page
+      .getByRole('dialog')
+      .filter({ has: page.getByRole('heading', { name: 'Bring Data into Tidepool' }) });
     this.bringDataDialog_doneButton = this.bringDataDialog.getByRole('button', { name: 'Done' });
 
-    //Patient Options Dropdown
-    this.patientOptionsButton = this.patientListTable.getByRole('button', { name: /info|\.\.\./i }).first();
+    // Patient Options Dropdown
+    this.patientOptionsButton = this.patientListTable
+      .getByRole('button', { name: /info|\.\.\./i })
+      .first();
     this.removePatientButton = this.page.getByRole('button', { name: /remove patient/i }).first();
     this.removePatientConfirm = this.page.getByRole('button', { name: /^Remove$/i });
   }
