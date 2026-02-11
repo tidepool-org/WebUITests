@@ -6,7 +6,7 @@ orbs:
 parameters:
   testEnvironment:
     type: string
-    default: 'qa1'
+    default: 'qa2'
   testExecKey:
     type: string
     default: 'none'
@@ -41,15 +41,18 @@ jobs:
     docker:
       - image: mcr.microsoft.com/playwright:v1.54.1-noble
     parallelism: 4
-    environment:
-      TEST_EXECUTION_KEY: << pipeline.parameters.testExecKey >>
-      TARGET_ENV: << pipeline.parameters.testEnvironment >>
-      TEST_TAGS: << pipeline.parameters.testTags >>
-      XRAY_PROJECT_KEY: << pipeline.parameters.xrayProjectKey >>
     steps:
       - checkout
       - node/install
       - run: node --version
+      # Pipeline parameters override project env vars only when explicitly provided
+      - run:
+          name: Set environment variables
+          command: |
+            echo "export TARGET_ENV=\"${TARGET_ENV:-<< pipeline.parameters.testEnvironment >>}\"" >> $BASH_ENV
+            echo "export TEST_EXECUTION_KEY=\"${TEST_EXECUTION_KEY:-<< pipeline.parameters.testExecKey >>}\"" >> $BASH_ENV
+            echo "export TEST_TAGS=\"${TEST_TAGS:-<< pipeline.parameters.testTags >>}\"" >> $BASH_ENV
+            echo "export XRAY_PROJECT_KEY=\"${XRAY_PROJECT_KEY:-<< pipeline.parameters.xrayProjectKey >>}\"" >> $BASH_ENV
       - restore_cache:
           keys:
             - dependency-cache-{{ checksum "package.json" }}
@@ -66,7 +69,6 @@ jobs:
           command: npx playwright install --with-deps
 
       # Run tests with parallel execution
-      # TARGET_ENV and TEST_TAGS are already set as environment variables above
       - run:
           name: Run Playwright Tests
           command: npm test -- --shard=$((CIRCLE_NODE_INDEX + 1))/$CIRCLE_NODE_TOTAL
@@ -150,15 +152,18 @@ jobs:
     docker:
       - image: mcr.microsoft.com/playwright:v1.54.1-noble
     parallelism: 4
-    environment:
-      TEST_EXECUTION_KEY: << pipeline.parameters.testExecKey >>
-      TARGET_ENV: << pipeline.parameters.testEnvironment >>
-      TEST_TAGS: << pipeline.parameters.testTags >>
-      XRAY_PROJECT_KEY: << pipeline.parameters.xrayProjectKey >>
     steps:
       - checkout
       - node/install
       - run: node --version
+      # Pipeline parameters override project env vars only when explicitly provided
+      - run:
+          name: Set environment variables
+          command: |
+            echo "export TARGET_ENV=\"${TARGET_ENV:-<< pipeline.parameters.testEnvironment >>}\"" >> $BASH_ENV
+            echo "export TEST_EXECUTION_KEY=\"${TEST_EXECUTION_KEY:-<< pipeline.parameters.testExecKey >>}\"" >> $BASH_ENV
+            echo "export TEST_TAGS=\"${TEST_TAGS:-<< pipeline.parameters.testTags >>}\"" >> $BASH_ENV
+            echo "export XRAY_PROJECT_KEY=\"${XRAY_PROJECT_KEY:-<< pipeline.parameters.xrayProjectKey >>}\"" >> $BASH_ENV
       - restore_cache:
           keys:
             - dependency-cache-{{ checksum "package.json" }}
@@ -175,7 +180,6 @@ jobs:
           command: npx playwright install --with-deps
 
       # Run tests with parallel execution
-      # TARGET_ENV and TEST_TAGS are already set as environment variables above
       - run:
           name: Run Playwright Tests
           command: npm test -- --shard=$((CIRCLE_NODE_INDEX + 1))/$CIRCLE_NODE_TOTAL
