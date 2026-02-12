@@ -68,6 +68,16 @@ jobs:
           name: Install Playwright Dependencies
           command: npx playwright install --with-deps
 
+      # Debug: list tests to verify grep matching
+      - run:
+          name: Debug - List tests with grep
+          command: |
+            echo "TEST_TAGS=$TEST_TAGS"
+            echo "--- All tests (first 20) ---"
+            npx playwright test --list 2>&1 | head -20
+            echo "--- Tests matching --grep @patient (CLI) ---"
+            npx playwright test --list --grep @patient 2>&1 | head -20
+
       # Run tests with parallel execution
       - run:
           name: Run Playwright Tests
