@@ -70,7 +70,7 @@ export default defineConfig({
   globalSetup: require.resolve(path.join(__dirname, 'tests/global-setup')),
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
-  grep: buildGrepFromTags(),
+  // grep: buildGrepFromTags(), // temporarily disabled for debugging
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 1 : undefined,
   timeout: 60_000,

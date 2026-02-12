@@ -73,10 +73,14 @@ jobs:
           name: Debug - List tests with grep
           command: |
             echo "TEST_TAGS=$TEST_TAGS"
-            echo "--- All tests (first 20) ---"
-            npx playwright test --list 2>&1 | head -20
+            echo "--- All tests (first 10) ---"
+            npx playwright test --list 2>&1 | head -10
+            echo ""
             echo "--- Tests matching --grep @patient (CLI) ---"
-            npx playwright test --list --grep @patient 2>&1 | head -20
+            npx playwright test --list --grep @patient 2>&1 | head -10
+            echo ""
+            echo "--- Tests matching --grep patient (no @, CLI) ---"
+            npx playwright test --list --grep patient 2>&1 | head -10
 
       # Run tests with parallel execution
       - run:
