@@ -48,7 +48,7 @@ function buildGrepArgs(tags) {
     .split(/[\s,]+/)
     .map(tag => tag.trim())
     .filter(tag => tag.length > 0)
-    .map(tag => (tag.startsWith('@') ? tag.slice(1) : tag));
+    .map(tag => (tag.startsWith('@') ? tag.slice(1) : tag).toLowerCase());
 
   if (tagList.length === 0) {
     return [];
@@ -82,7 +82,7 @@ function buildPlaywrightCommand() {
 
   // Add sharding for CircleCI if available
   if (circleCINodeIndex !== undefined && circleCINodeTotal !== undefined) {
-    baseArgs.push(`--shard=${circleCINodeIndex}/${circleCINodeTotal}`);
+    baseArgs.push(`--shard=${Number(circleCINodeIndex) + 1}/${circleCINodeTotal}`);
   }
 
   // Add grep arguments for tags
