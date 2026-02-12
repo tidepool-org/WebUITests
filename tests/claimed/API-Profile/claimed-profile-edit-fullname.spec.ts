@@ -13,7 +13,6 @@ const CLAIMED_PATIENT_SEARCH = 'Claimed Patient';
 test.describe('Claimed Account Settings edit (Full Name only) updates Profile endpoint and visually updates for user, clinic, and shared member', () => {
   test.setTimeout(120000); // 2 minute timeout for multi-phase test
 
-
   let api: ReturnType<typeof createNetworkHelper>;
   let putCapture: any;
   let newName: string; // Declare at test level scope
@@ -60,7 +59,6 @@ test.describe('Claimed Account Settings edit (Full Name only) updates Profile en
 
       // Create new acccount settings page for the following test
       const accountSettingsPage = new AccountSettingsPage(page);
-
 
       // Step 4: Change the Full Name field to a new value
       await test.step('When user updates the Full Name field', async () => {
@@ -146,40 +144,40 @@ test.describe('Claimed Account Settings edit (Full Name only) updates Profile en
             !getCapture.responseBody ||
             getCapture.responseBody.fullName !== putCapture.requestBody.fullName
           ) {
-      await (test as any).stepNoScreenshot(
-        'Then GET request matches the saved PUT request',
-        async () => {
-          await api.validateEndpointResponse('profile-metadata-get');
+            await (test as any).stepNoScreenshot(
+              'Then GET request matches the saved PUT request',
+              async () => {
+                await api.validateEndpointResponse('profile-metadata-get');
 
-          // Get all captures and find the LATEST GET request (after the PUT)
-          const allCaptures = api.getCaptures();
-          const putIndex = allCaptures.findIndex(req => req === putCapture);
+                // Get all captures and find the LATEST GET request (after the PUT)
+                const allCaptures = api.getCaptures();
+                const putIndex = allCaptures.findIndex(req => req === putCapture);
 
-          // Find GET requests that occurred AFTER the PUT request
-          const laterGetCaptures = allCaptures
-            .slice(putIndex + 1)
-            .filter((req: any) => req.method === 'GET' && req.url.includes('/profile'));
+                // Find GET requests that occurred AFTER the PUT request
+                const laterGetCaptures = allCaptures
+                  .slice(putIndex + 1)
+                  .filter((req: any) => req.method === 'GET' && req.url.includes('/profile'));
 
-          if (laterGetCaptures.length === 0) {
-            throw new Error('No GET /profile request captured after the PUT request');
-          }
+                if (laterGetCaptures.length === 0) {
+                  throw new Error('No GET /profile request captured after the PUT request');
+                }
 
-          // Use the most recent GET request
-          const getCapture = laterGetCaptures[laterGetCaptures.length - 1];
+                // Use the most recent GET request
+                const getCapture = laterGetCaptures[laterGetCaptures.length - 1];
 
-          if (
-            !getCapture.responseBody ||
-            getCapture.responseBody.fullName !== putCapture.requestBody.fullName
-          ) {
-            console.log('GET response fullName:', getCapture.responseBody.fullName);
-            console.log('PUT request fullName:', putCapture.requestBody.fullName);
-            console.log('Total captures:', allCaptures.length);
-            console.log('PUT index:', putIndex);
-            console.log('Later GET captures found:', laterGetCaptures.length);
-            throw new Error('GET response fullName does not match PUT request fullName');
-          }
-        },
-      );
+                if (
+                  !getCapture.responseBody ||
+                  getCapture.responseBody.fullName !== putCapture.requestBody.fullName
+                ) {
+                  console.log('GET response fullName:', getCapture.responseBody.fullName);
+                  console.log('PUT request fullName:', putCapture.requestBody.fullName);
+                  console.log('Total captures:', allCaptures.length);
+                  console.log('PUT index:', putIndex);
+                  console.log('Later GET captures found:', laterGetCaptures.length);
+                  throw new Error('GET response fullName does not match PUT request fullName');
+                }
+              },
+            );
             throw new Error('GET response fullName does not match PUT request fullName');
           }
         },
