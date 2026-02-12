@@ -18,7 +18,12 @@ const isBrowserStack = Boolean(
  */
 function buildGrepFromTags(): RegExp | undefined {
   const testTags = process.env.TEST_TAGS?.trim();
-  if (!testTags) return undefined;
+  console.log(`[DEBUG] TEST_TAGS env var: '${process.env.TEST_TAGS}' (trimmed: '${testTags}')`);
+
+  if (!testTags) {
+    console.log('[DEBUG] No TEST_TAGS set, grep = undefined (running all tests)');
+    return undefined;
+  }
 
   const hasCommas = testTags.includes(',');
   const tagList = testTags
@@ -27,17 +32,22 @@ function buildGrepFromTags(): RegExp | undefined {
     .filter(t => t.length > 0)
     .map(t => (t.startsWith('@') ? t : `@${t}`));
 
-  if (tagList.length === 0) return undefined;
+  if (tagList.length === 0) {
+    console.log('[DEBUG] Tag list empty after parsing, grep = undefined');
+    return undefined;
+  }
 
+  let result: RegExp;
   if (tagList.length === 1) {
-    return new RegExp(tagList[0], 'i');
+    result = new RegExp(tagList[0], 'i');
+  } else if (hasCommas) {
+    result = new RegExp(tagList.join('|'), 'i');
+  } else {
+    result = new RegExp(tagList.map(tag => `(?=.*${tag})`).join(''), 'i');
   }
 
-  if (hasCommas) {
-    return new RegExp(tagList.join('|'), 'i');
-  }
-
-  return new RegExp(tagList.map(tag => `(?=.*${tag})`).join(''), 'i');
+  console.log(`[DEBUG] grep regex: ${result}`);
+  return result;
 }
 
 function buildBrowserStackEndpoint(testName: string) {
