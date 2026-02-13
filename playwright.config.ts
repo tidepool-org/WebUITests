@@ -18,12 +18,7 @@ const isBrowserStack = Boolean(
  */
 function buildGrepFromTags(): RegExp | undefined {
   const testTags = process.env.TEST_TAGS?.trim();
-  console.log(`[DEBUG] TEST_TAGS env var: '${process.env.TEST_TAGS}' (trimmed: '${testTags}')`);
-
-  if (!testTags) {
-    console.log('[DEBUG] No TEST_TAGS set, grep = undefined (running all tests)');
-    return undefined;
-  }
+  if (!testTags) return undefined;
 
   const hasCommas = testTags.includes(',');
   const tagList = testTags
@@ -32,22 +27,17 @@ function buildGrepFromTags(): RegExp | undefined {
     .filter(t => t.length > 0)
     .map(t => (t.startsWith('@') ? t : `@${t}`));
 
-  if (tagList.length === 0) {
-    console.log('[DEBUG] Tag list empty after parsing, grep = undefined');
-    return undefined;
-  }
+  if (tagList.length === 0) return undefined;
 
-  let result: RegExp;
   if (tagList.length === 1) {
-    result = new RegExp(tagList[0], 'i');
-  } else if (hasCommas) {
-    result = new RegExp(tagList.join('|'), 'i');
-  } else {
-    result = new RegExp(tagList.map(tag => `(?=.*${tag})`).join(''), 'i');
+    return new RegExp(tagList[0], 'i');
   }
 
-  console.log(`[DEBUG] grep regex: ${result}`);
-  return result;
+  if (hasCommas) {
+    return new RegExp(tagList.join('|'), 'i');
+  }
+
+  return new RegExp(tagList.map(tag => `(?=.*${tag})`).join(''), 'i');
 }
 
 function buildBrowserStackEndpoint(testName: string) {
@@ -70,7 +60,7 @@ export default defineConfig({
   globalSetup: require.resolve(path.join(__dirname, 'tests/global-setup')),
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
-  // grep: buildGrepFromTags(), // temporarily disabled for debugging
+  grep: buildGrepFromTags(),
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 1 : undefined,
   timeout: 60_000,
@@ -97,7 +87,7 @@ export default defineConfig({
   projects: [
     {
       name: 'chromium-personal',
-      testMatch: '**/personal/**/*.spec.ts',
+      testMatch: 'personal/**/*.spec.ts',
       use: {
         ...devices['Desktop Chrome'],
         storageState: 'tests/.auth/personal.json',
@@ -107,7 +97,7 @@ export default defineConfig({
 
     {
       name: 'chromium-claimed',
-      testMatch: '**/claimed/**/*.spec.ts',
+      testMatch: 'claimed/**/*.spec.ts',
       use: {
         ...devices['Desktop Chrome'],
         storageState: 'tests/.auth/claimed.json',
@@ -117,7 +107,7 @@ export default defineConfig({
 
     {
       name: 'chromium-clinician',
-      testMatch: '**/clinician/**/*.spec.ts',
+      testMatch: 'clinician/**/*.spec.ts',
       use: {
         ...devices['Desktop Chrome'],
         storageState: 'tests/.auth/clinician.json',
@@ -129,7 +119,7 @@ export default defineConfig({
       ? [
           {
             name: 'bs-chrome-personal',
-            testMatch: '**/patient/**/*.spec.ts',
+            testMatch: 'personal/**/*.spec.ts',
             use: {
               storageState: 'tests/.auth/personal.json',
               connectOptions: { wsEndpoint: buildBrowserStackEndpoint('Personal Patient Tests') },
@@ -138,7 +128,7 @@ export default defineConfig({
 
           {
             name: 'bs-chrome-claimed',
-            testMatch: '**/claimed/**/*.spec.ts',
+            testMatch: 'claimed/**/*.spec.ts',
             use: {
               storageState: 'tests/.auth/claimed.json',
               connectOptions: { wsEndpoint: buildBrowserStackEndpoint('Claimed Patient Tests') },
@@ -147,7 +137,7 @@ export default defineConfig({
 
           {
             name: 'bs-chrome-clinician',
-            testMatch: '**/clinician/**/*.spec.ts',
+            testMatch: 'clinician/**/*.spec.ts',
             use: {
               storageState: 'tests/.auth/clinician.json',
               connectOptions: { wsEndpoint: buildBrowserStackEndpoint('Clinician Tests') },

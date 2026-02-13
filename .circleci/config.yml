@@ -68,22 +68,6 @@ jobs:
           name: Install Playwright Dependencies
           command: npx playwright install --with-deps
 
-      # Debug: investigate why 0 tests are discovered
-      - run:
-          name: Debug - Test discovery
-          command: |
-            echo "=== Working directory ==="
-            pwd
-            echo ""
-            echo "=== Test files on disk ==="
-            find tests -name "*.spec.ts" | head -20
-            echo ""
-            echo "=== Playwright test --list (full output) ==="
-            npx playwright test --list 2>&1 || true
-            echo ""
-            echo "=== Try listing a specific file ==="
-            npx playwright test tests/personal/basic-functionality.spec.ts --list 2>&1 || true
-
       # Run tests with parallel execution
       - run:
           name: Run Playwright Tests
