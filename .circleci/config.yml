@@ -68,11 +68,6 @@ jobs:
           name: Install Playwright Dependencies
           command: npx playwright install --with-deps
 
-      # Debug: verify test discovery before applying grep
-      - run:
-          name: List discovered tests (debug)
-          command: npx playwright test --list 2>&1 | head -20 || true
-
       # Run tests with parallel execution and optional tag filtering
       - run:
           name: Run Playwright Tests
@@ -191,11 +186,6 @@ jobs:
       - run:
           name: Install Playwright Dependencies
           command: npx playwright install --with-deps
-
-      # Debug: verify test discovery before applying grep
-      - run:
-          name: List discovered tests (debug)
-          command: npx playwright test --list 2>&1 | head -20 || true
 
       # Run tests with parallel execution and optional tag filtering
       - run:
