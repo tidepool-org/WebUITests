@@ -57,7 +57,7 @@ export default defineConfig({
       use: {
         ...devices['Desktop Chrome'],
         storageState: 'tests/.auth/personal.json',
-        headless: !process.env.CI,
+        headless: !!process.env.CI,
       },
     },
 
@@ -67,7 +67,7 @@ export default defineConfig({
       use: {
         ...devices['Desktop Chrome'],
         storageState: 'tests/.auth/claimed.json',
-        headless: !process.env.CI,
+        headless: !!process.env.CI,
       },
     },
 
@@ -77,7 +77,7 @@ export default defineConfig({
       use: {
         ...devices['Desktop Chrome'],
         storageState: 'tests/.auth/clinician.json',
-        headless: !process.env.CI,
+        headless: !!process.env.CI,
       },
     },
 
