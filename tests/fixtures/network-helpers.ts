@@ -284,7 +284,6 @@ export class NetworkHelper {
     if (request?.responseBody) {
       // Access the shared step counter from the stepScreenshoter fixture
       const stepCounterObj = (globalThis as any).stepCounter;
-      const stepCounterObj = (globalThis as any).stepCounter;
       if (stepCounterObj) {
         const stepNumber = stepCounterObj.increment();
         const currentStepName = stepCounterObj.getCurrentStepName();

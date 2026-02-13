@@ -145,35 +145,35 @@ test.describe('Claimed Account Settings edit (Full Name only) updates Profile en
             getCapture.responseBody.fullName !== putCapture.requestBody.fullName
           ) {
             await (test as any).stepNoScreenshot(
-              'Then GET request matches the saved PUT request',
+              'Then GET request matches the saved PUT request (retry)',
               async () => {
                 await api.validateEndpointResponse('profile-metadata-get');
 
                 // Get all captures and find the LATEST GET request (after the PUT)
-                const allCaptures = api.getCaptures();
-                const putIndex = allCaptures.findIndex(req => req === putCapture);
+                const retryAllCaptures = api.getCaptures();
+                const retryPutIndex = retryAllCaptures.findIndex(req => req === putCapture);
 
                 // Find GET requests that occurred AFTER the PUT request
-                const laterGetCaptures = allCaptures
-                  .slice(putIndex + 1)
+                const retryGetCaptures = retryAllCaptures
+                  .slice(retryPutIndex + 1)
                   .filter((req: any) => req.method === 'GET' && req.url.includes('/profile'));
 
-                if (laterGetCaptures.length === 0) {
+                if (retryGetCaptures.length === 0) {
                   throw new Error('No GET /profile request captured after the PUT request');
                 }
 
                 // Use the most recent GET request
-                const getCapture = laterGetCaptures[laterGetCaptures.length - 1];
+                const retryGetCapture = retryGetCaptures[retryGetCaptures.length - 1];
 
                 if (
-                  !getCapture.responseBody ||
-                  getCapture.responseBody.fullName !== putCapture.requestBody.fullName
+                  !retryGetCapture.responseBody ||
+                  retryGetCapture.responseBody.fullName !== putCapture.requestBody.fullName
                 ) {
-                  console.log('GET response fullName:', getCapture.responseBody.fullName);
+                  console.log('GET response fullName:', retryGetCapture.responseBody.fullName);
                   console.log('PUT request fullName:', putCapture.requestBody.fullName);
-                  console.log('Total captures:', allCaptures.length);
-                  console.log('PUT index:', putIndex);
-                  console.log('Later GET captures found:', laterGetCaptures.length);
+                  console.log('Total captures:', retryAllCaptures.length);
+                  console.log('PUT index:', retryPutIndex);
+                  console.log('Later GET captures found:', retryGetCaptures.length);
                   throw new Error('GET response fullName does not match PUT request fullName');
                 }
               },
