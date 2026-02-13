@@ -354,17 +354,21 @@ class XrayJsonReporter {
 
     const hasExistingExecution = testExecKey && testExecKey !== 'none' && testExecKey.trim() !== '';
 
+    // When linking to an existing execution (e.g., sharded CI runs), skip info to avoid
+    // overwriting the execution description with partial per-shard counts.
     return {
       testExecutionKey: hasExistingExecution ? testExecKey : undefined,
-      info: {
-        summary: `Playwright Test Execution - ${new Date().toISOString()}`,
-        description: `Automated test execution for ${targetEnv} environment\n\nResults: ${passedCount} passed, ${failedCount} failed, ${todoCount} skipped`,
-        startDate: playwrightResult.stats?.startTime || new Date().toISOString(),
-        finishDate: new Date(
-          new Date(playwrightResult.stats?.startTime || Date.now()).getTime() +
-            (playwrightResult.stats?.duration || 0),
-        ).toISOString(),
-      },
+      info: hasExistingExecution
+        ? undefined
+        : {
+            summary: `Playwright Test Execution - ${new Date().toISOString()}`,
+            description: `Automated test execution for ${targetEnv} environment\n\nResults: ${passedCount} passed, ${failedCount} failed, ${todoCount} skipped`,
+            startDate: playwrightResult.stats?.startTime || new Date().toISOString(),
+            finishDate: new Date(
+              new Date(playwrightResult.stats?.startTime || Date.now()).getTime() +
+                (playwrightResult.stats?.duration || 0),
+            ).toISOString(),
+          },
       tests,
     };
   }
