@@ -68,6 +68,11 @@ jobs:
           name: Install Playwright Dependencies
           command: npx playwright install --with-deps
 
+      # Debug: verify test discovery before applying grep
+      - run:
+          name: List discovered tests (debug)
+          command: npx playwright test --list 2>&1 | head -20 || true
+
       # Run tests with parallel execution and optional tag filtering
       - run:
           name: Run Playwright Tests
@@ -76,7 +81,7 @@ jobs:
             if [ -n "$TEST_TAGS" ]; then
               TAG=$(echo "$TEST_TAGS" | tr '[:upper:]' '[:lower:]')
               [[ "$TAG" != @* ]] && TAG="@${TAG}"
-              GREP_ARG="--grep ${TAG}"
+              GREP_ARG="--grep \"${TAG}\""
             fi
             npm test -- --shard=$((CIRCLE_NODE_INDEX + 1))/$CIRCLE_NODE_TOTAL $GREP_ARG
 
@@ -186,6 +191,11 @@ jobs:
           name: Install Playwright Dependencies
           command: npx playwright install --with-deps
 
+      # Debug: verify test discovery before applying grep
+      - run:
+          name: List discovered tests (debug)
+          command: npx playwright test --list 2>&1 | head -20 || true
+
       # Run tests with parallel execution and optional tag filtering
       - run:
           name: Run Playwright Tests
@@ -194,7 +204,7 @@ jobs:
             if [ -n "$TEST_TAGS" ]; then
               TAG=$(echo "$TEST_TAGS" | tr '[:upper:]' '[:lower:]')
               [[ "$TAG" != @* ]] && TAG="@${TAG}"
-              GREP_ARG="--grep ${TAG}"
+              GREP_ARG="--grep \"${TAG}\""
             fi
             npm test -- --shard=$((CIRCLE_NODE_INDEX + 1))/$CIRCLE_NODE_TOTAL $GREP_ARG
 

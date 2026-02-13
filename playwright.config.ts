@@ -7,39 +7,6 @@ const isBrowserStack = Boolean(
   process.env.BROWSERSTACK_USERNAME && process.env.BROWSERSTACK_ACCESS_KEY,
 );
 
-/**
- * Convert TEST_TAGS env var to a Playwright grep RegExp.
- *
- * - Single tag:   TEST_TAGS="smoke"        → /@smoke/i
- * - AND (spaces): TEST_TAGS="smoke ui"     → /(?=.*@smoke)(?=.*@ui)/i
- * - OR (commas):  TEST_TAGS="smoke,api"    → /@smoke|@api/i
- * - Case-insensitive so Jira uppercase input matches lowercase tags.
- * - Works with or without @ prefix.
- */
-function buildGrepFromTags(): RegExp | undefined {
-  const testTags = process.env.TEST_TAGS?.trim();
-  if (!testTags) return undefined;
-
-  const hasCommas = testTags.includes(',');
-  const tagList = testTags
-    .split(hasCommas ? ',' : /\s+/)
-    .map(t => t.trim().toLowerCase())
-    .filter(t => t.length > 0)
-    .map(t => (t.startsWith('@') ? t : `@${t}`));
-
-  if (tagList.length === 0) return undefined;
-
-  if (tagList.length === 1) {
-    return new RegExp(tagList[0], 'i');
-  }
-
-  if (hasCommas) {
-    return new RegExp(tagList.join('|'), 'i');
-  }
-
-  return new RegExp(tagList.map(tag => `(?=.*${tag})`).join(''), 'i');
-}
-
 function buildBrowserStackEndpoint(testName: string) {
   const caps = {
     browser: 'chrome',
@@ -60,7 +27,6 @@ export default defineConfig({
   globalSetup: require.resolve(path.join(__dirname, 'tests/global-setup')),
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
-  grep: buildGrepFromTags(),
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 1 : undefined,
   timeout: 60_000,
@@ -87,7 +53,7 @@ export default defineConfig({
   projects: [
     {
       name: 'chromium-personal',
-      testMatch: /personal\/.*\.spec\.ts$/,
+      testMatch: '**/personal/*.spec.ts',
       use: {
         ...devices['Desktop Chrome'],
         storageState: 'tests/.auth/personal.json',
@@ -97,7 +63,7 @@ export default defineConfig({
 
     {
       name: 'chromium-claimed',
-      testMatch: /claimed\/.*\.spec\.ts$/,
+      testMatch: '**/claimed/*.spec.ts',
       use: {
         ...devices['Desktop Chrome'],
         storageState: 'tests/.auth/claimed.json',
@@ -107,7 +73,7 @@ export default defineConfig({
 
     {
       name: 'chromium-clinician',
-      testMatch: /clinician\/.*\.spec\.ts$/,
+      testMatch: '**/clinician/*.spec.ts',
       use: {
         ...devices['Desktop Chrome'],
         storageState: 'tests/.auth/clinician.json',
@@ -119,7 +85,7 @@ export default defineConfig({
       ? [
           {
             name: 'bs-chrome-personal',
-            testMatch: /personal\/.*\.spec\.ts$/,
+            testMatch: '**/personal/*.spec.ts',
             use: {
               storageState: 'tests/.auth/personal.json',
               connectOptions: { wsEndpoint: buildBrowserStackEndpoint('Personal Patient Tests') },
@@ -128,7 +94,7 @@ export default defineConfig({
 
           {
             name: 'bs-chrome-claimed',
-            testMatch: /claimed\/.*\.spec\.ts$/,
+            testMatch: '**/claimed/*.spec.ts',
             use: {
               storageState: 'tests/.auth/claimed.json',
               connectOptions: { wsEndpoint: buildBrowserStackEndpoint('Claimed Patient Tests') },
@@ -137,7 +103,7 @@ export default defineConfig({
 
           {
             name: 'bs-chrome-clinician',
-            testMatch: /clinician\/.*\.spec\.ts$/,
+            testMatch: '**/clinician/*.spec.ts',
             use: {
               storageState: 'tests/.auth/clinician.json',
               connectOptions: { wsEndpoint: buildBrowserStackEndpoint('Clinician Tests') },
