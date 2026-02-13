@@ -77,13 +77,14 @@ jobs:
       - run:
           name: Run Playwright Tests
           command: |
-            GREP_ARG=""
+            SHARD_ARG="--shard=$((CIRCLE_NODE_INDEX + 1))/$CIRCLE_NODE_TOTAL"
             if [ -n "$TEST_TAGS" ]; then
               TAG=$(echo "$TEST_TAGS" | tr '[:upper:]' '[:lower:]')
               [[ "$TAG" != @* ]] && TAG="@${TAG}"
-              GREP_ARG="--grep \"${TAG}\""
+              npm test -- $SHARD_ARG --grep "$TAG"
+            else
+              npm test -- $SHARD_ARG
             fi
-            npm test -- --shard=$((CIRCLE_NODE_INDEX + 1))/$CIRCLE_NODE_TOTAL $GREP_ARG
 
       # Store test results and artifacts
       - store_artifacts:
@@ -200,13 +201,14 @@ jobs:
       - run:
           name: Run Playwright Tests
           command: |
-            GREP_ARG=""
+            SHARD_ARG="--shard=$((CIRCLE_NODE_INDEX + 1))/$CIRCLE_NODE_TOTAL"
             if [ -n "$TEST_TAGS" ]; then
               TAG=$(echo "$TEST_TAGS" | tr '[:upper:]' '[:lower:]')
               [[ "$TAG" != @* ]] && TAG="@${TAG}"
-              GREP_ARG="--grep \"${TAG}\""
+              npm test -- $SHARD_ARG --grep "$TAG"
+            else
+              npm test -- $SHARD_ARG
             fi
-            npm test -- --shard=$((CIRCLE_NODE_INDEX + 1))/$CIRCLE_NODE_TOTAL $GREP_ARG
 
       # Store test results and artifacts
       - store_artifacts:
