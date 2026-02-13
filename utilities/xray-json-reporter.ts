@@ -310,7 +310,7 @@ class XrayJsonReporter {
           if (base64Data) {
             testEvidence.push({
               data: base64Data,
-              filename: attachment.name,
+              filename: path.basename(attachment.path),
               contentType,
             });
           }
