@@ -39,7 +39,7 @@ jobs:
   test:
     working_directory: ~/tidepool-org/webuitests
     docker:
-      - image: mcr.microsoft.com/playwright:v1.54.1-noble
+      - image: mcr.microsoft.com/playwright:v1.57.0-noble
     parallelism: 4
     steps:
       - checkout
@@ -68,10 +68,17 @@ jobs:
           name: Install Playwright Dependencies
           command: npx playwright install --with-deps
 
-      # Run tests with parallel execution
+      # Run tests with parallel execution and optional tag filtering
       - run:
           name: Run Playwright Tests
-          command: npm test -- --shard=$((CIRCLE_NODE_INDEX + 1))/$CIRCLE_NODE_TOTAL
+          command: |
+            GREP_ARG=""
+            if [ -n "$TEST_TAGS" ]; then
+              TAG=$(echo "$TEST_TAGS" | tr '[:upper:]' '[:lower:]')
+              [[ "$TAG" != @* ]] && TAG="@${TAG}"
+              GREP_ARG="--grep ${TAG}"
+            fi
+            npm test -- --shard=$((CIRCLE_NODE_INDEX + 1))/$CIRCLE_NODE_TOTAL $GREP_ARG
 
       # Store test results and artifacts
       - store_artifacts:
@@ -150,7 +157,7 @@ jobs:
   scheduled-test:
     working_directory: ~/tidepool-org/webuitests
     docker:
-      - image: mcr.microsoft.com/playwright:v1.54.1-noble
+      - image: mcr.microsoft.com/playwright:v1.57.0-noble
     parallelism: 4
     steps:
       - checkout
@@ -179,10 +186,17 @@ jobs:
           name: Install Playwright Dependencies
           command: npx playwright install --with-deps
 
-      # Run tests with parallel execution
+      # Run tests with parallel execution and optional tag filtering
       - run:
           name: Run Playwright Tests
-          command: npm test -- --shard=$((CIRCLE_NODE_INDEX + 1))/$CIRCLE_NODE_TOTAL
+          command: |
+            GREP_ARG=""
+            if [ -n "$TEST_TAGS" ]; then
+              TAG=$(echo "$TEST_TAGS" | tr '[:upper:]' '[:lower:]')
+              [[ "$TAG" != @* ]] && TAG="@${TAG}"
+              GREP_ARG="--grep ${TAG}"
+            fi
+            npm test -- --shard=$((CIRCLE_NODE_INDEX + 1))/$CIRCLE_NODE_TOTAL $GREP_ARG
 
       # Store test results and artifacts
       - store_artifacts:

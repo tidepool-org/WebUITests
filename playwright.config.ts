@@ -87,7 +87,7 @@ export default defineConfig({
   projects: [
     {
       name: 'chromium-personal',
-      testMatch: 'personal/**/*.spec.ts',
+      testMatch: /personal\/.*\.spec\.ts$/,
       use: {
         ...devices['Desktop Chrome'],
         storageState: 'tests/.auth/personal.json',
@@ -97,7 +97,7 @@ export default defineConfig({
 
     {
       name: 'chromium-claimed',
-      testMatch: 'claimed/**/*.spec.ts',
+      testMatch: /claimed\/.*\.spec\.ts$/,
       use: {
         ...devices['Desktop Chrome'],
         storageState: 'tests/.auth/claimed.json',
@@ -107,7 +107,7 @@ export default defineConfig({
 
     {
       name: 'chromium-clinician',
-      testMatch: 'clinician/**/*.spec.ts',
+      testMatch: /clinician\/.*\.spec\.ts$/,
       use: {
         ...devices['Desktop Chrome'],
         storageState: 'tests/.auth/clinician.json',
@@ -119,7 +119,7 @@ export default defineConfig({
       ? [
           {
             name: 'bs-chrome-personal',
-            testMatch: 'personal/**/*.spec.ts',
+            testMatch: /personal\/.*\.spec\.ts$/,
             use: {
               storageState: 'tests/.auth/personal.json',
               connectOptions: { wsEndpoint: buildBrowserStackEndpoint('Personal Patient Tests') },
@@ -128,7 +128,7 @@ export default defineConfig({
 
           {
             name: 'bs-chrome-claimed',
-            testMatch: 'claimed/**/*.spec.ts',
+            testMatch: /claimed\/.*\.spec\.ts$/,
             use: {
               storageState: 'tests/.auth/claimed.json',
               connectOptions: { wsEndpoint: buildBrowserStackEndpoint('Claimed Patient Tests') },
@@ -137,7 +137,7 @@ export default defineConfig({
 
           {
             name: 'bs-chrome-clinician',
-            testMatch: 'clinician/**/*.spec.ts',
+            testMatch: /clinician\/.*\.spec\.ts$/,
             use: {
               storageState: 'tests/.auth/clinician.json',
               connectOptions: { wsEndpoint: buildBrowserStackEndpoint('Clinician Tests') },
