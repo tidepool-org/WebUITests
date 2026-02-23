@@ -322,7 +322,7 @@ class XrayJsonReporter {
       testInfo: {
         summary: testCase.title,
         type: 'Manual',
-        projectKey: env.XRAY_PROJECT_KEY || 'SAND',
+        projectKey: env.XRAY_PROJECT_KEY || 'QAE',
         steps: stepDefinitions.length > 0 ? stepDefinitions : undefined,
       },
       status: this.getTestStatus(testStatus),
