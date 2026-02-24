@@ -52,7 +52,6 @@ jobs:
             echo "export TARGET_ENV=\"${TARGET_ENV:-<< pipeline.parameters.testEnvironment >>}\"" >> $BASH_ENV
             echo "export TEST_EXECUTION_KEY=\"${TEST_EXECUTION_KEY:-<< pipeline.parameters.testExecKey >>}\"" >> $BASH_ENV
             echo "export TEST_TAGS=\"${TEST_TAGS:-<< pipeline.parameters.testTags >>}\"" >> $BASH_ENV
-            echo "export XRAY_PROJECT_KEY=\"${XRAY_PROJECT_KEY:-<< pipeline.parameters.xrayProjectKey >>}\"" >> $BASH_ENV
       - restore_cache:
           keys:
             - dependency-cache-{{ checksum "package.json" }}
@@ -163,7 +162,6 @@ jobs:
             echo "export TARGET_ENV=\"${TARGET_ENV:-<< pipeline.parameters.testEnvironment >>}\"" >> $BASH_ENV
             echo "export TEST_EXECUTION_KEY=\"${TEST_EXECUTION_KEY:-<< pipeline.parameters.testExecKey >>}\"" >> $BASH_ENV
             echo "export TEST_TAGS=\"${TEST_TAGS:-<< pipeline.parameters.testTags >>}\"" >> $BASH_ENV
-            echo "export XRAY_PROJECT_KEY=\"${XRAY_PROJECT_KEY:-<< pipeline.parameters.xrayProjectKey >>}\"" >> $BASH_ENV
       - restore_cache:
           keys:
             - dependency-cache-{{ checksum "package.json" }}
