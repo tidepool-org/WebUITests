@@ -8,6 +8,10 @@ test.describe('Filter patients in clinic', () => {
   const patientName1 = `Filter Patient A ${timestamp}`;
   const patientName2 = `Filter Patient B ${timestamp}`;
   const patientBirthdate = '01/01/1995'; // Shared birthdate for simplicity
+  const patnetMRN1 = `MRN-${timestamp}-1`;
+  const patnetMRN2 = `MRN-${timestamp}-2`;
+  const patientEmail1 = `webuiautomation+createdpatient-${timestamp}-1@tidepool.org`;
+  const patientEmail2 = `webuiautomation+createdpatient-${timestamp}-2@tidepool.org`;
 
   let workspacesPage: WorkspacesPage;
   let clinicWorkspacePage: ClinicianDashboardPage;
@@ -29,7 +33,12 @@ test.describe('Filter patients in clinic', () => {
 
     await test.step('Given two patients exist', async () => {
       // Add first patient
-      await clinicWorkspacePage.openAndFillAddPatientDialog(patientName1, patientBirthdate);
+      await clinicWorkspacePage.openAndFillAddPatientDialog(
+        patientName1,
+        patientBirthdate,
+        patnetMRN1,
+        patientEmail1,
+      );
       await clinicWorkspacePage.submitAddPatientDialog();
       await clinicWorkspacePage.closeBringDataDialog();
       // Ensure the first patient is added before adding the second
@@ -38,7 +47,12 @@ test.describe('Filter patients in clinic', () => {
       });
 
       // Add second patient
-      await clinicWorkspacePage.openAndFillAddPatientDialog(patientName2, patientBirthdate);
+      await clinicWorkspacePage.openAndFillAddPatientDialog(
+        patientName2,
+        patientBirthdate,
+        patnetMRN2,
+        patientEmail2,
+      );
       await clinicWorkspacePage.submitAddPatientDialog();
       await clinicWorkspacePage.closeBringDataDialog();
       // Ensure the second patient is also added
@@ -48,7 +62,7 @@ test.describe('Filter patients in clinic', () => {
     });
   });
 
-  test('should successfully filter patients by name', async () => {
+  test('Clinician - Filter Patients by Name', async () => {
     await test.step("When user filters by the first patient's name", async () => {
       await clinicWorkspacePage.searchForPatient(patientName1);
     });

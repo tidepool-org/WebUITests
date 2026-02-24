@@ -16,6 +16,10 @@ import {
  * Maps Playwright test data to Xray Cloud JSON format and uploads results
  */
 class XrayJsonReporter {
+  private config?: FullConfig;
+
+  private rootSuite?: Suite;
+
   private styles = {
     success: '\u2705',
     error: '\u274C',
@@ -104,16 +108,25 @@ class XrayJsonReporter {
    * Videos are only included for failed tests; other files check size threshold
    */
   private shouldIncludeEvidence(attachment: any, testStatus: string, contentType: string): boolean {
-    const filePath = attachment.path;
-    if (!filePath || !fs.existsSync(filePath)) {
+    // Check if attachment has embedded base64 data (from JSON) or file path
+    const hasData = !!attachment.body || (attachment.path && fs.existsSync(attachment.path));
+    console.log(
+      `DEBUG shouldIncludeEvidence: name=${attachment.name}, hasData=${hasData}, contentType=${contentType}`,
+    );
+
+    if (!hasData) {
       return false;
     }
 
     // Videos: Only for failed tests
     if (contentType.includes('video')) {
+      console.log(
+        `DEBUG: Video detected, testStatus=${testStatus}, including=${testStatus !== 'passed'}`,
+      );
       return testStatus !== 'passed';
     }
 
+    console.log(`DEBUG: Non-video attachment, including=true`);
     return true;
   }
 
@@ -153,18 +166,35 @@ class XrayJsonReporter {
       );
 
       for (const attachment of stepAttachments) {
-        if (attachment.path && fs.existsSync(attachment.path)) {
-          const contentType = attachment.contentType || 'application/octet-stream';
+        const contentType = attachment.contentType || 'application/octet-stream';
 
-          if (this.shouldIncludeEvidence(attachment, testStatus, contentType)) {
-            const base64Data = await this.fileToBase64(attachment.path);
-            if (base64Data) {
-              evidence.push({
-                data: base64Data,
-                filename: path.basename(attachment.path),
-                contentType,
-              });
-            }
+        if (this.shouldIncludeEvidence(attachment, testStatus, contentType)) {
+          let base64Data: string | null = null;
+          let filename = attachment.name || 'attachment';
+
+          // Check if attachment has embedded base64 data (from JSON)
+          if (attachment.body) {
+            // Handle both Buffer and string cases
+            base64Data =
+              typeof attachment.body === 'string'
+                ? attachment.body
+                : attachment.body.toString('base64');
+            console.log(`DEBUG: Using embedded base64 data for ${filename}`);
+          }
+          // Check if attachment has file path to read from
+          else if (attachment.path && fs.existsSync(attachment.path)) {
+            base64Data = await this.fileToBase64(attachment.path);
+            filename = path.basename(attachment.path);
+            console.log(`DEBUG: Using file path data for ${filename}`);
+          }
+
+          if (base64Data) {
+            evidence.push({
+              data: base64Data,
+              filename,
+              contentType,
+            });
+            console.log(`DEBUG: Added evidence: ${filename}, size=${base64Data.length}`);
           }
         }
       }
@@ -294,29 +324,7 @@ class XrayJsonReporter {
       stepResults[stepResults.length - 1].actualResult = testResult.error?.message || 'Test failed';
     }
 
-    // Collect test-level evidence (not step-level)
-    const testEvidence: XrayEvidence[] = [];
-
-    for (const attachment of attachments) {
-      if (
-        attachment.path &&
-        fs.existsSync(attachment.path) &&
-        !attachment.name.toLowerCase().includes('step-')
-      ) {
-        const contentType = attachment.contentType || 'application/octet-stream';
-
-        if (this.shouldIncludeEvidence(attachment, testStatus, contentType)) {
-          const base64Data = await this.fileToBase64(attachment.path);
-          if (base64Data) {
-            testEvidence.push({
-              data: base64Data,
-              filename: attachment.name,
-              contentType,
-            });
-          }
-        }
-      }
-    }
+    // Remove test-level evidence to avoid duplication (using step-level evidence instead)
 
     return {
       testInfo: {
@@ -327,7 +335,6 @@ class XrayJsonReporter {
       },
       status: this.getTestStatus(testStatus),
       comment: testResult.error?.message,
-      evidence: testEvidence.length > 0 ? testEvidence : undefined,
       steps: stepResults.length > 0 ? stepResults : undefined,
     };
   }
@@ -345,8 +352,8 @@ class XrayJsonReporter {
       await this.processSuite(suite, tests);
     }
 
-    const testExecKey = process.env.TEST_EXECUTION_KEY || process.env.testExecKey;
-    const targetEnv = process.env.TARGET_ENV || 'qa1';
+    const testExecKey = env.TEST_EXECUTION_KEY;
+    const targetEnv = env.TARGET_ENV;
 
     const passedCount = tests.filter(t => t.status === 'PASSED').length;
     const failedCount = tests.filter(t => t.status === 'FAILED').length;
@@ -390,10 +397,174 @@ class XrayJsonReporter {
   /**
    * Uploads Xray execution result to Xray Cloud
    */
+  private calculatePayloadSize(xrayResult: XrayExecutionResult): number {
+    try {
+      // Calculate size safely, handling circular references
+      const safePayload = JSON.stringify(xrayResult, (key, value) => {
+        if (key === 'parent' || key === 'suite' || key === '_parentSuite' || key === '_project') {
+          return undefined;
+        }
+        return value;
+      });
+      return safePayload.length;
+    } catch (error) {
+      console.log(
+        `${this.styles.warning} Could not calculate payload size: ${(error as Error).message}`,
+      );
+      return 0;
+    }
+  }
+
+  private createTestBatches(tests: XrayTest[]): XrayTest[][] {
+    const maxBatchSizeBytes = (env.XRAY_BATCH_SIZE_MB || 20) * 1024 * 1024; // Convert MB to bytes
+    const batches: XrayTest[][] = [];
+    let currentBatch: XrayTest[] = [];
+    let currentBatchSize = 0;
+
+    // Base execution structure size (info + metadata)
+    const baseStructureSize = JSON.stringify({
+      testExecutionKey: 'SAMPLE-123',
+      info: {
+        project: 'SAMPLE',
+        summary: 'Sample execution',
+        description: 'Sample description for size calculation',
+        testEnvironments: ['sample'],
+      },
+      tests: [],
+    }).length;
+
+    for (const test of tests) {
+      // Calculate size of this individual test
+      const testSize = JSON.stringify(test, (key, value) => {
+        if (key === 'parent' || key === 'suite' || key === '_parentSuite' || key === '_project') {
+          return undefined;
+        }
+        return value;
+      }).length;
+
+      // Check if adding this test would exceed batch size limit
+      const projectedBatchSize = currentBatchSize + testSize + baseStructureSize;
+
+      if (projectedBatchSize > maxBatchSizeBytes && currentBatch.length > 0) {
+        // Current batch would be too large, start new batch
+        console.log(
+          `${this.styles.info} Batch ${batches.length + 1}: ${currentBatch.length} tests, ${(currentBatchSize / 1024 / 1024).toFixed(1)}MB`,
+        );
+        batches.push(currentBatch);
+        currentBatch = [test];
+        currentBatchSize = testSize;
+      } else {
+        // Add test to current batch
+        currentBatch.push(test);
+        currentBatchSize += testSize;
+      }
+
+      // Log warning for oversized individual tests
+      if (testSize + baseStructureSize > maxBatchSizeBytes) {
+        const testSizeMB = ((testSize + baseStructureSize) / 1024 / 1024).toFixed(1);
+        console.log(
+          `${this.styles.warning} Large test detected: ${testSizeMB}MB (exceeds ${env.XRAY_BATCH_SIZE_MB}MB limit) - will upload as single-test batch`,
+        );
+      }
+    }
+
+    // Don't forget the last batch
+    if (currentBatch.length > 0) {
+      console.log(
+        `${this.styles.info} Batch ${batches.length + 1}: ${currentBatch.length} tests, ${(currentBatchSize / 1024 / 1024).toFixed(1)}MB`,
+      );
+      batches.push(currentBatch);
+    }
+
+    return batches;
+  }
+
   async uploadToXray(xrayResult: XrayExecutionResult): Promise<XrayImportResponse | null> {
+    // Check if batching is needed
+    const totalSize = this.calculatePayloadSize(xrayResult);
+    const maxBatchSizeBytes = (env.XRAY_BATCH_SIZE_MB || 20) * 1024 * 1024;
+
+    if (totalSize > maxBatchSizeBytes && xrayResult.tests.length > 1) {
+      console.log(
+        `${this.styles.info} Payload size ${(totalSize / 1024 / 1024).toFixed(1)}MB exceeds ${env.XRAY_BATCH_SIZE_MB}MB limit`,
+      );
+      console.log(
+        `${this.styles.info} Splitting ${xrayResult.tests.length} tests into size-capped batches...`,
+      );
+
+      return this.uploadInBatches(xrayResult);
+    }
+    // Single upload for small payloads
+    return this.uploadSingleBatch(xrayResult);
+  }
+
+  private async uploadInBatches(
+    fullResult: XrayExecutionResult,
+  ): Promise<XrayImportResponse | null> {
+    const testBatches = this.createTestBatches(fullResult.tests);
+    let firstUploadResult: XrayImportResponse | null = null;
+
+    console.log(`${this.styles.info} Uploading ${testBatches.length} batches...`);
+
+    for (let i = 0; i < testBatches.length; i++) {
+      const batchNumber = i + 1;
+      const batch = testBatches[i];
+
+      // Create batch payload
+      const batchResult: XrayExecutionResult = {
+        ...fullResult,
+        tests: batch,
+      };
+
+      // For subsequent batches after the first, link to the same test execution
+      if (i > 0 && firstUploadResult?.testExecIssue?.key) {
+        batchResult.testExecutionKey = firstUploadResult.testExecIssue.key;
+        // Remove info object for updates (only needed for creation)
+        delete batchResult.info;
+      }
+
+      console.log(
+        `${this.styles.upload} Uploading batch ${batchNumber}/${testBatches.length} (${batch.length} tests)...`,
+      );
+
+      try {
+        const batchResponse = await this.uploadSingleBatch(batchResult);
+
+        if (i === 0) {
+          firstUploadResult = batchResponse;
+        }
+
+        if (batchResponse) {
+          console.log(`${this.styles.upload} ✅ Batch ${batchNumber} uploaded successfully`);
+        }
+      } catch (error) {
+        console.log(`${this.styles.error} ❌ Batch ${batchNumber} failed: ${error}`);
+        // Continue with other batches even if one fails
+      }
+    }
+
+    return firstUploadResult;
+  }
+
+  private async uploadSingleBatch(
+    xrayResult: XrayExecutionResult,
+  ): Promise<XrayImportResponse | null> {
     try {
       const uploadStart = Date.now();
-      const payloadSizeKB = (JSON.stringify(xrayResult).length / 1024).toFixed(1);
+
+      // Calculate payload size safely, handling circular references
+      let payloadSizeKB = '0';
+      try {
+        const safePayload = JSON.stringify(xrayResult, (key, value) => {
+          if (key === 'parent' || key === 'suite' || key === '_parentSuite' || key === '_project') {
+            return undefined;
+          }
+          return value;
+        });
+        payloadSizeKB = (safePayload.length / 1024).toFixed(1);
+      } catch (sizeError) {
+        payloadSizeKB = 'unknown';
+      }
 
       console.log(`${this.styles.info} Uploading test execution to Xray...`);
       console.log(
@@ -408,7 +579,13 @@ class XrayJsonReporter {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(xrayResult),
+        body: JSON.stringify(xrayResult, (key, value) => {
+          // Skip circular references in upload payload
+          if (key === 'parent' || key === 'suite' || key === '_parentSuite' || key === '_project') {
+            return undefined;
+          }
+          return value;
+        }),
       });
 
       if (!response.ok) {
@@ -445,9 +622,9 @@ class XrayJsonReporter {
       console.log(`\n${this.styles.separator}`);
       console.log(`${this.styles.info} Processing Playwright results for Xray...`);
       console.log(`${this.styles.info} Project Key: ${env.XRAY_PROJECT_KEY || 'SAND'}`);
-      console.log(`${this.styles.info} Environment: ${process.env.TARGET_ENV || 'qa1'}`);
+      console.log(`${this.styles.info} Environment: ${env.TARGET_ENV}`);
 
-      const testExecKey = process.env.TEST_EXECUTION_KEY || process.env.testExecKey;
+      const testExecKey = env.TEST_EXECUTION_KEY;
       if (testExecKey && testExecKey !== 'none' && testExecKey.trim() !== '') {
         console.log(`${this.styles.info} Linking to Test Execution: ${testExecKey}`);
       } else {
@@ -457,8 +634,29 @@ class XrayJsonReporter {
       const xrayResult = await this.convertPlaywrightJsonToXray(playwrightJsonPath);
 
       // Save converted result for debugging
-      fs.writeFileSync('test-results/xray-execution.json', JSON.stringify(xrayResult, null, 2));
-      console.log(`${this.styles.info} Saved Xray JSON to: test-results/xray-execution.json`);
+      try {
+        // Handle circular references when saving debug JSON
+        const safeResult = JSON.parse(
+          JSON.stringify(xrayResult, (key, value) => {
+            // Skip circular references and other problematic fields
+            if (
+              key === 'parent' ||
+              key === 'suite' ||
+              key === '_parentSuite' ||
+              key === '_project'
+            ) {
+              return undefined;
+            }
+            return value;
+          }),
+        );
+        fs.writeFileSync('test-results/xray-execution.json', JSON.stringify(safeResult, null, 2));
+        console.log(`${this.styles.info} Saved Xray JSON to: test-results/xray-execution.json`);
+      } catch (debugError) {
+        console.log(
+          `${this.styles.warning} Could not save debug JSON: ${(debugError as Error).message}`,
+        );
+      }
 
       if (xrayResult.tests.length === 0) {
         console.log(`${this.styles.warning} No tests to upload, skipping Xray upload`);
@@ -479,7 +677,10 @@ class XrayJsonReporter {
   /**
    * Reporter lifecycle methods for Playwright integration
    */
-  onBegin(_config: FullConfig, suite: Suite): void {
+  onBegin(config: FullConfig, suite: Suite): void {
+    this.config = config;
+    this.rootSuite = suite;
+
     console.log(`\n${this.styles.separator}`);
     console.log(`${this.styles.test} Starting test run with ${suite.allTests().length} tests`);
     console.log(`${this.styles.separator}\n`);
@@ -503,11 +704,36 @@ class XrayJsonReporter {
     console.log(`Duration: ${result.duration}ms`);
     console.log(`${this.styles.separator}\n`);
 
-    const testExecKey = process.env.TEST_EXECUTION_KEY || process.env.testExecKey;
+    const testExecKey = env.TEST_EXECUTION_KEY;
     if (env.XRAY_CLIENT_ID && env.XRAY_CLIENT_SECRET && testExecKey && testExecKey !== 'none') {
-      const jsonPath = 'test-results/last-run.json';
-      if (fs.existsSync(jsonPath)) {
-        await this.processAndUpload(jsonPath);
+      console.log(`${this.styles.info} Linking to Test Execution: ${testExecKey}`);
+
+      // Check for multiple possible JSON file locations
+      const possiblePaths = [
+        'test-results/last-run.json',
+        'test-results/.last-run.json',
+        path.resolve('test-results/last-run.json'),
+        path.resolve('test-results/.last-run.json'),
+      ];
+
+      let jsonPath: string | null = null;
+      for (const testPath of possiblePaths) {
+        if (fs.existsSync(testPath)) {
+          jsonPath = testPath;
+          break;
+        }
+      }
+
+      if (jsonPath) {
+        console.log(`${this.styles.info} Found test results at: ${jsonPath}`);
+        try {
+          await this.processAndUpload(jsonPath);
+        } catch (error) {
+          console.log(`${this.styles.error} Xray upload failed: ${error}`);
+        }
+      } else {
+        console.log(`${this.styles.warning} No test results JSON file found for Xray upload`);
+        console.log(`${this.styles.info} Checked paths:`, possiblePaths);
       }
     }
   }

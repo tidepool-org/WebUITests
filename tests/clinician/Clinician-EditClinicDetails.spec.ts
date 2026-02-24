@@ -9,7 +9,7 @@ import type { WorkspaceKey } from '@pom/clinician/ClinicianNavigation';
 ALL_WORKSPACE_KEYS.forEach((workspace: WorkspaceKey) => {
   test.describe('Clinic admin given edit permissions to Workspace Details. Clinic Members have view only access', () => {
     test(
-      `should allow navigation to workspace details and edit workspace: "[${workspace}]"`,
+      `Clinician - Edit Clinic Details [${workspace}]`,
       {
         tag: createValidatedTags([TEST_TAGS.CLINICIAN, TEST_TAGS.UI, TEST_TAGS.MEDIUM]),
       },

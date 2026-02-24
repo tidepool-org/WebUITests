@@ -5,12 +5,12 @@ import { test } from '../fixtures/clinic-helpers';
 
 import { TEST_TAGS, createValidatedTags } from '../fixtures/test-tags';
 
-test.describe('Custodial patients are allowed access and modification of profile details', () => {
+test.describe('Clinic Account may create a new workspace', () => {
   const uniqueSuffix = `${Date.now()}`;
   const clinicName = `Test Clinic ${uniqueSuffix}`;
 
   test(
-    'should create a new workspace as admin',
+    'Clinician - Create Clinic Workspace',
     {
       tag: createValidatedTags([TEST_TAGS.CLINICIAN, TEST_TAGS.UI, TEST_TAGS.HIGH]),
     },

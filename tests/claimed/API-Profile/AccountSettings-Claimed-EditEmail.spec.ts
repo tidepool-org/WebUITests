@@ -5,12 +5,12 @@ import { createNetworkHelper } from '../../fixtures/network-helpers';
 import { TEST_TAGS, createValidatedTags } from '../../fixtures/test-tags';
 import { AccountSettingsPage } from '../../../page-objects/account/AccountSettingsPage';
 
-test.describe('Clinician Account Settings Access', () => {
+test.describe('Account Settings - Claimed - Edit Email', () => {
   // API Test cases require this to capture network activity
   let api: ReturnType<typeof createNetworkHelper>;
 
   test(
-    'should allow navigation to account settings and capture GET response',
+    'Account Settings - Claimed - Edit Email',
     {
       tag: createValidatedTags([
         TEST_TAGS.PATIENT,
@@ -18,7 +18,7 @@ test.describe('Clinician Account Settings Access', () => {
         TEST_TAGS.API,
         TEST_TAGS.UI,
         TEST_TAGS.HIGH,
-        TEST_TAGS.API_USER,
+        TEST_TAGS.API_PROFILE,
       ]),
     },
     async ({ page }) => {

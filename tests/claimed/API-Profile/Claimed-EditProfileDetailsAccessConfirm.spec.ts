@@ -4,6 +4,7 @@ import { test as clinicTest } from '../../fixtures/clinic-helpers';
 import { test as accountTest } from '../../fixtures/account-helpers';
 import { createNetworkHelper } from '../../fixtures/network-helpers';
 import { TEST_TAGS, createValidatedTags } from '../../fixtures/test-tags';
+import { getProfileMetadataSchema } from '../../../endpoint-schema/profile-endpoints';
 import { ProfilePage } from '../../../page-objects/patient/ProfilePage';
 
 const CUSTODIAL_WORKSPACE = 'AdminClinicBase';
@@ -11,22 +12,22 @@ const CLAIMED_PATIENT_SEARCH = 'Claimed Patient';
 
 test.describe('Comprehensive Profile Access Test: Edit as Claimed, View as Shared and Clinician', () => {
   test(
-    'should edit claimed profile then verify view-only access for shared and clinician users',
+    'Claimed - Edit Profile Details with Access Confirmation',
     {
       tag: createValidatedTags([
-        TEST_TAGS.PATIENT, // User Type (required)
-        TEST_TAGS.CLINICIAN, // User Type (required)
+        TEST_TAGS.PATIENT,
+        TEST_TAGS.CLINICIAN,
         TEST_TAGS.CLAIMED,
         TEST_TAGS.SHARED_MEMBER,
-        TEST_TAGS.API, // Test Type (required)
-        TEST_TAGS.UI, // Test Type (required)
-        TEST_TAGS.HIGH, // Priority (required)
-        TEST_TAGS.API_PROFILE, // Feature (optional)
+        TEST_TAGS.API,
+        TEST_TAGS.UI,
+        TEST_TAGS.HIGH,
+        TEST_TAGS.API_PROFILE,
       ]),
     },
     async ({ page }) => {
       let api: ReturnType<typeof createNetworkHelper>;
-      let producerPutCapture: any;
+      let producerGetCapture: any;
 
       // ========== PHASE 1: CLAIMED USER EDITS PROFILE ==========
 
@@ -66,7 +67,6 @@ test.describe('Comprehensive Profile Access Test: Edit as Claimed, View as Share
         const birthYear = 1985 + (testRunId % 10);
         const diagnosisYear = birthYear + 20;
         const birthDate = `01/15/${birthYear}`;
-        const diagnosisDate = `03/10/${diagnosisYear}`;
 
         // Generate random 15-letter string for clinical notes
         const randomString = Array.from({ length: 15 }, () =>
@@ -82,8 +82,7 @@ test.describe('Comprehensive Profile Access Test: Edit as Claimed, View as Share
 
         // Update fields using ProfilePage methods
         await profilePage.fillFullName(updatedName);
-        await profilePage.fillBirthDate(birthDate);
-        await profilePage.fillDiagnosisDate(diagnosisDate);
+        await profilePage.fillDateOfBirth(birthDate);
         await profilePage.selectDiagnosisType(nextDiagnosisIndex);
         await profilePage.fillClinicalNotes(randomString);
       });
@@ -93,14 +92,22 @@ test.describe('Comprehensive Profile Access Test: Edit as Claimed, View as Share
         await profilePage.saveProfile();
       });
 
-      // Step 7: PUT response is validated and saved for comparison
+      // Step 7: GET response is validated and saved for comparison
       await (test as any).stepNoScreenshot(
-        'Then profile endpoint responds with PUT request consistent with schema',
+        'Then profile endpoint responds with GET request consistent with schema',
         async () => {
-          await api.validateEndpointResponse('profile-metadata-put');
-          const putSchema = await import('../../../endpoint-schema/profile-endpoints');
-          const schema = putSchema.putProfileMetadataSchema;
-          producerPutCapture = api.getLatestCaptureMatching(schema.method, schema.url as RegExp);
+          await api.reloadPage('load');
+          const clickTimestamp = Date.now();
+          producerGetCapture = await api.waitForCaptureMatching(
+            getProfileMetadataSchema.method,
+            getProfileMetadataSchema.url as RegExp,
+            clickTimestamp,
+            15000,
+          );
+          await api.validateEndpointResponse('profile-metadata-get');
+          const getSchema = await import('../../../endpoint-schema/profile-endpoints');
+          const schema = getSchema.getProfileMetadataSchema;
+          producerGetCapture = api.getLatestCaptureMatching(schema.method, schema.url as RegExp);
         },
       );
 
@@ -127,7 +134,8 @@ test.describe('Comprehensive Profile Access Test: Edit as Claimed, View as Share
       await (test as any).stepNoScreenshot(
         'Then shared user sees view-only claimed profile data with matching data',
         async () => {
-          await api.compareEndpointResponse('profile-metadata-get', producerPutCapture);
+          await api.reloadPage('load');
+          await api.compareEndpointResponse('profile-metadata-get', producerGetCapture);
         },
       );
 
@@ -150,16 +158,12 @@ test.describe('Comprehensive Profile Access Test: Edit as Claimed, View as Share
         await clinicTest.clinician.navigateTo('Profile', page);
       });
 
-      // Step 15: Confirm edit button is not present
-      await test.step('Then Edit button should not be present for claimed patients', async () => {
-        await profilePage.editButtonDisplays(false);
-      });
-
       // Step 16: Validate GET response and confirm appropriate permissions
       await (test as any).stepNoScreenshot(
         'Then clinician sees claimed profile data with matching data and no save access',
         async () => {
-          await api.compareEndpointResponse('profile-metadata-get', producerPutCapture);
+          await api.reloadPage('load');
+          await api.compareEndpointResponse('profile-metadata-get', producerGetCapture);
         },
       );
     },

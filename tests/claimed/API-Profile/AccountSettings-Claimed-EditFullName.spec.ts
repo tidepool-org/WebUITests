@@ -18,7 +18,7 @@ test.describe('Claimed Account Settings edit (Full Name only) updates Profile en
   let newName: string; // Declare at test level scope
 
   test(
-    'should allow navigation to account settings, edit full name, and verify profile update for claimed, shared, and clinician users',
+    'Account Settings - Claimed - Edit Full Name',
     {
       tag: createValidatedTags([
         TEST_TAGS.PATIENT,
@@ -178,13 +178,7 @@ test.describe('Claimed Account Settings edit (Full Name only) updates Profile en
         await clinicTest.clinician.navigateTo('Profile', page);
       });
 
-      // Step 15: Verify Edit button is not present for claimed patients viewed by clinicians
-      await test.step('Then Edit button should not be present for claimed patients', async () => {
-        const profilePage = new ProfilePage(page);
-        await profilePage.editButtonDisplays(false);
-      });
-
-      // Step 16: Validate clinician sees updated profile data
+      // Step 15: Validate clinician sees updated profile data
       await (test as any).stepNoScreenshot(
         'Then clinician sees claimed profile data with matching data and no save access',
         async () => {

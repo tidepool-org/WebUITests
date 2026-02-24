@@ -219,6 +219,57 @@ export class NetworkHelper {
   }
 
   /**
+   * Wait for and get the most recent capture matching method and URL pattern after a specific timestamp
+   * @param method - HTTP method to match
+   * @param urlPattern - URL pattern to match
+   * @param afterTimestamp - Only consider captures after this timestamp (defaults to now)
+   * @param timeoutMs - Maximum time to wait in milliseconds (default 10000)
+   * @returns Promise that resolves with the matching capture or rejects on timeout
+   */
+  async waitForCaptureMatching(
+    method: string,
+    urlPattern: RegExp,
+    afterTimestamp: number = Date.now(),
+    timeoutMs = 10000,
+  ): Promise<NetworkCapture> {
+    const startTime = Date.now();
+
+    return new Promise((resolve, reject) => {
+      const checkForCapture = () => {
+        // Look for captures after the specified timestamp
+        const matches = this.captures
+          .filter(
+            c => c.method === method && urlPattern.test(c.url) && c.timestamp > afterTimestamp,
+          )
+          .sort((a, b) => b.timestamp - a.timestamp);
+
+        if (matches.length > 0) {
+          resolve(matches[0]);
+          return;
+        }
+
+        // Check if we've exceeded the timeout
+        if (Date.now() - startTime > timeoutMs) {
+          reject(
+            new Error(
+              `Timeout waiting for ${method} request matching ${urlPattern} after timestamp ${afterTimestamp}. ` +
+                `Total captures: ${this.captures.length}, ` +
+                `Matching method/URL: ${this.captures.filter(c => c.method === method && urlPattern.test(c.url)).length}`,
+            ),
+          );
+          return;
+        }
+
+        // Check again in 100ms
+        setTimeout(checkForCapture, 100);
+      };
+
+      // Start checking
+      checkForCapture();
+    });
+  }
+
+  /**
    * Get all captures for a specific endpoint
    */
   getCapturesForEndpoint(endpointName: string): NetworkCapture[] {
@@ -443,11 +494,25 @@ export class NetworkHelper {
   /**
    * Helper method to get nested object values using dot notation
    * @param obj - The object to search
-   * @param path - The dot-notation path (e.g., 'patient.birthday')
+   * @param path - The dot-notation path (e.g., 'patient.birthday' or 'patient.emails[0].address')
    * @returns The value at the path or undefined
    */
   private getNestedValue(obj: any, propertyPath: string): any {
-    return propertyPath.split('.').reduce((current, key) => current?.[key], obj);
+    if (!obj || typeof obj !== 'object') return undefined;
+
+    return propertyPath.split('.').reduce((current, key) => {
+      if (current === null || current === undefined) return undefined;
+
+      // Handle array notation like 'emails[0]'
+      const arrayMatch = key.match(/^(\w+)\[(\d+)\]$/);
+      if (arrayMatch) {
+        const [, arrayKey, index] = arrayMatch;
+        const array = current[arrayKey];
+        return Array.isArray(array) ? array[parseInt(index, 10)] : undefined;
+      }
+
+      return current[key];
+    }, obj);
   }
 
   /**
@@ -596,6 +661,73 @@ export class NetworkHelper {
       validationFields,
       requiredFields,
     );
+  }
+
+  /**
+   * Reload the current page to trigger API calls again
+   * @param waitUntil - Wait until a specific state before considering reload complete
+   * @param timeout - Maximum time to wait for reload to complete (default 30s)
+   */
+  async reloadPage(
+    waitUntil: 'load' | 'domcontentloaded' | 'networkidle' | 'commit' = 'networkidle',
+    timeout = 30000,
+  ): Promise<void> {
+    console.log('🔄 Reloading page to trigger API calls...');
+    await this.page.reload({ waitUntil, timeout });
+    console.log('✅ Page reloaded successfully');
+  }
+
+  /**
+   * Validates that specific values appear in the correct fields of a captured response
+   * @param capture - The captured network response to validate
+   * @param expectedValues - Object mapping field paths to expected values
+   * Example: { 'patient.fullName': 'John Doe', 'patient.mrn': '123456' }
+   */
+  validateResponseFields(capture: NetworkCapture, expectedValues: Record<string, any>): void {
+    if (!capture || !capture.responseBody) {
+      throw new Error('No response body available for field validation');
+    }
+
+    const { responseBody } = capture;
+    const validationErrors: string[] = [];
+
+    for (const [fieldPath, expectedValue] of Object.entries(expectedValues)) {
+      const actualValue = this.getNestedValue(responseBody, fieldPath);
+
+      if (actualValue === undefined) {
+        validationErrors.push(`Field '${fieldPath}' not found in response`);
+        continue;
+      }
+
+      // Handle different comparison types
+      let isMatch = false;
+
+      if (expectedValue === actualValue) {
+        isMatch = true;
+      } else if (Array.isArray(actualValue)) {
+        // For arrays, check if expected value is contained
+        isMatch = actualValue.some(item =>
+          typeof item === 'object' && item !== null
+            ? Object.values(item).includes(expectedValue)
+            : item === expectedValue,
+        );
+      } else if (typeof actualValue === 'string' && typeof expectedValue === 'string') {
+        // For strings, allow partial matching (useful for emails, names with formatting)
+        isMatch = actualValue.includes(expectedValue) || expectedValue.includes(actualValue);
+      }
+
+      if (!isMatch) {
+        validationErrors.push(
+          `Field '${fieldPath}' mismatch: expected '${expectedValue}', got '${actualValue}'`,
+        );
+      }
+    }
+
+    if (validationErrors.length > 0) {
+      throw new Error(`Field validation failed:\n${validationErrors.join('\n')}`);
+    }
+
+    console.log(`✅ All ${Object.keys(expectedValues).length} field validations passed`);
   }
 }
 

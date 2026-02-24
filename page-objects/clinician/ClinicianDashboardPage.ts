@@ -23,6 +23,10 @@ class ClinicianDashboardPage {
 
   readonly addPatientDialog_birthdateInput: Locator;
 
+  readonly addPatientDialog_mrnInput: Locator;
+
+  readonly addPatientDialog_emailInput: Locator;
+
   readonly addPatientDialog_addButton: Locator;
 
   // Locators for the Bring Data Dialog
@@ -34,6 +38,8 @@ class ClinicianDashboardPage {
   readonly patientOptionsButton: Locator;
 
   readonly removePatientButton: Locator;
+
+  readonly editPatientDetailsButton: Locator;
 
   readonly removePatientConfirm: Locator;
 
@@ -56,6 +62,12 @@ class ClinicianDashboardPage {
     this.addPatientDialog_birthdateInput = this.addPatientDialog.getByRole('textbox', {
       name: 'Birthdate',
     });
+    this.addPatientDialog_mrnInput = this.addPatientDialog.getByRole('textbox', {
+      name: 'MRN (optional)',
+    });
+    this.addPatientDialog_emailInput = this.addPatientDialog.getByRole('textbox', {
+      name: 'Email (optional)',
+    });
     this.addPatientDialog_addButton = this.addPatientDialog.getByRole('button', {
       name: 'Add Patient',
     });
@@ -71,6 +83,9 @@ class ClinicianDashboardPage {
       .getByRole('button', { name: /info|\.\.\./i })
       .first();
     this.removePatientButton = this.page.getByRole('button', { name: /remove patient/i }).first();
+    this.editPatientDetailsButton = this.page
+      .getByRole('button', { name: /edit patient details/i })
+      .first();
     this.removePatientConfirm = this.page.getByRole('button', { name: /^Remove$/i });
   }
 
@@ -78,12 +93,21 @@ class ClinicianDashboardPage {
    * Opens the Add Patient dialog and fills in the patient details.
    * @param name - The full name of the patient.
    * @param birthdate - The birthdate of the patient (e.g., MM/DD/YYYY).
+   * @param mrn - The medical record number of the patient.
+   * @param email - The email address of the patient.
    */
-  async openAndFillAddPatientDialog(name: string, birthdate: string): Promise<void> {
+  async openAndFillAddPatientDialog(
+    name: string,
+    birthdate: string,
+    mrn: string,
+    email: string,
+  ): Promise<void> {
     await this.addNewPatientButton.click();
     await this.addPatientDialog.waitFor({ state: 'visible' });
     await this.addPatientDialog_fullNameInput.fill(name);
     await this.addPatientDialog_birthdateInput.fill(birthdate);
+    await this.addPatientDialog_mrnInput.fill(mrn);
+    await this.addPatientDialog_emailInput.fill(email);
   }
 
   /**
@@ -123,7 +147,7 @@ class ClinicianDashboardPage {
    */
   getPatientCellByName(name: string): Locator {
     // Use exact match to avoid multiple matches with similar names
-    return this.patientListTable.getByRole('cell', { name, exact: true });
+    return this.patientListTable.getByRole('cell', { name, exact: false });
   }
 
   /**
@@ -139,8 +163,17 @@ class ClinicianDashboardPage {
     await this.page.waitForTimeout(500);
   }
 
+  async clickPatientCell(name: string): Promise<void> {
+    const patientCell = this.getPatientCellByName(name);
+    await patientCell.click();
+  }
+
   async clickRemovePatientMenuItem(): Promise<void> {
     await this.removePatientButton.click();
+  }
+
+  async clickEditPatientDetailsMenuItem(): Promise<void> {
+    await this.editPatientDetailsButton.click();
   }
 
   async confirmRemovePatient(): Promise<void> {

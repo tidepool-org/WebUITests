@@ -52,9 +52,7 @@ test.describe('Patient Data Navigation and Visualization', () => {
   });
 
   // Bolus dashboard functionality
-  test('should display bolus dashboard when selecting a date from basics page', async ({
-    page,
-  }) => {
+  test('Patient - Bolus Dashboard - Navigation and Visualization', async ({ page }) => {
     const basicsPage = new PatientDataBasicsPage(page);
     const dailyPage = new PatientDataDailyPage(page);
     let selectedDateText: string | null;
