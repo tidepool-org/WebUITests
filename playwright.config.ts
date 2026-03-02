@@ -38,7 +38,7 @@ export default defineConfig({
   reporter: [
     ['html', { open: 'never', outputFolder: 'playwright-report' }],
     ['json', { outputFile: 'test-results/last-run.json' }],
-    ['./build/utilities/xray-json-reporter.ts'],
+    ['./utilities/xray-json-reporter.ts'],
   ],
 
   use: {
