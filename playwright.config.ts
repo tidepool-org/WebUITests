@@ -27,7 +27,7 @@ export default defineConfig({
   globalSetup: require.resolve(path.join(__dirname, 'tests/global-setup')),
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 2 : 0,
+  retries: process.env.CI ? 1 : 0,
   workers: process.env.CI ? 1 : undefined,
   timeout: 60_000,
 
