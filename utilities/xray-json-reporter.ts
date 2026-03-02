@@ -16,10 +16,6 @@ import {
  * Maps Playwright test data to Xray Cloud JSON format and uploads results
  */
 class XrayJsonReporter {
-  private config?: FullConfig;
-
-  private rootSuite?: Suite;
-
   private styles = {
     success: '\u2705',
     error: '\u274C',
@@ -110,9 +106,6 @@ class XrayJsonReporter {
   private shouldIncludeEvidence(attachment: any, testStatus: string, contentType: string): boolean {
     // Check if attachment has embedded base64 data (from JSON) or file path
     const hasData = !!attachment.body || (attachment.path && fs.existsSync(attachment.path));
-    console.log(
-      `DEBUG shouldIncludeEvidence: name=${attachment.name}, hasData=${hasData}, contentType=${contentType}`,
-    );
 
     if (!hasData) {
       return false;
@@ -120,13 +113,9 @@ class XrayJsonReporter {
 
     // Videos: Only for failed tests
     if (contentType.includes('video')) {
-      console.log(
-        `DEBUG: Video detected, testStatus=${testStatus}, including=${testStatus !== 'passed'}`,
-      );
       return testStatus !== 'passed';
     }
 
-    console.log(`DEBUG: Non-video attachment, including=true`);
     return true;
   }
 
@@ -179,13 +168,11 @@ class XrayJsonReporter {
               typeof attachment.body === 'string'
                 ? attachment.body
                 : attachment.body.toString('base64');
-            console.log(`DEBUG: Using embedded base64 data for ${filename}`);
           }
           // Check if attachment has file path to read from
           else if (attachment.path && fs.existsSync(attachment.path)) {
             base64Data = await this.fileToBase64(attachment.path);
             filename = path.basename(attachment.path);
-            console.log(`DEBUG: Using file path data for ${filename}`);
           }
 
           if (base64Data) {
@@ -194,7 +181,6 @@ class XrayJsonReporter {
               filename,
               contentType,
             });
-            console.log(`DEBUG: Added evidence: ${filename}, size=${base64Data.length}`);
           }
         }
       }
@@ -361,17 +347,21 @@ class XrayJsonReporter {
 
     const hasExistingExecution = testExecKey && testExecKey !== 'none' && testExecKey.trim() !== '';
 
+    // When linking to an existing execution (e.g., sharded CI runs), skip info to avoid
+    // overwriting the execution description with partial per-shard counts.
     return {
       testExecutionKey: hasExistingExecution ? testExecKey : undefined,
-      info: {
-        summary: `Playwright Test Execution - ${new Date().toISOString()}`,
-        description: `Automated test execution for ${targetEnv} environment\n\nResults: ${passedCount} passed, ${failedCount} failed, ${todoCount} skipped`,
-        startDate: playwrightResult.stats?.startTime || new Date().toISOString(),
-        finishDate: new Date(
-          new Date(playwrightResult.stats?.startTime || Date.now()).getTime() +
-            (playwrightResult.stats?.duration || 0),
-        ).toISOString(),
-      },
+      info: hasExistingExecution
+        ? undefined
+        : {
+            summary: `Playwright Test Execution - ${new Date().toISOString()}`,
+            description: `Automated test execution for ${targetEnv} environment\n\nResults: ${passedCount} passed, ${failedCount} failed, ${todoCount} skipped`,
+            startDate: playwrightResult.stats?.startTime || new Date().toISOString(),
+            finishDate: new Date(
+              new Date(playwrightResult.stats?.startTime || Date.now()).getTime() +
+                (playwrightResult.stats?.duration || 0),
+            ).toISOString(),
+          },
       tests,
     };
   }
@@ -506,7 +496,7 @@ class XrayJsonReporter {
 
     console.log(`${this.styles.info} Uploading ${testBatches.length} batches...`);
 
-    for (let i = 0; i < testBatches.length; i++) {
+    for (let i = 0; i < testBatches.length; i += 1) {
       const batchNumber = i + 1;
       const batch = testBatches[i];
 
@@ -677,10 +667,7 @@ class XrayJsonReporter {
   /**
    * Reporter lifecycle methods for Playwright integration
    */
-  onBegin(config: FullConfig, suite: Suite): void {
-    this.config = config;
-    this.rootSuite = suite;
-
+  onBegin(_config: FullConfig, suite: Suite): void {
     console.log(`\n${this.styles.separator}`);
     console.log(`${this.styles.test} Starting test run with ${suite.allTests().length} tests`);
     console.log(`${this.styles.separator}\n`);
