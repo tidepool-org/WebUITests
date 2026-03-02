@@ -696,30 +696,29 @@ export class NetworkHelper {
 
       if (actualValue === undefined) {
         validationErrors.push(`Field '${fieldPath}' not found in response`);
-        continue;
-      }
+      } else {
+        // Handle different comparison types
+        let isMatch = false;
 
-      // Handle different comparison types
-      let isMatch = false;
+        if (expectedValue === actualValue) {
+          isMatch = true;
+        } else if (Array.isArray(actualValue)) {
+          // For arrays, check if expected value is contained
+          isMatch = actualValue.some(item =>
+            typeof item === 'object' && item !== null
+              ? Object.values(item).includes(expectedValue)
+              : item === expectedValue,
+          );
+        } else if (typeof actualValue === 'string' && typeof expectedValue === 'string') {
+          // For strings, allow partial matching (useful for emails, names with formatting)
+          isMatch = actualValue.includes(expectedValue) || expectedValue.includes(actualValue);
+        }
 
-      if (expectedValue === actualValue) {
-        isMatch = true;
-      } else if (Array.isArray(actualValue)) {
-        // For arrays, check if expected value is contained
-        isMatch = actualValue.some(item =>
-          typeof item === 'object' && item !== null
-            ? Object.values(item).includes(expectedValue)
-            : item === expectedValue,
-        );
-      } else if (typeof actualValue === 'string' && typeof expectedValue === 'string') {
-        // For strings, allow partial matching (useful for emails, names with formatting)
-        isMatch = actualValue.includes(expectedValue) || expectedValue.includes(actualValue);
-      }
-
-      if (!isMatch) {
-        validationErrors.push(
-          `Field '${fieldPath}' mismatch: expected '${expectedValue}', got '${actualValue}'`,
-        );
+        if (!isMatch) {
+          validationErrors.push(
+            `Field '${fieldPath}' mismatch: expected '${expectedValue}', got '${actualValue}'`,
+          );
+        }
       }
     }
 
