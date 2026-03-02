@@ -67,10 +67,18 @@ jobs:
           name: Install Playwright Dependencies
           command: npx playwright install --with-deps
 
-      # Run tests with parallel execution
+      # Run tests with parallel execution and optional tag filtering
       - run:
           name: Run Playwright Tests
-          command: npm test -- --shard=$((CIRCLE_NODE_INDEX + 1))/$CIRCLE_NODE_TOTAL
+          command: |
+            SHARD_ARG="--shard=$((CIRCLE_NODE_INDEX + 1))/$CIRCLE_NODE_TOTAL"
+            if [ -n "$TEST_TAGS" ]; then
+              TAG=$(echo "$TEST_TAGS" | tr '[:upper:]' '[:lower:]')
+              [[ "$TAG" != @* ]] && TAG="@${TAG}"
+              npm test -- $SHARD_ARG --grep "$TAG"
+            else
+              npm test -- $SHARD_ARG
+            fi
 
       # Store test results and artifacts
       - store_artifacts:
@@ -177,10 +185,18 @@ jobs:
           name: Install Playwright Dependencies
           command: npx playwright install --with-deps
 
-      # Run tests with parallel execution
+      # Run tests with parallel execution and optional tag filtering
       - run:
           name: Run Playwright Tests
-          command: npm test -- --shard=$((CIRCLE_NODE_INDEX + 1))/$CIRCLE_NODE_TOTAL
+          command: |
+            SHARD_ARG="--shard=$((CIRCLE_NODE_INDEX + 1))/$CIRCLE_NODE_TOTAL"
+            if [ -n "$TEST_TAGS" ]; then
+              TAG=$(echo "$TEST_TAGS" | tr '[:upper:]' '[:lower:]')
+              [[ "$TAG" != @* ]] && TAG="@${TAG}"
+              npm test -- $SHARD_ARG --grep "$TAG"
+            else
+              npm test -- $SHARD_ARG
+            fi
 
       # Store test results and artifacts
       - store_artifacts:
