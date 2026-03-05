@@ -133,7 +133,31 @@ class ClinicianDashboardPage {
    * @param name - The name of the patient to search for.
    */
   async searchForPatient(name: string): Promise<void> {
-    await this.searchInput.fill(name);
+    // Retry up to 3 times to ensure text is properly entered
+    let success = false;
+    let attempt = 1;
+
+    while (attempt <= 3 && !success) {
+      await this.searchInput.fill(name);
+
+      // Verify the text was actually entered
+      const inputValue = await this.searchInput.inputValue();
+      if (inputValue === name) {
+        success = true;
+      } else if (attempt < 3) {
+        // If not successful and not the last attempt, wait and try again
+        await this.page.waitForTimeout(500);
+        // Clear the field before retrying
+        await this.searchInput.clear();
+      }
+
+      attempt += 1;
+    }
+
+    if (!success) {
+      throw new Error(`Failed to enter search text "${name}" after 3 attempts`);
+    }
+
     // Press Enter to trigger search
     await this.searchInput.press('Enter');
     // Wait longer for search to process and results to load
