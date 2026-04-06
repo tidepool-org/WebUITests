@@ -38,7 +38,7 @@ const URL_MAP: Record<typeof env.data.TARGET_ENV, string> = {
   qa5: 'https://qa5.development.tidepool.org',
   production: 'https://app.tidepool.org',
   prd: 'https://app.tidepool.org', // Alias for production
-  int: 'https://int.development.tidepool.org', // Integration environment
+  int: 'https://external.integration.tidepool.org', // Integration environment
 };
 
 export default {
