@@ -63,26 +63,31 @@ test.describe('Account Settings - Personal - Edit Email', () => {
         await accountSettingsPage.saveConfirm.waitFor({ state: 'visible', timeout: 5000 });
       });
 
-      // Step 7: Validate PUT request and email value
-      await (test as any).stepNoScreenshot(
-        'Then PUT request is validated and email is set to new value',
-        async () => {
-          await api.validateEndpointResponse('profile-metadata-put');
-          const putCapture = api
-            .getCaptures()
-            .find((req: any) => req.method === 'PUT' && req.url.includes('/profile'));
-          if (!putCapture) throw new Error('No PUT /profile request captured');
-          if (
-            !putCapture.requestBody ||
-            !putCapture.requestBody.email ||
-            putCapture.requestBody.email !== 'qa+TempPersonalEdit@tidepool.org'
-          ) {
-            throw new Error('PUT request did not set email to qa+TempEdit@tidepool.org');
-          }
-        },
-      );
+      // Step 7: Validate PUT request and email value (with email reversion on failure)
+      let step7ValidationError = null;
+      try {
+        await (test as any).stepNoScreenshot(
+          'Then PUT request is validated and email is set to new value',
+          async () => {
+            await api.validateEndpointResponse('profile-metadata-put');
+            const putCapture = api
+              .getCaptures()
+              .find((req: any) => req.method === 'PUT' && req.url.includes('/profile'));
+            if (!putCapture) throw new Error('No PUT /profile request captured');
+            if (
+              !putCapture.requestBody ||
+              !putCapture.requestBody.email ||
+              putCapture.requestBody.email !== 'qa+TempPersonalEdit@tidepool.org'
+            ) {
+              throw new Error('PUT request did not set email to qa+TempPersonalEdit@tidepool.org');
+            }
+          },
+        );
+      } catch (error) {
+        step7ValidationError = error;
+      }
 
-      // Step 8: Change email field to temporary value
+      // Step 8: Change email field to temporary value (always execute to revert email)
       await test.step('When user sets the email field to the previous value', async () => {
         await accountSettingsPage.emailInput.fill(originalEmail);
       });
@@ -97,24 +102,10 @@ test.describe('Account Settings - Personal - Edit Email', () => {
         await accountSettingsPage.saveConfirm.waitFor({ state: 'visible', timeout: 5000 });
       });
 
-      // Step 7: Validate PUT request and email value
-      await (test as any).stepNoScreenshot(
-        'Then PUT request is validated and email is set to new value',
-        async () => {
-          await api.validateEndpointResponse('profile-metadata-put');
-          const putCapture = api
-            .getCaptures()
-            .find((req: any) => req.method === 'PUT' && req.url.includes('/profile'));
-          if (!putCapture) throw new Error('No PUT /profile request captured');
-          if (
-            !putCapture.requestBody ||
-            !putCapture.requestBody.email ||
-            putCapture.requestBody.email !== originalEmail
-          ) {
-            throw new Error('PUT request did not set email to originalEmail');
-          }
-        },
-      );
+      // Re-throw step 7 validation error after email reversion (if any)
+      if (step7ValidationError) {
+        throw step7ValidationError;
+      }
 
       await api.stopCapture();
     },
