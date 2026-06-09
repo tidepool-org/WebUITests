@@ -372,8 +372,13 @@ class XrayJsonReporter {
   private async processSuite(suite: any, tests: XrayTest[]): Promise<void> {
     for (const spec of suite.specs || []) {
       for (const test of spec.tests || []) {
-        for (const result of test.results || []) {
-          const xrayTest = await this.mapPlaywrightTestToXray(spec, result);
+        const results = test.results || [];
+        if (results.length > 0) {
+          // Only report the last result (final attempt after retries).
+          // Reporting all results produces duplicate testInfo entries for the
+          // same Xray test issue, which causes Xray to return HTTP 500.
+          const lastResult = results[results.length - 1];
+          const xrayTest = await this.mapPlaywrightTestToXray(spec, lastResult);
           tests.push(xrayTest);
         }
       }
