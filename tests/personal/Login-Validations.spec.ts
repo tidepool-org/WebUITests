@@ -18,6 +18,7 @@ test.describe('Login into application', () => {
         TEST_TAGS.UI,
         TEST_TAGS.SMOKE,
         TEST_TAGS.CRITICAL,
+        TEST_TAGS.WIP,
       ]),
     },
     async ({ page }) => {
@@ -45,6 +46,7 @@ test.describe('Login into application', () => {
         TEST_TAGS.UI,
         TEST_TAGS.SMOKE,
         TEST_TAGS.HIGH,
+        TEST_TAGS.WIP,
       ]),
     },
     async ({ page }) => {
@@ -76,6 +78,7 @@ test.describe('Login into application', () => {
         TEST_TAGS.UI,
         TEST_TAGS.REGRESSION,
         TEST_TAGS.MEDIUM,
+        TEST_TAGS.WIP,
       ]),
     },
     async ({ page }) => {
@@ -107,6 +110,7 @@ test.describe('Login into application', () => {
         TEST_TAGS.UI,
         TEST_TAGS.SMOKE,
         TEST_TAGS.HIGH,
+        TEST_TAGS.WIP,
       ]),
     },
     async ({ page }) => {

@@ -75,9 +75,9 @@ jobs:
             if [ -n "$TEST_TAGS" ]; then
               TAG=$(echo "$TEST_TAGS" | tr '[:upper:]' '[:lower:]')
               [[ "$TAG" != @* ]] && TAG="@${TAG}"
-              npm test -- $SHARD_ARG --grep "$TAG"
+              npm test -- $SHARD_ARG --grep "$TAG" --grep-invert "@wip"
             else
-              npm test -- $SHARD_ARG
+              npm test -- $SHARD_ARG --grep "@" --grep-invert "@wip"
             fi
 
       # Store test results and artifacts
@@ -193,9 +193,9 @@ jobs:
             if [ -n "$TEST_TAGS" ]; then
               TAG=$(echo "$TEST_TAGS" | tr '[:upper:]' '[:lower:]')
               [[ "$TAG" != @* ]] && TAG="@${TAG}"
-              npm test -- $SHARD_ARG --grep "$TAG"
+              npm test -- $SHARD_ARG --grep "$TAG" --grep-invert "@wip"
             else
-              npm test -- $SHARD_ARG
+              npm test -- $SHARD_ARG --grep "@" --grep-invert "@wip"
             fi
 
       # Store test results and artifacts

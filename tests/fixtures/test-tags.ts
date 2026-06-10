@@ -56,6 +56,9 @@ export const TEST_TAGS = {
   // Endpoint API Testing
   API_PROFILE: '@api_profile',
   API_USER: '@api_user',
+
+  // WIP Tag for tests under development
+  WIP: '@wip',
 };
 
 // Tag Categories for Validation
