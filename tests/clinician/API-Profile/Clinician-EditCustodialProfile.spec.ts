@@ -4,6 +4,7 @@ import { test, ALL_WORKSPACE_KEYS } from '../../fixtures/clinic-helpers';
 import { createNetworkHelper } from '../../fixtures/network-helpers';
 import { TEST_TAGS, createValidatedTags } from '../../fixtures/test-tags';
 import { ProfilePage } from '../../../page-objects/patient/ProfilePage';
+import ClinicianDashboardPage from '../../../page-objects/clinician/ClinicianDashboardPage';
 
 ALL_WORKSPACE_KEYS.forEach((workspace: WorkspaceKey) => {
   test.describe('Custodial patients are allowed access and modification of profile details', () => {
@@ -91,11 +92,19 @@ ALL_WORKSPACE_KEYS.forEach((workspace: WorkspaceKey) => {
         // Step 13: Navigate to workspace
         await test.step(`When user navigates to workspace ${workspace}`, async () => {
           await test.clinician.navigateToWorkspace(workspace, page);
+          // Wait for patient list to be ready before search interactions
+          const dashboard = new ClinicianDashboardPage(page);
+          await dashboard.waitForLoadState();
         });
 
         // Step 3: Access custodial patient
         await test.step('When user accesses a custodial patient summary', async () => {
           await test.clinician.findAndAccessPatientByPartialName(CUSTODIAL_PATIENT_SEARCH, page);
+        });
+
+        // Navigate back to Profile Edit page to trigger a fresh GET with updated values
+        await test.step('When user navigates to Profile Edit page', async () => {
+          await test.clinician.navigateTo('ProfileEdit', page);
         });
 
         // Step 9: Validate captured response and creation values

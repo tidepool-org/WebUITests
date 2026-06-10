@@ -91,6 +91,10 @@ export class ProfilePage {
 
   async saveProfile() {
     await this.saveButton.click();
+    // Wait for the Save Changes button to become hidden — this means the edit form
+    // has either closed (dialog) or navigated away (full-page route). Both indicate
+    // the save completed and the UI has fully transitioned out of edit mode.
+    await this.saveButton.waitFor({ state: 'hidden', timeout: 10000 });
   }
 
   /**

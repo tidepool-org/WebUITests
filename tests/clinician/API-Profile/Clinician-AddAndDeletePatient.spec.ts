@@ -153,6 +153,8 @@ ALL_WORKSPACE_KEYS.forEach((workspace: WorkspaceKey) => {
         // Step 13: Navigate to workspace
         await test.step(`When user navigates to workspace ${workspace}`, async () => {
           await test.clinician.navigateToWorkspace(workspace, page);
+          // Wait for the patient list to be ready before any search interactions
+          await clinicianDashboardPage.waitForLoadState();
         });
 
         // Step 14: Search for the edited patient
@@ -202,6 +204,8 @@ ALL_WORKSPACE_KEYS.forEach((workspace: WorkspaceKey) => {
         // Step 18: Navigate to workspace
         await test.step(`When user navigates to workspace ${workspace}`, async () => {
           await test.clinician.navigateToWorkspace(workspace, page);
+          // Wait for the patient list to be ready before any search interactions
+          await clinicianDashboardPage.waitForLoadState();
         });
 
         // Step 19: Search for the edited patient

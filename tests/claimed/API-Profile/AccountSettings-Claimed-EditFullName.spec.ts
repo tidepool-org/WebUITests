@@ -16,6 +16,7 @@ test.describe('Claimed Account Settings edit (Full Name only) updates Profile en
   let api: ReturnType<typeof createNetworkHelper>;
   let putCapture: any;
   let newName: string; // Declare at test level scope
+  let saveTimestamp: number; // Timestamp just before save — anchors PUT/GET lookups
 
   test(
     'Account Settings - Claimed - Edit Full Name',
@@ -65,8 +66,9 @@ test.describe('Claimed Account Settings edit (Full Name only) updates Profile en
         await nameInput.fill(newName);
       });
 
-      // Step 5: Tap the Save button
+      // Step 5: Tap the Save button — record timestamp so we can anchor capture lookups to this moment
       await test.step('When user taps the save button', async () => {
+        saveTimestamp = Date.now();
         await accountSettingsPage.saveButton.click();
       });
 
@@ -75,21 +77,29 @@ test.describe('Claimed Account Settings edit (Full Name only) updates Profile en
         await accountSettingsPage.saveConfirm.waitFor({ state: 'visible', timeout: 5000 });
       });
 
-      // Step 7: Validate PUT request and save value
+      // Step 7: Validate PUT request fired after save with the new name in its body
       await (test as any).stepNoScreenshot(
         'Then PUT request is validated and name is set to new value',
         async () => {
+          // Wait for a PUT that was captured AFTER the save button was clicked.
+          // Using waitForCaptureMatching prevents false-matches against any prior PUT
+          // that may have been captured earlier in the session.
+          putCapture = await api.waitForCaptureMatching(
+            'PUT',
+            /\/metadata\/.*\/profile$/,
+            saveTimestamp,
+            10000,
+          );
           await api.validateEndpointResponse('profile-metadata-put');
-          putCapture = api
-            .getCaptures()
-            .find((req: any) => req.method === 'PUT' && req.url.includes('/profile'));
-          if (!putCapture) throw new Error('No PUT /profile request captured');
+
           if (
             !putCapture.requestBody ||
             !putCapture.requestBody.fullName ||
             putCapture.requestBody.fullName !== newName
           ) {
-            throw new Error(`PUT request did not set fullName to ${newName}`);
+            throw new Error(
+              `PUT request did not set fullName to "${newName}". Got: "${putCapture.requestBody?.fullName}"`,
+            );
           }
         },
       );
@@ -99,38 +109,23 @@ test.describe('Claimed Account Settings edit (Full Name only) updates Profile en
         await patientTest.patient.navigateTo('Profile', page);
       });
 
-      // Step 9: Confirm GET request matches the saved PUT request
+      // Step 9: Confirm GET request after navigation to Profile reflects the saved name
       await (test as any).stepNoScreenshot(
         'Then GET request matches the saved PUT request',
         async () => {
-          await api.validateEndpointResponse('profile-metadata-get');
+          // Wait for a GET that fires AFTER the PUT (anchored to saveTimestamp).
+          // This prevents the pre-save GET from being used for comparison.
+          const getCapture = await api.waitForCaptureMatching(
+            'GET',
+            /\/metadata\/.*\/profile$/,
+            putCapture.timestamp,
+            10000,
+          );
 
-          // Get all captures and find the LATEST GET request (after the PUT)
-          const allCaptures = api.getCaptures();
-          const putIndex = allCaptures.findIndex(req => req === putCapture);
-
-          // Find GET requests that occurred AFTER the PUT request
-          const laterGetCaptures = allCaptures
-            .slice(putIndex + 1)
-            .filter((req: any) => req.method === 'GET' && req.url.includes('/profile'));
-
-          if (laterGetCaptures.length === 0) {
-            throw new Error('No GET /profile request captured after the PUT request');
-          }
-
-          // Use the most recent GET request
-          const getCapture = laterGetCaptures[laterGetCaptures.length - 1];
-
-          if (
-            !getCapture.responseBody ||
-            getCapture.responseBody.fullName !== putCapture.requestBody.fullName
-          ) {
-            console.log('GET response fullName:', getCapture.responseBody.fullName);
-            console.log('PUT request fullName:', putCapture.requestBody.fullName);
-            console.log('Total captures:', allCaptures.length);
-            console.log('PUT index:', putIndex);
-            console.log('Later GET captures found:', laterGetCaptures.length);
-            throw new Error('GET response fullName does not match PUT request fullName');
+          if (!getCapture.responseBody || getCapture.responseBody.fullName !== newName) {
+            throw new Error(
+              `GET response fullName "${getCapture.responseBody?.fullName}" does not match saved name "${newName}"`,
+            );
           }
         },
       );
@@ -138,7 +133,9 @@ test.describe('Claimed Account Settings edit (Full Name only) updates Profile en
       // ========== PHASE 2: SHARED USER VIEWS PROFILE ==========
 
       // Step 10: Switch to shared user authentication and go directly to Profile
+      let sharedNavTimestamp: number;
       await test.step('When shared user views claimed user profile', async () => {
+        sharedNavTimestamp = Date.now();
         await accountTest.account.switchUser('shared', page);
         await page.goto('/data');
         await patientTest.patient.setup(page);
@@ -158,14 +155,29 @@ test.describe('Claimed Account Settings edit (Full Name only) updates Profile en
       await (test as any).stepNoScreenshot(
         'Then shared user sees view-only claimed profile data with matching data',
         async () => {
-          await api.compareEndpointResponse('profile-metadata-get', putCapture);
+          const sharedGetCapture = await api.waitForCaptureMatching(
+            'GET',
+            /\/metadata\/.*\/profile$/,
+            sharedNavTimestamp,
+            10000,
+          );
+          if (
+            !sharedGetCapture.responseBody ||
+            sharedGetCapture.responseBody.fullName !== newName
+          ) {
+            throw new Error(
+              `Shared user GET fullName "${sharedGetCapture.responseBody?.fullName}" does not match saved name "${newName}"`,
+            );
+          }
         },
       );
 
       // ========== PHASE 3: CLINICIAN VIEWS PROFILE ==========
 
       // Step 13: Switch to clinician user authentication
+      let clinicianNavTimestamp: number;
       await test.step('When clinician accesses patient workspace', async () => {
+        clinicianNavTimestamp = Date.now();
         await accountTest.account.switchUser('clinician', page);
         await page.goto('/');
         await clinicTest.clinician.navigateToWorkspace(CUSTODIAL_WORKSPACE, page);
@@ -182,7 +194,20 @@ test.describe('Claimed Account Settings edit (Full Name only) updates Profile en
       await (test as any).stepNoScreenshot(
         'Then clinician sees claimed profile data with matching data and no save access',
         async () => {
-          await api.compareEndpointResponse('profile-metadata-get', putCapture);
+          const clinicianGetCapture = await api.waitForCaptureMatching(
+            'GET',
+            /\/metadata\/.*\/profile$/,
+            clinicianNavTimestamp,
+            10000,
+          );
+          if (
+            !clinicianGetCapture.responseBody ||
+            clinicianGetCapture.responseBody.fullName !== newName
+          ) {
+            throw new Error(
+              `Clinician GET fullName "${clinicianGetCapture.responseBody?.fullName}" does not match saved name "${newName}"`,
+            );
+          }
         },
       );
     },

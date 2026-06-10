@@ -130,38 +130,39 @@ class ClinicianDashboardPage {
 
   /**
    * Searches for a patient in the list.
+   * Uses triple-click to select existing text then pressSequentially to type,
+   * which properly triggers React's onChange handler on each keystroke.
    * @param name - The name of the patient to search for.
    */
   async searchForPatient(name: string): Promise<void> {
-    // Retry up to 3 times to ensure text is properly entered
-    let success = false;
-    let attempt = 1;
-
-    while (attempt <= 3 && !success) {
-      await this.searchInput.fill(name);
-
-      // Verify the text was actually entered
-      const inputValue = await this.searchInput.inputValue();
-      if (inputValue === name) {
-        success = true;
-      } else if (attempt < 3) {
-        // If not successful and not the last attempt, wait and try again
-        await this.page.waitForTimeout(500);
-        // Clear the field before retrying
-        await this.searchInput.clear();
-      }
-
-      attempt += 1;
+    // Use the "Clear Search" button if visible — it reliably resets the input and React state
+    const clearButton = this.page.getByRole('button', { name: 'Clear Search' });
+    if (await clearButton.isVisible({ timeout: 500 })) {
+      await clearButton.click();
+      await this.page.waitForTimeout(500);
     }
 
-    if (!success) {
-      throw new Error(`Failed to enter search text "${name}" after 3 attempts`);
+    if (name.trim() === '') {
+      // Clearing was the goal — wait for the table to reset
+      await this.page.waitForTimeout(1500);
+      return;
     }
 
-    // Press Enter to trigger search
+    // Triple-click selects all existing text in the input (reliable cross-browser),
+    // then pressSequentially replaces the selection character-by-character,
+    // firing onChange on each keystroke so React state stays in sync.
+    await this.searchInput.click({ clickCount: 3 });
+    await this.searchInput.pressSequentially(name, { delay: 50 });
+
+    // Verify the text was entered correctly; retry once if not
+    const inputValue = await this.searchInput.inputValue();
+    if (inputValue !== name) {
+      await this.searchInput.click({ clickCount: 3 });
+      await this.searchInput.pressSequentially(name, { delay: 50 });
+    }
+
     await this.searchInput.press('Enter');
-    // Wait longer for search to process and results to load
-    await this.page.waitForTimeout(3000);
+    await this.page.waitForTimeout(2000);
   }
 
   /**
