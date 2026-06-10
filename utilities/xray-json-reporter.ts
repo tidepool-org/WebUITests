@@ -219,9 +219,11 @@ class XrayJsonReporter {
     const flushPendingWhen = async () => {
       if (!pendingWhen) return;
 
+      const totalDuration =
+        pendingWhen.duration + pendingThens.reduce((sum, t) => sum + t.duration, 0);
+
       const stepDef: XrayTestStepDefinition = {
         action: pendingWhen.name,
-        data: `Duration: ${pendingWhen.duration + pendingThens.reduce((sum, t) => sum + t.duration, 0)}ms`,
       };
 
       if (pendingThens.length > 0) {
@@ -232,6 +234,7 @@ class XrayJsonReporter {
 
       const stepResult: XrayTestStepResult = {
         status: 'PASSED',
+        comment: `Duration: ${totalDuration}ms`,
       };
 
       const allIndices = [pendingWhen.index, ...pendingThens.map(t => t.index)];
@@ -248,11 +251,11 @@ class XrayJsonReporter {
     const addStandaloneStep = async (stepName: string, duration: number, index: number) => {
       stepDefinitions.push({
         action: stepName,
-        data: `Duration: ${duration}ms`,
       });
 
       const stepResult: XrayTestStepResult = {
         status: 'PASSED',
+        comment: `Duration: ${duration}ms`,
       };
 
       const evidence = await this.collectStepEvidence([index], attachments, testStatus);
@@ -304,10 +307,11 @@ class XrayJsonReporter {
       testStatus,
     );
 
-    // Mark last step as failed if test failed
+    // Mark last step as failed if test failed — duration stays in comment, error goes in actualResult
     if (testStatus !== 'passed' && stepResults.length > 0) {
-      stepResults[stepResults.length - 1].status = 'FAILED';
-      stepResults[stepResults.length - 1].actualResult = testResult.error?.message || 'Test failed';
+      const lastStep = stepResults[stepResults.length - 1];
+      lastStep.status = 'FAILED';
+      lastStep.actualResult = testResult.error?.message || 'Test failed';
     }
 
     // Remove test-level evidence to avoid duplication (using step-level evidence instead)
