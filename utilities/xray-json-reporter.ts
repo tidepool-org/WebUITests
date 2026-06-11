@@ -126,9 +126,11 @@ class XrayJsonReporter {
     }
 
     // Screenshots: Only for failed tests — passed tests generate many step screenshots
-    // that balloon the payload and cause Xray HTTP 500 errors
+    // that balloon the payload and cause Xray HTTP 500 errors. Compared case-insensitively
+    // because callers may pass either Playwright ("passed") or Xray ("PASSED") status —
+    // a previous bug let "PASSED" !== "passed" leak every screenshot into the payload.
     if (contentType.includes('image')) {
-      return testStatus !== 'passed';
+      return String(testStatus).toLowerCase() !== 'passed';
     }
 
     // JSON API responses and other non-visual attachments: always include
@@ -164,7 +166,6 @@ class XrayJsonReporter {
     indices: number[],
     attachments: any[],
     testStatus: string,
-    stepStatus = 'PASSED',
     includeImages = true,
   ): Promise<XrayEvidence[]> {
     const evidence: XrayEvidence[] = [];
@@ -179,9 +180,10 @@ class XrayJsonReporter {
       for (const attachment of stepAttachments) {
         const contentType = attachment.contentType || 'application/octet-stream';
 
-        // Pass per-step status so screenshots are only included for the failed step
+        // Image inclusion is gated on the overall test status (screenshots only for
+        // failed tests); `includeImages` further restricts images to Then-steps.
         if (
-          this.shouldIncludeEvidence(attachment, stepStatus, contentType) &&
+          this.shouldIncludeEvidence(attachment, testStatus, contentType) &&
           (!contentType.includes('image') || includeImages)
         ) {
           let base64Data: string | null = null;
@@ -276,7 +278,6 @@ class XrayJsonReporter {
         [pendingWhen.index],
         attachments,
         testStatus,
-        stepResult.status,
         false,
       );
       // Then indices: include all evidence (screenshots + JSON)
@@ -284,7 +285,6 @@ class XrayJsonReporter {
         pendingThens.map(t => t.index),
         attachments,
         testStatus,
-        stepResult.status,
         true,
       );
       const evidence = [...whenEvidence, ...thenEvidence];
@@ -308,13 +308,7 @@ class XrayJsonReporter {
       };
 
       // Given/standalone When steps: include JSON evidence only (no screenshots)
-      const evidence = await this.collectStepEvidence(
-        [index],
-        attachments,
-        testStatus,
-        stepResult.status,
-        false,
-      );
+      const evidence = await this.collectStepEvidence([index], attachments, testStatus, false);
       if (evidence.length > 0) {
         stepResult.evidence = evidence;
       }
