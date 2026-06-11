@@ -550,7 +550,7 @@ class XrayJsonReporter {
       return this.uploadInBatches(xrayResult);
     }
     // Single upload for small payloads
-    return this.uploadSingleBatch(xrayResult);
+    return this.uploadSingleBatch(xrayResult, 'single');
   }
 
   private async uploadInBatches(
@@ -584,7 +584,7 @@ class XrayJsonReporter {
       );
 
       try {
-        const batchResponse = await this.uploadSingleBatch(batchResult);
+        const batchResponse = await this.uploadSingleBatch(batchResult, `batch-${batchNumber}`);
         if (i === 0) {
           firstUploadResult = batchResponse;
         }
@@ -616,12 +616,58 @@ class XrayJsonReporter {
   }
 
   /**
+   * Persists the exact request body and Xray's full response for a failed upload
+   * attempt so they can be inspected from the CI artifacts (test-results/ is stored
+   * even when the upload step fails). The Authorization header is never written.
+   */
+  private saveUploadDebugInfo(
+    label: string,
+    attempt: number,
+    requestBody: string,
+    response: Response,
+    responseBody: string,
+  ): void {
+    try {
+      fs.mkdirSync('test-results', { recursive: true });
+
+      const requestPath = `test-results/xray-failed-request-${label}.json`;
+      fs.writeFileSync(requestPath, requestBody);
+
+      const responseHeaders: string[] = [];
+      response.headers.forEach((value, key) => {
+        responseHeaders.push(`${key}: ${value}`);
+      });
+
+      const responsePath = `test-results/xray-failed-response-${label}.log`;
+      const entry = [
+        `--- attempt ${attempt} @ ${new Date().toISOString()} ---`,
+        `HTTP ${response.status} ${response.statusText}`,
+        ...responseHeaders,
+        '',
+        responseBody,
+        '',
+        '',
+      ].join('\n');
+      fs.appendFileSync(responsePath, entry);
+
+      console.log(
+        `${this.styles.info} Saved failed request to ${requestPath} and response to ${responsePath}`,
+      );
+    } catch (error) {
+      console.log(
+        `${this.styles.warning} Could not save Xray debug info: ${(error as Error).message}`,
+      );
+    }
+  }
+
+  /**
    * Uploads a single payload, retrying on HTTP 500 with exponential backoff + jitter.
    * Uses an iterative loop (not recursion) so a failure is logged exactly once and the
    * stack trace stays shallow.
    */
   private async uploadSingleBatch(
     xrayResult: XrayExecutionResult,
+    label = 'single',
     maxAttempts = 4,
   ): Promise<XrayImportResponse> {
     const body = JSON.stringify(xrayResult, (key, value) => {
@@ -665,6 +711,11 @@ class XrayJsonReporter {
 
       const errorText = await response.text();
       lastError = new Error(`Upload failed (HTTP ${response.status}): ${errorText}`);
+
+      console.log(
+        `${this.styles.warning} Xray responded HTTP ${response.status} ${response.statusText} (attempt ${attempt}/${maxAttempts}): ${errorText}`,
+      );
+      this.saveUploadDebugInfo(label, attempt, body, response, errorText);
 
       // Retry only on 500 (Xray internal error) with exponential backoff + jitter.
       if (response.status !== 500 || attempt >= maxAttempts) {

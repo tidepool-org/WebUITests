@@ -222,11 +222,22 @@ jobs:
       - run:
           name: Merge shard blob reports into one JSON
           command: npm run merge-reports
+      # Don't fail this step directly: a failed step skips everything after it,
+      # including store_artifacts — exactly when the xray-execution.json and failed
+      # request/response debug files in test-results/ are needed. Record the failure
+      # and fail the job AFTER artifacts are stored.
       - run:
           name: Upload merged results to Xray (single upload)
-          command: npm run upload-to-xray
+          command: npm run upload-to-xray || touch .xray-upload-failed
       - store_artifacts:
           path: test-results
+      - run:
+          name: Fail job if Xray upload failed
+          command: |
+            if [ -f .xray-upload-failed ]; then
+              echo "❌ Xray upload failed — see the test-results artifacts (xray-execution.json, xray-failed-request/response files) for the exact payload and Xray's response."
+              exit 1
+            fi
       # Decide the run's verdict here (the test job always succeeds so the upload can
       # run). Fail the job — and the pipeline — if any test failed unexpectedly.
       - run:
