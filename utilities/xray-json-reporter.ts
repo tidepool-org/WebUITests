@@ -1,6 +1,12 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { FullConfig, FullResult, Suite, TestCase, TestResult } from '@playwright/test/reporter';
+import type {
+  FullConfig,
+  FullResult,
+  Suite,
+  TestCase,
+  TestResult,
+} from '@playwright/test/reporter';
 import env from './env';
 import {
   XrayTestStepDefinition,
@@ -112,9 +118,11 @@ class XrayJsonReporter {
       return false;
     }
 
-    // Videos: Only for failed tests
+    // Videos: never sent to Xray. Base64-encoded videos dominate the payload and are
+    // the main cause of oversized requests / Xray HTTP 500s. They remain available in
+    // the CircleCI artifacts and the Playwright HTML report.
     if (contentType.includes('video')) {
-      return testStatus !== 'passed';
+      return false;
     }
 
     // Screenshots: Only for failed tests — passed tests generate many step screenshots
@@ -463,7 +471,7 @@ class XrayJsonReporter {
   }
 
   private createTestBatches(tests: XrayTest[]): XrayTest[][] {
-    const maxBatchSizeBytes = (env.XRAY_BATCH_SIZE_MB || 20) * 1024 * 1024; // Convert MB to bytes
+    const maxBatchSizeBytes = (env.XRAY_BATCH_SIZE_MB || 1) * 1024 * 1024; // Convert MB to bytes
     const batches: XrayTest[][] = [];
     let currentBatch: XrayTest[] = [];
     let currentBatchSize = 0;
@@ -529,7 +537,7 @@ class XrayJsonReporter {
   async uploadToXray(xrayResult: XrayExecutionResult): Promise<XrayImportResponse | null> {
     // Check if batching is needed
     const totalSize = this.calculatePayloadSize(xrayResult);
-    const maxBatchSizeBytes = (env.XRAY_BATCH_SIZE_MB || 20) * 1024 * 1024;
+    const maxBatchSizeBytes = (env.XRAY_BATCH_SIZE_MB || 1) * 1024 * 1024;
 
     if (totalSize > maxBatchSizeBytes && xrayResult.tests.length > 1) {
       console.log(
@@ -550,8 +558,9 @@ class XrayJsonReporter {
   ): Promise<XrayImportResponse | null> {
     const testBatches = this.createTestBatches(fullResult.tests);
     let firstUploadResult: XrayImportResponse | null = null;
+    const failures: string[] = [];
 
-    console.log(`${this.styles.info} Uploading ${testBatches.length} batches...`);
+    console.log(`${this.styles.info} Uploading ${testBatches.length} batches sequentially...`);
 
     for (let i = 0; i < testBatches.length; i += 1) {
       const batchNumber = i + 1;
@@ -576,48 +585,61 @@ class XrayJsonReporter {
 
       try {
         const batchResponse = await this.uploadSingleBatch(batchResult);
-
         if (i === 0) {
           firstUploadResult = batchResponse;
         }
-
-        if (batchResponse) {
-          console.log(`${this.styles.upload} ✅ Batch ${batchNumber} uploaded successfully`);
-        }
+        console.log(`${this.styles.success} Batch ${batchNumber} uploaded successfully`);
       } catch (error) {
-        console.log(`${this.styles.error} ❌ Batch ${batchNumber} failed: ${error}`);
-        // Continue with other batches even if one fails
+        failures.push(`Batch ${batchNumber}: ${(error as Error).message}`);
+        console.log(
+          `${this.styles.error} Batch ${batchNumber} failed: ${(error as Error).message}`,
+        );
+        // Continue so remaining batches still attempt, but the overall upload is failed.
       }
+
+      // Small gap before the next batch so Xray finishes processing this one against
+      // the same execution (imports are processed asynchronously server-side).
+      if (i < testBatches.length - 1) {
+        await new Promise<void>(resolve => {
+          setTimeout(resolve, 2000);
+        });
+      }
+    }
+
+    if (failures.length > 0) {
+      throw new Error(
+        `${failures.length}/${testBatches.length} Xray batch(es) failed:\n${failures.join('\n')}`,
+      );
     }
 
     return firstUploadResult;
   }
 
+  /**
+   * Uploads a single payload, retrying on HTTP 500 with exponential backoff + jitter.
+   * Uses an iterative loop (not recursion) so a failure is logged exactly once and the
+   * stack trace stays shallow.
+   */
   private async uploadSingleBatch(
     xrayResult: XrayExecutionResult,
-    attempt = 1,
     maxAttempts = 4,
-  ): Promise<XrayImportResponse | null> {
-    try {
-      const uploadStart = Date.now();
-
-      // Calculate payload size safely, handling circular references
-      let payloadSizeKB = '0';
-      try {
-        const safePayload = JSON.stringify(xrayResult, (key, value) => {
-          if (key === 'parent' || key === 'suite' || key === '_parentSuite' || key === '_project') {
-            return undefined;
-          }
-          return value;
-        });
-        payloadSizeKB = (safePayload.length / 1024).toFixed(1);
-      } catch (sizeError) {
-        payloadSizeKB = 'unknown';
+  ): Promise<XrayImportResponse> {
+    const body = JSON.stringify(xrayResult, (key, value) => {
+      // Skip circular references in upload payload
+      if (key === 'parent' || key === 'suite' || key === '_parentSuite' || key === '_project') {
+        return undefined;
       }
+      return value;
+    });
+    const payloadSizeKB = (body.length / 1024).toFixed(1);
 
+    let lastError: Error | null = null;
+
+    for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+      const uploadStart = Date.now();
       console.log(`${this.styles.info} Uploading test execution to Xray...`);
       console.log(
-        `${this.styles.info} Payload: ${xrayResult.tests.length} tests, ${payloadSizeKB} KB`,
+        `${this.styles.info} Payload: ${xrayResult.tests.length} tests, ${payloadSizeKB} KB (attempt ${attempt}/${maxAttempts})`,
       );
 
       const token = await this.authenticateWithXray();
@@ -628,50 +650,39 @@ class XrayJsonReporter {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(xrayResult, (key, value) => {
-          // Skip circular references in upload payload
-          if (key === 'parent' || key === 'suite' || key === '_parentSuite' || key === '_project') {
-            return undefined;
-          }
-          return value;
-        }),
+        body,
       });
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        const error = new Error(`Upload failed (HTTP ${response.status}): ${errorText}`);
-
-        // Retry on 500 (Xray internal error, often caused by concurrent shard uploads)
-        // with exponential backoff + jitter to avoid re-colliding
-        if (response.status === 500 && attempt < maxAttempts) {
-          const baseDelay = 5000 * attempt; // 5s, 10s, 15s
-          const jitter = Math.floor(Math.random() * 3000); // 0-3s random jitter
-          const delay = baseDelay + jitter;
-          console.log(
-            `${this.styles.warning} Xray 500 on attempt ${attempt}/${maxAttempts}, retrying in ${(delay / 1000).toFixed(1)}s...`,
-          );
-          await new Promise<void>(resolve => {
-            setTimeout(resolve, delay);
-          });
-          return await this.uploadSingleBatch(xrayResult, attempt + 1, maxAttempts);
-        }
-
-        throw error;
+      if (response.ok) {
+        const result: XrayImportResponse = await response.json();
+        const uploadDuration = Date.now() - uploadStart;
+        console.log(`${this.styles.success} Successfully uploaded to Xray (${uploadDuration}ms)`);
+        console.log(
+          `${this.styles.success} Test Execution Key: ${result.testExecIssue?.key || 'N/A'}`,
+        );
+        return result;
       }
 
-      const result: XrayImportResponse = await response.json();
-      const uploadDuration = Date.now() - uploadStart;
+      const errorText = await response.text();
+      lastError = new Error(`Upload failed (HTTP ${response.status}): ${errorText}`);
 
-      console.log(`${this.styles.success} Successfully uploaded to Xray (${uploadDuration}ms)`);
+      // Retry only on 500 (Xray internal error) with exponential backoff + jitter.
+      if (response.status !== 500 || attempt >= maxAttempts) {
+        break;
+      }
+
+      const delay = 5000 * attempt + Math.floor(Math.random() * 3000); // 5/10/15s + 0-3s jitter
       console.log(
-        `${this.styles.success} Test Execution Key: ${result.testExecIssue?.key || 'N/A'}`,
+        `${this.styles.warning} Xray 500 on attempt ${attempt}/${maxAttempts}, retrying in ${(delay / 1000).toFixed(1)}s...`,
       );
-
-      return result;
-    } catch (error) {
-      console.error(`${this.styles.error} Failed to upload to Xray:`, error);
-      throw error;
+      await new Promise<void>(resolve => {
+        setTimeout(resolve, delay);
+      });
     }
+
+    // Logged exactly once, after all retries are exhausted.
+    console.error(`${this.styles.error} Failed to upload to Xray: ${lastError?.message}`);
+    throw lastError ?? new Error('Unknown Xray upload failure');
   }
 
   /**
@@ -766,6 +777,17 @@ class XrayJsonReporter {
     );
     console.log(`Duration: ${result.duration}ms`);
     console.log(`${this.styles.separator}\n`);
+
+    // In sharded CI runs each shard would otherwise upload its own slice to the SAME
+    // execution concurrently, which makes Xray return HTTP 500. When XRAY_DEFER_UPLOAD
+    // is set, shards skip upload; a dedicated job merges all shard reports and uploads
+    // once (see utilities/upload-to-xray.ts + the merge-and-upload-xray CI job).
+    if (process.env.XRAY_DEFER_UPLOAD === 'true') {
+      console.log(
+        `${this.styles.info} XRAY_DEFER_UPLOAD=true — skipping inline upload; results will be merged and uploaded in a separate job.`,
+      );
+      return;
+    }
 
     const testExecKey = env.TEST_EXECUTION_KEY;
     if (env.XRAY_CLIENT_ID && env.XRAY_CLIENT_SECRET && testExecKey && testExecKey !== 'none') {

@@ -18,7 +18,7 @@ const envSchema = z.object({
   XRAY_CLIENT_ID: z.string().optional(),
   XRAY_CLIENT_SECRET: z.string().optional(),
   XRAY_PROJECT_KEY: z.string().default('SAND'),
-  XRAY_BATCH_SIZE_MB: z.coerce.number().default(2),
+  XRAY_BATCH_SIZE_MB: z.coerce.number().default(1),
   TEST_EXECUTION_KEY: z.string().optional(),
   JIRA_EMAIL: z.string().optional(),
   JIRA_API_KEY: z.string().optional(),

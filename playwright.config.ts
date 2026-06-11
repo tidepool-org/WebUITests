@@ -1,4 +1,5 @@
 import { defineConfig, devices } from '@playwright/test';
+import type { ReporterDescription } from '@playwright/test';
 import path from 'node:path';
 import env from './utilities/env';
 
@@ -35,11 +36,19 @@ export default defineConfig({
     toHaveScreenshot: { maxDiffPixelRatio: 0.2 },
   },
 
-  reporter: [
-    ['html', { open: 'never', outputFolder: 'playwright-report' }],
-    ['json', { outputFile: 'test-results/last-run.json' }],
-    ['./utilities/xray-json-reporter.ts'],
-  ],
+  reporter: ((): ReporterDescription[] => {
+    const reporters: ReporterDescription[] = [
+      ['html', { open: 'never', outputFolder: 'playwright-report' }],
+      ['json', { outputFile: 'test-results/last-run.json' }],
+    ];
+    // In CI, emit a blob report per shard so a downstream job can merge all shards
+    // and upload to Xray once (avoids concurrent per-shard uploads → Xray HTTP 500).
+    if (process.env.CI) {
+      reporters.push(['blob']);
+    }
+    reporters.push(['./utilities/xray-json-reporter.ts']);
+    return reporters;
+  })(),
 
   use: {
     baseURL: env.BASE_URL,

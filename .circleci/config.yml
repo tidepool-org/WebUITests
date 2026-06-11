@@ -1,6 +1,6 @@
 version: 2.1
 orbs:
-  node: circleci/node@6.1.0
+  node: circleci/node@7.2.0
   browser-tools: circleci/browser-tools@1.5.1
   slack: circleci/slack@4.1
 parameters:
@@ -15,7 +15,7 @@ parameters:
     default: ''
   xrayProjectKey:
     type: string
-    default: 'SAND'
+    default: 'QAE'
 jobs:
   code-quality-check:
     working_directory: ~/tidepool-org/webuitests
@@ -52,6 +52,11 @@ jobs:
             echo "export TARGET_ENV=\"<< pipeline.parameters.testEnvironment >>\"" >> $BASH_ENV
             echo "export TEST_EXECUTION_KEY=\"<< pipeline.parameters.testExecKey >>\"" >> $BASH_ENV
             echo "export TEST_TAGS=\"<< pipeline.parameters.testTags >>\"" >> $BASH_ENV
+            echo "export XRAY_PROJECT_KEY=\"<< pipeline.parameters.xrayProjectKey >>\"" >> $BASH_ENV
+            # Shards must NOT upload to Xray individually — they would hit the same
+            # execution concurrently and trigger HTTP 500. The merge-and-upload-xray
+            # job uploads the merged results once instead.
+            echo "export XRAY_DEFER_UPLOAD=\"true\"" >> $BASH_ENV
       - restore_cache:
           keys:
             - dependency-cache-{{ checksum "package.json" }}
@@ -67,7 +72,12 @@ jobs:
           name: Install Playwright Dependencies
           command: npx playwright install --with-deps
 
-      # Run tests with parallel execution and optional tag filtering
+      # Run tests with parallel execution and optional tag filtering.
+      # NOTE: this step intentionally does NOT fail on test failures. If it did, the
+      # job would fail and the downstream merge-and-upload-xray job (requires: test)
+      # would be skipped — so results would never reach Xray exactly when tests fail.
+      # The real pass/fail verdict is decided in merge-and-upload-xray from the merged
+      # results. (This also guarantees blob reports persist even on failing runs.)
       - run:
           name: Run Playwright Tests
           command: |
@@ -75,9 +85,9 @@ jobs:
             if [ -n "$TEST_TAGS" ]; then
               TAG=$(echo "$TEST_TAGS" | tr '[:upper:]' '[:lower:]')
               [[ "$TAG" != @* ]] && TAG="@${TAG}"
-              npm test -- $SHARD_ARG --grep "$TAG" --grep-invert "@wip"
+              npm test -- $SHARD_ARG --grep "$TAG" --grep-invert "@wip" || echo "⚠️ Playwright reported failures — continuing so results merge & upload; verdict decided in merge-and-upload-xray."
             else
-              npm test -- $SHARD_ARG --grep "@" --grep-invert "@wip"
+              npm test -- $SHARD_ARG --grep "@" --grep-invert "@wip" || echo "⚠️ Playwright reported failures — continuing so results merge & upload; verdict decided in merge-and-upload-xray."
             fi
 
       # Store test results and artifacts
@@ -86,73 +96,12 @@ jobs:
       - store_artifacts:
           path: test-results
 
-      # Only send notifications from the first node to avoid duplicates
-      - when:
-          condition:
-            equal: ["0", "${CIRCLE_NODE_INDEX}"]
-          steps:
-            - slack/notify:
-                event: fail
-                branch_pattern: main
-                mentions: '<@UG56AQFK2>'
-                custom: |
-                  {
-                    "blocks": [
-                      {
-                        "type": "section",
-                        "text": {
-                          "type": "mrkdwn",
-                          "text": ":x: *Tidepool Web UI Tests Failed on Main Branch* \n\n:link: <${CIRCLE_BUILD_URL}|View Build Details>"
-                        }
-                      }
-                    ]
-                  }
-            - slack/notify:
-                event: pass
-                branch_pattern: main
-                custom: |
-                  {
-                    "blocks": [
-                      {
-                        "type": "section",
-                        "text": {
-                          "type": "mrkdwn",
-                          "text": ":white_check_mark: *Tidepool Web UI Tests Passed on Main Branch* \n\n:link: <${CIRCLE_BUILD_URL}|View Build Details>"
-                        }
-                      }
-                    ]
-                  }
-            - slack/notify:
-                event: fail
-                branch_pattern: develop
-                mentions: '<@UG56AQFK2>'
-                custom: |
-                  {
-                    "blocks": [
-                      {
-                        "type": "section",
-                        "text": {
-                          "type": "mrkdwn",
-                          "text": ":x: *Tidepool Web UI Tests Failed on Develop Branch* \n\n:link: <${CIRCLE_BUILD_URL}|View Build Details>"
-                        }
-                      }
-                    ]
-                  }
-            - slack/notify:
-                event: pass
-                branch_pattern: develop
-                custom: |
-                  {
-                    "blocks": [
-                      {
-                        "type": "section",
-                        "text": {
-                          "type": "mrkdwn",
-                          "text": ":white_check_mark: *Tidepool Web UI Tests Passed on Develop Branch* \n\n:link: <${CIRCLE_BUILD_URL}|View Build Details>"
-                        }
-                      }
-                    ]
-                  }
+      # Hand each shard's blob report to the merge-and-upload job. Playwright names
+      # blob files per shard (report-1.zip, report-2.zip, …) so they don't collide.
+      - persist_to_workspace:
+          root: .
+          paths:
+            - blob-report
 
   scheduled-test:
     working_directory: ~/tidepool-org/webuitests
@@ -249,8 +198,110 @@ jobs:
                     ]
                   }
 
+  merge-and-upload-xray:
+    working_directory: ~/tidepool-org/webuitests
+    docker:
+      - image: mcr.microsoft.com/playwright:v1.57.0-noble
+    steps:
+      - checkout
+      - node/install
+      - run:
+          name: Set environment variables
+          command: |
+            echo "export TARGET_ENV=\"<< pipeline.parameters.testEnvironment >>\"" >> $BASH_ENV
+            echo "export TEST_EXECUTION_KEY=\"<< pipeline.parameters.testExecKey >>\"" >> $BASH_ENV
+            echo "export XRAY_PROJECT_KEY=\"<< pipeline.parameters.xrayProjectKey >>\"" >> $BASH_ENV
+      - restore_cache:
+          keys:
+            - dependency-cache-{{ checksum "package.json" }}
+            - dependency-cache-
+      - run: npm ci
+      # Pull every shard's blob report (report-1.zip … report-4.zip) into blob-report/
+      - attach_workspace:
+          at: .
+      - run:
+          name: Merge shard blob reports into one JSON
+          command: npm run merge-reports
+      - run:
+          name: Upload merged results to Xray (single upload)
+          command: npm run upload-to-xray
+      - store_artifacts:
+          path: test-results
+      # Decide the run's verdict here (the test job always succeeds so the upload can
+      # run). Fail the job — and the pipeline — if any test failed unexpectedly.
+      - run:
+          name: Report test verdict
+          command: npm run test-verdict
+      # Slack notifications live here because this job's status reflects the real
+      # pass/fail verdict. event: fail/pass map to on_fail/on_success internally.
+      - slack/notify:
+          event: fail
+          branch_pattern: main
+          mentions: '<@UG56AQFK2>'
+          custom: |
+            {
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": ":x: *Tidepool Web UI Tests Failed on Main Branch* \n\n:link: <${CIRCLE_BUILD_URL}|View Build Details>"
+                  }
+                }
+              ]
+            }
+      - slack/notify:
+          event: pass
+          branch_pattern: main
+          custom: |
+            {
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": ":white_check_mark: *Tidepool Web UI Tests Passed on Main Branch* \n\n:link: <${CIRCLE_BUILD_URL}|View Build Details>"
+                  }
+                }
+              ]
+            }
+      - slack/notify:
+          event: fail
+          branch_pattern: develop
+          mentions: '<@UG56AQFK2>'
+          custom: |
+            {
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": ":x: *Tidepool Web UI Tests Failed on Develop Branch* \n\n:link: <${CIRCLE_BUILD_URL}|View Build Details>"
+                  }
+                }
+              ]
+            }
+      - slack/notify:
+          event: pass
+          branch_pattern: develop
+          custom: |
+            {
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": ":white_check_mark: *Tidepool Web UI Tests Passed on Develop Branch* \n\n:link: <${CIRCLE_BUILD_URL}|View Build Details>"
+                  }
+                }
+              ]
+            }
+
 workflows:
   commit-workflow:
     jobs:
       - code-quality-check
       - test
+      - merge-and-upload-xray:
+          requires:
+            - test
