@@ -101,7 +101,8 @@ class XrayJsonReporter {
 
   /**
    * Determines if an attachment should be included as evidence
-   * Videos are only included for failed tests; other files check size threshold
+   * Videos and screenshots are only included for failed tests to keep payloads small.
+   * JSON API responses are always included.
    */
   private shouldIncludeEvidence(attachment: any, testStatus: string, contentType: string): boolean {
     // Check if attachment has embedded base64 data (from JSON) or file path
@@ -116,8 +117,19 @@ class XrayJsonReporter {
       return testStatus !== 'passed';
     }
 
+    // Screenshots: Only for failed tests — passed tests generate many step screenshots
+    // that balloon the payload and cause Xray HTTP 500 errors
+    if (contentType.includes('image')) {
+      return testStatus !== 'passed';
+    }
+
+    // JSON API responses and other non-visual attachments: always include
     return true;
   }
+
+  // Maximum size (bytes) for a single evidence item sent to Xray.
+  // Xray Cloud returns HTTP 500 on payloads over ~1MB per test.
+  private readonly MAX_EVIDENCE_BYTES = 200 * 1024; // 200 KB
 
   private isGivenStep(stepName: string): boolean {
     return stepName.toLowerCase().startsWith('given ');
@@ -144,6 +156,8 @@ class XrayJsonReporter {
     indices: number[],
     attachments: any[],
     testStatus: string,
+    stepStatus = 'PASSED',
+    includeImages = true,
   ): Promise<XrayEvidence[]> {
     const evidence: XrayEvidence[] = [];
 
@@ -157,7 +171,11 @@ class XrayJsonReporter {
       for (const attachment of stepAttachments) {
         const contentType = attachment.contentType || 'application/octet-stream';
 
-        if (this.shouldIncludeEvidence(attachment, testStatus, contentType)) {
+        // Pass per-step status so screenshots are only included for the failed step
+        if (
+          this.shouldIncludeEvidence(attachment, stepStatus, contentType) &&
+          (!contentType.includes('image') || includeImages)
+        ) {
           let base64Data: string | null = null;
           let filename = attachment.name || 'attachment';
 
@@ -176,11 +194,19 @@ class XrayJsonReporter {
           }
 
           if (base64Data) {
-            evidence.push({
-              data: base64Data,
-              filename,
-              contentType,
-            });
+            // Skip evidence items that exceed the size cap to prevent Xray HTTP 500 errors
+            const byteSize = Buffer.byteLength(base64Data, 'utf8');
+            if (byteSize > this.MAX_EVIDENCE_BYTES) {
+              console.log(
+                `${this.styles.warning} Skipping oversized evidence (${(byteSize / 1024).toFixed(0)}KB > ${this.MAX_EVIDENCE_BYTES / 1024}KB): ${filename}`,
+              );
+            } else {
+              evidence.push({
+                data: base64Data,
+                filename,
+                contentType,
+              });
+            }
           }
         }
       }
@@ -237,8 +263,23 @@ class XrayJsonReporter {
         comment: `Duration: ${totalDuration}ms`,
       };
 
-      const allIndices = [pendingWhen.index, ...pendingThens.map(t => t.index)];
-      const evidence = await this.collectStepEvidence(allIndices, attachments, testStatus);
+      // When index: include JSON evidence only (no screenshots)
+      const whenEvidence = await this.collectStepEvidence(
+        [pendingWhen.index],
+        attachments,
+        testStatus,
+        stepResult.status,
+        false,
+      );
+      // Then indices: include all evidence (screenshots + JSON)
+      const thenEvidence = await this.collectStepEvidence(
+        pendingThens.map(t => t.index),
+        attachments,
+        testStatus,
+        stepResult.status,
+        true,
+      );
+      const evidence = [...whenEvidence, ...thenEvidence];
       if (evidence.length > 0) {
         stepResult.evidence = evidence;
       }
@@ -258,7 +299,14 @@ class XrayJsonReporter {
         comment: `Duration: ${duration}ms`,
       };
 
-      const evidence = await this.collectStepEvidence([index], attachments, testStatus);
+      // Given/standalone When steps: include JSON evidence only (no screenshots)
+      const evidence = await this.collectStepEvidence(
+        [index],
+        attachments,
+        testStatus,
+        stepResult.status,
+        false,
+      );
       if (evidence.length > 0) {
         stepResult.evidence = evidence;
       }
@@ -547,6 +595,8 @@ class XrayJsonReporter {
 
   private async uploadSingleBatch(
     xrayResult: XrayExecutionResult,
+    attempt = 1,
+    maxAttempts = 4,
   ): Promise<XrayImportResponse | null> {
     try {
       const uploadStart = Date.now();
@@ -589,7 +639,24 @@ class XrayJsonReporter {
 
       if (!response.ok) {
         const errorText = await response.text();
-        throw new Error(`Upload failed (HTTP ${response.status}): ${errorText}`);
+        const error = new Error(`Upload failed (HTTP ${response.status}): ${errorText}`);
+
+        // Retry on 500 (Xray internal error, often caused by concurrent shard uploads)
+        // with exponential backoff + jitter to avoid re-colliding
+        if (response.status === 500 && attempt < maxAttempts) {
+          const baseDelay = 5000 * attempt; // 5s, 10s, 15s
+          const jitter = Math.floor(Math.random() * 3000); // 0-3s random jitter
+          const delay = baseDelay + jitter;
+          console.log(
+            `${this.styles.warning} Xray 500 on attempt ${attempt}/${maxAttempts}, retrying in ${(delay / 1000).toFixed(1)}s...`,
+          );
+          await new Promise<void>(resolve => {
+            setTimeout(resolve, delay);
+          });
+          return await this.uploadSingleBatch(xrayResult, attempt + 1, maxAttempts);
+        }
+
+        throw error;
       }
 
       const result: XrayImportResponse = await response.json();
