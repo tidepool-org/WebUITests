@@ -270,7 +270,9 @@ class XrayJsonReporter {
 
       const stepResult: XrayTestStepResult = {
         status: 'PASSED',
-        comment: `Duration: ${totalDuration}ms`,
+        // TEMP: disabled to confirm whether the per-step Duration comment is what
+        // breaks imports into the Jira-created execution. Re-enable once confirmed.
+        // comment: `Duration: ${totalDuration}ms`,
       };
 
       // When index: include JSON evidence only (no screenshots)
@@ -304,7 +306,9 @@ class XrayJsonReporter {
 
       const stepResult: XrayTestStepResult = {
         status: 'PASSED',
-        comment: `Duration: ${duration}ms`,
+        // TEMP: disabled to confirm whether the per-step Duration comment is what
+        // breaks imports into the Jira-created execution. Re-enable once confirmed.
+        // comment: `Duration: ${duration}ms`,
       };
 
       // Given/standalone When steps: include JSON evidence only (no screenshots)
@@ -374,7 +378,9 @@ class XrayJsonReporter {
         steps: stepDefinitions.length > 0 ? stepDefinitions : undefined,
       },
       status: this.getTestStatus(testStatus),
-      comment: testResult.error?.message,
+      // TEMP: disabled along with step comments to test a fully comment-free payload
+      // against the Jira-created execution. (This is the failed test's error message.)
+      // comment: testResult.error?.message,
       steps: stepResults.length > 0 ? stepResults : undefined,
     };
   }
