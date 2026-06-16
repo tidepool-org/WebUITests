@@ -18,6 +18,7 @@
     "test:clinician": "npx playwright test --grep @clinician",
     "test:regression": "npx playwright test --grep @regression",
     "merge-reports": "mkdir -p test-results && PLAYWRIGHT_JSON_OUTPUT_NAME=test-results/merged.json npx playwright merge-reports --reporter json blob-report",
+    "create-execution": "jiti utilities/create-execution.ts",
     "upload-to-xray": "jiti utilities/upload-to-xray.ts",
     "test-verdict": "node -e \"const r=require('./test-results/merged.json');const s=r.stats||{};const u=s.unexpected||0;console.log('Verdict — passed:',s.expected||0,'failed:',u,'flaky:',s.flaky||0,'skipped:',s.skipped||0);process.exit(u>0?1:0)\"",
     "build": "tsc",

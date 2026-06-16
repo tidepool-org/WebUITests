@@ -36,6 +36,50 @@ jobs:
       - run:
           name: Run ESLint and TypeScript Check
           command: npm run check
+  create-execution:
+    working_directory: ~/tidepool-org/webuitests
+    docker:
+      - image: cimg/node:lts
+    steps:
+      - checkout
+      - node/install
+      # Pipeline parameters always take precedence over project-level env vars
+      - run:
+          name: Set environment variables
+          command: |
+            echo "export TARGET_ENV=\"<< pipeline.parameters.testEnvironment >>\"" >> $BASH_ENV
+            echo "export TEST_EXECUTION_KEY=\"<< pipeline.parameters.testExecKey >>\"" >> $BASH_ENV
+            echo "export TEST_TAGS=\"<< pipeline.parameters.testTags >>\"" >> $BASH_ENV
+            echo "export XRAY_PROJECT_KEY=\"<< pipeline.parameters.xrayProjectKey >>\"" >> $BASH_ENV
+      - restore_cache:
+          keys:
+            - dependency-cache-{{ checksum "package.json" }}
+            - dependency-cache-
+      - run: npm ci
+      - save_cache:
+          paths:
+            - ./node_modules
+          key: dependency-cache-{{ checksum "package.json" }}
+      # Pre-create (frontload) the Xray execution BEFORE any tests run, so a user who
+      # triggered the automation from a Jira ticket sees the queued tests (status TO DO,
+      # with their existing step definitions) during the run rather than only after it.
+      # Uses `playwright test --list` (no browsers needed) to learn which tests will run
+      # from the tag filter. Non-fatal by design: the script never exits non-zero, so a
+      # frontload hiccup won't block the test job — the post-run upload auto-creates a
+      # fresh execution as a fallback. The new execution's key is written to
+      # test-results/created-exec-key.txt and handed to merge-and-upload-xray.
+      - run:
+          name: Pre-create (frontload) Xray execution
+          command: npm run create-execution
+      # Guarantee the dir exists even when the frontload is skipped (e.g. testExecKey=none
+      # on a plain commit), so persisting the workspace never fails on a missing path.
+      - run:
+          name: Ensure test-results dir exists
+          command: mkdir -p test-results
+      - persist_to_workspace:
+          root: .
+          paths:
+            - test-results
   test:
     working_directory: ~/tidepool-org/webuitests
     docker:
@@ -312,7 +356,15 @@ workflows:
   commit-workflow:
     jobs:
       - code-quality-check
-      - test
+      # Frontload the Xray execution before the shards run, so the triggering Jira
+      # ticket shows the queued tests during the run (see the create-execution job).
+      - create-execution
+      - test:
+          requires:
+            - create-execution
+      # merge-and-upload-xray attaches the workspace, which (via the create-execution
+      # → test → merge ancestry) includes test-results/created-exec-key.txt — so the
+      # single upload imports results INTO the frontload execution.
       - merge-and-upload-xray:
           requires:
             - test

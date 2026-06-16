@@ -392,20 +392,24 @@ class XrayJsonReporter {
       await this.processSuite(suite, tests);
     }
 
-    const testExecKey = env.TEST_EXECUTION_KEY;
     const targetEnv = env.TARGET_ENV;
 
     const passedCount = tests.filter(t => t.status === 'PASSED').length;
     const failedCount = tests.filter(t => t.status === 'FAILED').length;
     const todoCount = tests.filter(t => t.status === 'TODO').length;
 
-    const originalExecKey =
-      testExecKey && testExecKey !== 'none' && testExecKey.trim() !== '' ? testExecKey : undefined;
+    // If the pre-run frontload step created an execution, import results INTO it (it's
+    // Xray-created, so import-ready, and already linked to the trigger ticket).
+    const targetExec = process.env.XRAY_TARGET_EXECUTION?.trim();
+    if (targetExec) {
+      return { testExecutionKey: targetExec, tests };
+    }
 
-    // ALWAYS auto-create a new execution. Test Executions created by the Jira Automation
+    // Otherwise auto-create a new execution. Test Executions created by the Jira Automation
     // aren't registered in Xray's backend ("test execution ... not found"), so they reject
     // every import; an Xray-created execution is import-ready immediately. We link this new
-    // execution back to the original Jira-created one after upload (see linkExecutions).
+    // execution to the triggering ticket after upload (see linkExecutionToTrigger).
+    const pipelineUrl = process.env.CIRCLE_BUILD_URL;
     return {
       testExecutionKey: undefined,
       info: {
@@ -413,7 +417,7 @@ class XrayJsonReporter {
         description:
           `Automated test execution for ${targetEnv} environment\n\n` +
           `Results: ${passedCount} passed, ${failedCount} failed, ${todoCount} skipped` +
-          (originalExecKey ? `\n\nLinked to ${originalExecKey}` : ''),
+          (pipelineUrl ? `\n\nCircleCI pipeline: ${pipelineUrl}` : ''),
         startDate: playwrightResult.stats?.startTime || new Date().toISOString(),
         finishDate: new Date(
           new Date(playwrightResult.stats?.startTime || Date.now()).getTime() +
@@ -627,6 +631,84 @@ class XrayJsonReporter {
         `${this.styles.warning} Error linking ${newKey} to ${triggerKey}: ${(error as Error).message}`,
       );
     }
+  }
+
+  /** Fetch the set of existing Test summaries in the project (paginated). */
+  private async fetchExistingTestSummaries(): Promise<Set<string>> {
+    const token = await this.authenticateWithXray();
+    const project = env.XRAY_PROJECT_KEY || 'QAE';
+    const summaries = new Set<string>();
+    const limit = 100;
+    let start = 0;
+    for (;;) {
+      const query = `query{getTests(jql:"project = ${project} AND issuetype = Test",limit:${limit},start:${start}){total results{jira(fields:["summary"])}}}`;
+      const res = await fetch('https://xray.cloud.getxray.app/api/v2/graphql', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ query }),
+      });
+      const json = (await res.json()) as {
+        data?: { getTests?: { total?: number; results?: Array<{ jira?: { summary?: string } }> } };
+      };
+      const data = json.data?.getTests;
+      if (!data) break;
+      (data.results ?? []).forEach(r => {
+        if (r.jira?.summary) summaries.add(r.jira.summary);
+      });
+      start += limit;
+      if (start >= (data.total ?? 0)) break;
+    }
+    return summaries;
+  }
+
+  /**
+   * Pre-run "frontload": create a NEW execution containing the tests that WILL run, as
+   * status TO DO with no results — so the ticket shows the queued tests (and their existing
+   * step definitions, which Xray fills in automatically) while the automation runs. Only
+   * tests already known to Xray are included; brand-new tests are skipped here and appear
+   * with full steps+results in the post-run import. Links the execution to the triggering
+   * ticket. Returns the new execution key.
+   */
+  async createFrontloadExecution(
+    testTitles: string[],
+    originalExecKey: string,
+  ): Promise<string | null> {
+    if (!(env.XRAY_CLIENT_ID && env.XRAY_CLIENT_SECRET)) {
+      console.log(`${this.styles.warning} No Xray credentials — skipping frontload.`);
+      return null;
+    }
+    const existing = await this.fetchExistingTestSummaries();
+    const known = [...new Set(testTitles)].filter(t => existing.has(t));
+    const skipped = testTitles.length - known.length;
+    console.log(
+      `${this.styles.info} Frontload: ${known.length} known test(s) to pre-load; ${skipped} new test(s) skipped (they'll appear with results after the run).`,
+    );
+    if (known.length === 0) {
+      console.log(`${this.styles.warning} No already-known tests to frontload; skipping pre-creation.`);
+      return null;
+    }
+    const pipelineUrl = process.env.CIRCLE_BUILD_URL;
+    const payload: XrayExecutionResult = {
+      info: {
+        summary: `Playwright Test Execution - ${new Date().toISOString()}`,
+        description:
+          `Automated test execution for ${env.TARGET_ENV} environment\n\n` +
+          `${known.length} test(s) queued — results pending.` +
+          (pipelineUrl ? `\n\nCircleCI pipeline: ${pipelineUrl}` : ''),
+      },
+      tests: known.map(summary => ({
+        testInfo: { summary, type: 'Manual' as const, projectKey: env.XRAY_PROJECT_KEY || 'QAE' },
+        status: 'TODO' as const,
+      })),
+    };
+    const resp = await this.uploadSingleBatch(payload, 'frontload');
+    const issue = resp.testExecIssue ?? resp;
+    const newKey = issue?.key;
+    const newSelf = issue?.self;
+    if (newKey && newSelf && originalExecKey && originalExecKey !== 'none' && originalExecKey.trim() !== '') {
+      await this.linkExecutionToTrigger(newKey, originalExecKey, newSelf);
+    }
+    return newKey ?? null;
   }
 
   async uploadToXray(xrayResult: XrayExecutionResult): Promise<XrayImportResponse | null> {
@@ -901,7 +983,10 @@ class XrayJsonReporter {
       const execIssue = uploadResult?.testExecIssue ?? uploadResult;
       const newKey = execIssue?.key;
       const newSelf = execIssue?.self;
+      // Only link when we auto-created here. If results went into a pre-created frontload
+      // execution (XRAY_TARGET_EXECUTION), it was already linked in the pre-run step.
       if (
+        !process.env.XRAY_TARGET_EXECUTION?.trim() &&
         newKey &&
         newSelf &&
         originalExecKey &&

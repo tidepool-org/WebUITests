@@ -11,6 +11,7 @@
  */
 import fs from 'node:fs';
 import XrayJsonReporter from './xray-json-reporter';
+import { EXEC_KEY_FILE } from './create-execution';
 
 const DEFAULT_MERGED_PATH = 'test-results/merged.json';
 
@@ -24,6 +25,16 @@ async function main(): Promise<void> {
   if (!execKey || execKey === 'none' || execKey.trim() === '') {
     console.log('ℹ️ No TEST_EXECUTION_KEY provided — skipping Xray upload (nothing to link to).');
     return;
+  }
+
+  // If the pre-run frontload step created an execution, import results INTO it; otherwise
+  // the reporter auto-creates a fresh one and links it to the trigger ticket.
+  if (!process.env.XRAY_TARGET_EXECUTION && fs.existsSync(EXEC_KEY_FILE)) {
+    const key = fs.readFileSync(EXEC_KEY_FILE, 'utf8').trim();
+    if (key) {
+      process.env.XRAY_TARGET_EXECUTION = key;
+      console.log(`ℹ️ Importing results into pre-created (frontload) execution ${key}.`);
+    }
   }
 
   if (!fs.existsSync(jsonPath)) {
