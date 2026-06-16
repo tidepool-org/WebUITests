@@ -87,7 +87,12 @@ export interface XrayExecutionResult {
  * Xray API Import Response
  */
 export interface XrayImportResponse {
-  testExecIssue: {
+  // Xray Cloud's /import/execution returns the execution issue at the TOP LEVEL
+  // ({ id, key, self }); some responses/versions nest it under testExecIssue. Support both.
+  id?: string;
+  key?: string;
+  self?: string;
+  testExecIssue?: {
     id: string;
     key: string;
     self: string;

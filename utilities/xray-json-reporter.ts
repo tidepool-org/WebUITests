@@ -270,9 +270,7 @@ class XrayJsonReporter {
 
       const stepResult: XrayTestStepResult = {
         status: 'PASSED',
-        // TEMP: disabled to confirm whether the per-step Duration comment is what
-        // breaks imports into the Jira-created execution. Re-enable once confirmed.
-        // comment: `Duration: ${totalDuration}ms`,
+        comment: `Duration: ${totalDuration}ms`,
       };
 
       // When index: include JSON evidence only (no screenshots)
@@ -306,9 +304,7 @@ class XrayJsonReporter {
 
       const stepResult: XrayTestStepResult = {
         status: 'PASSED',
-        // TEMP: disabled to confirm whether the per-step Duration comment is what
-        // breaks imports into the Jira-created execution. Re-enable once confirmed.
-        // comment: `Duration: ${duration}ms`,
+        comment: `Duration: ${duration}ms`,
       };
 
       // Given/standalone When steps: include JSON evidence only (no screenshots)
@@ -378,9 +374,7 @@ class XrayJsonReporter {
         steps: stepDefinitions.length > 0 ? stepDefinitions : undefined,
       },
       status: this.getTestStatus(testStatus),
-      // TEMP: disabled along with step comments to test a fully comment-free payload
-      // against the Jira-created execution. (This is the failed test's error message.)
-      // comment: testResult.error?.message,
+      comment: testResult.error?.message,
       steps: stepResults.length > 0 ? stepResults : undefined,
     };
   }
@@ -405,23 +399,27 @@ class XrayJsonReporter {
     const failedCount = tests.filter(t => t.status === 'FAILED').length;
     const todoCount = tests.filter(t => t.status === 'TODO').length;
 
-    const hasExistingExecution = testExecKey && testExecKey !== 'none' && testExecKey.trim() !== '';
+    const originalExecKey =
+      testExecKey && testExecKey !== 'none' && testExecKey.trim() !== '' ? testExecKey : undefined;
 
-    // When linking to an existing execution (e.g., sharded CI runs), skip info to avoid
-    // overwriting the execution description with partial per-shard counts.
+    // ALWAYS auto-create a new execution. Test Executions created by the Jira Automation
+    // aren't registered in Xray's backend ("test execution ... not found"), so they reject
+    // every import; an Xray-created execution is import-ready immediately. We link this new
+    // execution back to the original Jira-created one after upload (see linkExecutions).
     return {
-      testExecutionKey: hasExistingExecution ? testExecKey : undefined,
-      info: hasExistingExecution
-        ? undefined
-        : {
-            summary: `Playwright Test Execution - ${new Date().toISOString()}`,
-            description: `Automated test execution for ${targetEnv} environment\n\nResults: ${passedCount} passed, ${failedCount} failed, ${todoCount} skipped`,
-            startDate: playwrightResult.stats?.startTime || new Date().toISOString(),
-            finishDate: new Date(
-              new Date(playwrightResult.stats?.startTime || Date.now()).getTime() +
-                (playwrightResult.stats?.duration || 0),
-            ).toISOString(),
-          },
+      testExecutionKey: undefined,
+      info: {
+        summary: `Playwright Test Execution - ${new Date().toISOString()}`,
+        description:
+          `Automated test execution for ${targetEnv} environment\n\n` +
+          `Results: ${passedCount} passed, ${failedCount} failed, ${todoCount} skipped` +
+          (originalExecKey ? `\n\nLinked to ${originalExecKey}` : ''),
+        startDate: playwrightResult.stats?.startTime || new Date().toISOString(),
+        finishDate: new Date(
+          new Date(playwrightResult.stats?.startTime || Date.now()).getTime() +
+            (playwrightResult.stats?.duration || 0),
+        ).toISOString(),
+      },
       tests,
     };
   }
@@ -534,6 +532,103 @@ class XrayJsonReporter {
     return batches;
   }
 
+  // Jira link type connecting a Test Execution to the ticket it tests (outward "tests").
+  private readonly EXECUTION_LINK_TYPE = 'Test';
+
+  /**
+   * Links the freshly auto-created execution to the ORIGINAL TRIGGERING TICKET (the
+   * Task/Story that fired the Jira Automation), using the same "Test" link the automation
+   * applies to its own execution. The triggering ticket is discovered from the original
+   * (Jira-created) execution's "Test" link, so this stays correct if that ticket changes.
+   * Non-fatal: results are already uploaded regardless of whether linking succeeds.
+   */
+  private async linkExecutionToTrigger(
+    newKey: string,
+    originalExecKey: string,
+    selfUrl: string,
+  ): Promise<void> {
+    if (!env.JIRA_EMAIL || !env.JIRA_API_KEY) {
+      console.log(`${this.styles.warning} JIRA_EMAIL/JIRA_API_KEY not set — skipping issue link.`);
+      return;
+    }
+    let baseUrl: string;
+    try {
+      baseUrl = new URL(selfUrl).origin;
+    } catch {
+      console.log(`${this.styles.warning} Could not derive Jira base URL from "${selfUrl}".`);
+      return;
+    }
+    const auth = Buffer.from(`${env.JIRA_EMAIL}:${env.JIRA_API_KEY}`).toString('base64');
+    const headers = { 'Content-Type': 'application/json', Authorization: `Basic ${auth}` };
+
+    // Find the triggering ticket via the original execution's "Test" link.
+    let triggerKey: string | undefined;
+    try {
+      const res = await fetch(
+        `${baseUrl}/rest/api/3/issue/${originalExecKey}?fields=issuelinks`,
+        { headers },
+      );
+      if (res.ok) {
+        const data = (await res.json()) as {
+          fields?: {
+            issuelinks?: Array<{
+              type?: { name?: string };
+              outwardIssue?: { key: string };
+              inwardIssue?: { key: string };
+            }>;
+          };
+        };
+        const testLink = (data.fields?.issuelinks ?? []).find(
+          l => l.type?.name === this.EXECUTION_LINK_TYPE,
+        );
+        triggerKey = (testLink?.outwardIssue ?? testLink?.inwardIssue)?.key;
+      } else {
+        console.log(
+          `${this.styles.warning} Could not read links of ${originalExecKey} (HTTP ${res.status}).`,
+        );
+      }
+    } catch (error) {
+      console.log(
+        `${this.styles.warning} Error reading links of ${originalExecKey}: ${(error as Error).message}`,
+      );
+    }
+
+    if (!triggerKey) {
+      console.log(
+        `${this.styles.warning} No "${this.EXECUTION_LINK_TYPE}" link found on ${originalExecKey}; cannot identify the triggering ticket. Skipping link for ${newKey}.`,
+      );
+      return;
+    }
+
+    // Replicate the automation's link: triggering ticket as the outward ("tests") side,
+    // the new execution as the inward ("is tested by") side.
+    try {
+      const response = await fetch(`${baseUrl}/rest/api/3/issueLink`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          type: { name: this.EXECUTION_LINK_TYPE },
+          outwardIssue: { key: triggerKey },
+          inwardIssue: { key: newKey },
+        }),
+      });
+      if (response.ok || response.status === 201) {
+        console.log(
+          `${this.styles.success} Linked execution ${newKey} to triggering ticket ${triggerKey} ("${this.EXECUTION_LINK_TYPE}").`,
+        );
+      } else {
+        const text = await response.text();
+        console.log(
+          `${this.styles.warning} Failed to link ${newKey} to ${triggerKey} (HTTP ${response.status}): ${text.slice(0, 200)}`,
+        );
+      }
+    } catch (error) {
+      console.log(
+        `${this.styles.warning} Error linking ${newKey} to ${triggerKey}: ${(error as Error).message}`,
+      );
+    }
+  }
+
   async uploadToXray(xrayResult: XrayExecutionResult): Promise<XrayImportResponse | null> {
     // Check if batching is needed
     const totalSize = this.calculatePayloadSize(xrayResult);
@@ -572,9 +667,11 @@ class XrayJsonReporter {
         tests: batch,
       };
 
-      // For subsequent batches after the first, link to the same test execution
-      if (i > 0 && firstUploadResult?.testExecIssue?.key) {
-        batchResult.testExecutionKey = firstUploadResult.testExecIssue.key;
+      // For subsequent batches after the first, link to the same test execution that
+      // batch 1 auto-created (Xray returns the issue at the top level; fall back to nested).
+      const firstKey = (firstUploadResult?.testExecIssue ?? firstUploadResult)?.key;
+      if (i > 0 && firstKey) {
+        batchResult.testExecutionKey = firstKey;
         // Remove info object for updates (only needed for creation)
         delete batchResult.info;
       }
@@ -704,7 +801,7 @@ class XrayJsonReporter {
         const uploadDuration = Date.now() - uploadStart;
         console.log(`${this.styles.success} Successfully uploaded to Xray (${uploadDuration}ms)`);
         console.log(
-          `${this.styles.success} Test Execution Key: ${result.testExecIssue?.key || 'N/A'}`,
+          `${this.styles.success} Test Execution Key: ${(result.testExecIssue ?? result)?.key || 'N/A'}`,
         );
         return result;
       }
@@ -754,7 +851,9 @@ class XrayJsonReporter {
 
       const testExecKey = env.TEST_EXECUTION_KEY;
       if (testExecKey && testExecKey !== 'none' && testExecKey.trim() !== '') {
-        console.log(`${this.styles.info} Linking to Test Execution: ${testExecKey}`);
+        console.log(
+          `${this.styles.info} Auto-creating a new execution; will link it back to ${testExecKey}`,
+        );
       } else {
         console.log(`${this.styles.info} Creating new Test Execution`);
       }
@@ -791,7 +890,27 @@ class XrayJsonReporter {
         return;
       }
 
-      await this.uploadToXray(xrayResult);
+      // Auto-creates a new execution (see convertPlaywrightJsonToXray) and returns it.
+      const uploadResult = await this.uploadToXray(xrayResult);
+
+      // Link the new auto-created execution to the original triggering ticket (found via
+      // the original Jira-created execution's "Test" link), matching the automation.
+      const originalExecKey = testExecKey;
+      // Xray returns the execution at the top level ({id,key,self}); fall back to the
+      // nested testExecIssue shape just in case.
+      const execIssue = uploadResult?.testExecIssue ?? uploadResult;
+      const newKey = execIssue?.key;
+      const newSelf = execIssue?.self;
+      if (
+        newKey &&
+        newSelf &&
+        originalExecKey &&
+        originalExecKey !== 'none' &&
+        originalExecKey.trim() !== '' &&
+        newKey !== originalExecKey
+      ) {
+        await this.linkExecutionToTrigger(newKey, originalExecKey, newSelf);
+      }
 
       const totalDuration = Date.now() - processStart;
       console.log(`${this.styles.upload} Xray upload completed successfully (${totalDuration}ms)`);
