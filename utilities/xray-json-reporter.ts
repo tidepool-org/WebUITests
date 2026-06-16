@@ -145,11 +145,10 @@ class XrayJsonReporter {
       return false;
     }
 
-    // JSON API responses, other non-visual attachments, and screenshots are all eligible
-    // here. Whether a SCREENSHOT is actually kept is decided by the caller
-    // (collectStepEvidence): Then-step screenshots are always kept as verification
-    // evidence (pass or fail), while screenshots on other steps are kept only when the
-    // test failed. The per-item size cap still applies in either case.
+    // Everything else is kept: JSON API responses, other non-visual attachments, and ALL
+    // screenshots — every step, pass or fail — for full media capture (so passing steps
+    // can be reviewed to confirm/deny false negatives). The per-item size cap in
+    // collectStepEvidence still applies.
     return true;
   }
 
@@ -182,7 +181,6 @@ class XrayJsonReporter {
     indices: number[],
     attachments: any[],
     testStatus: string,
-    isThenStep = true,
   ): Promise<XrayEvidence[]> {
     const evidence: XrayEvidence[] = [];
 
@@ -196,15 +194,10 @@ class XrayJsonReporter {
       for (const attachment of stepAttachments) {
         const contentType = attachment.contentType || 'application/octet-stream';
 
-        // Screenshots: keep Then-step captures always (verification evidence, pass or
-        // fail); keep screenshots on other steps only when the test failed. Compared
-        // case-insensitively since callers may pass Playwright ("passed") or Xray
-        // ("PASSED") status. Non-image evidence (JSON responses) is unaffected.
-        const allowImage = isThenStep || String(testStatus).toLowerCase() !== 'passed';
-        if (
-          this.shouldIncludeEvidence(attachment, testStatus, contentType) &&
-          (!contentType.includes('image') || allowImage)
-        ) {
+        // Include every step's evidence: JSON responses AND all screenshots, on any step,
+        // pass or fail. Videos are still excluded (size) by shouldIncludeEvidence, and the
+        // per-item size cap below still applies.
+        if (this.shouldIncludeEvidence(attachment, testStatus, contentType)) {
           let base64Data: string | null = null;
           let filename = attachment.name || 'attachment';
 
@@ -292,19 +285,16 @@ class XrayJsonReporter {
         comment: `Duration: ${totalDuration}ms`,
       };
 
-      // When index: include JSON evidence only (no screenshots)
+      // Collect evidence for the When step and all of its Then steps (JSON + screenshots).
       const whenEvidence = await this.collectStepEvidence(
         [pendingWhen.index],
         attachments,
         testStatus,
-        false,
       );
-      // Then indices: include all evidence (screenshots + JSON)
       const thenEvidence = await this.collectStepEvidence(
         pendingThens.map(t => t.index),
         attachments,
         testStatus,
-        true,
       );
       const evidence = [...whenEvidence, ...thenEvidence];
       if (evidence.length > 0) {
@@ -326,8 +316,8 @@ class XrayJsonReporter {
         comment: `Duration: ${duration}ms`,
       };
 
-      // Given/standalone When steps: include JSON evidence only (no screenshots)
-      const evidence = await this.collectStepEvidence([index], attachments, testStatus, false);
+      // Given/standalone steps: include JSON + screenshot evidence for the step.
+      const evidence = await this.collectStepEvidence([index], attachments, testStatus);
       if (evidence.length > 0) {
         stepResult.evidence = evidence;
       }
