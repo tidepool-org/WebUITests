@@ -11,7 +11,10 @@
  */
 import fs from 'node:fs';
 import XrayJsonReporter from './xray-json-reporter';
-import { EXEC_KEY_FILE } from './create-execution';
+// Import the constant from its side-effect-free module, NOT from create-execution.ts:
+// importing create-execution.ts runs its top-level main(), which would create a second
+// (duplicate, blank) frontload execution inside this upload job.
+import { EXEC_KEY_FILE } from './exec-key-file';
 
 const DEFAULT_MERGED_PATH = 'test-results/merged.json';
 

@@ -13,8 +13,10 @@
 import { spawnSync } from 'node:child_process';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import XrayJsonReporter from './xray-json-reporter.js';
-
-export const EXEC_KEY_FILE = 'test-results/created-exec-key.txt';
+// NOTE: do not re-export EXEC_KEY_FILE from this module. This file runs main() at import
+// time, so any importer must take the constant from './exec-key-file' to avoid kicking off
+// a duplicate frontload execution.
+import { EXEC_KEY_FILE } from './exec-key-file';
 
 /** Mirror the CI grep logic: TEST_TAGS lowercased + `@`-prefixed, default `@`. */
 function resolveGrep(): string {

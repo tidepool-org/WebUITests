@@ -93,6 +93,26 @@ class XrayJsonReporter {
   }
 
   /**
+   * Link to the overall CircleCI WORKFLOW (so the reader sees every job's progress, not
+   * just the single job that wrote the description). Falls back to the per-job build URL
+   * when the workflow id isn't available (e.g. running outside CircleCI).
+   */
+  private getPipelineUrl(): string | undefined {
+    const workflowId = process.env.CIRCLE_WORKFLOW_ID;
+    if (workflowId) return `https://app.circleci.com/pipelines/workflows/${workflowId}`;
+    return process.env.CIRCLE_BUILD_URL;
+  }
+
+  /** The tag filter used to choose the tests, for the execution description. "ALL" when
+   *  no tag was applied. Mirrors the CI grep normalization (lowercased, `@`-prefixed). */
+  private testTagLabel(): string {
+    const raw = process.env.TEST_TAGS?.trim();
+    if (!raw) return 'ALL';
+    const lower = raw.toLowerCase();
+    return lower.startsWith('@') ? lower : `@${lower}`;
+  }
+
+  /**
    * Converts file to base64 string for Xray evidence
    */
   private async fileToBase64(filePath: string): Promise<string> {
@@ -110,7 +130,7 @@ class XrayJsonReporter {
    * Videos and screenshots are only included for failed tests to keep payloads small.
    * JSON API responses are always included.
    */
-  private shouldIncludeEvidence(attachment: any, testStatus: string, contentType: string): boolean {
+  private shouldIncludeEvidence(attachment: any, _testStatus: string, contentType: string): boolean {
     // Check if attachment has embedded base64 data (from JSON) or file path
     const hasData = !!attachment.body || (attachment.path && fs.existsSync(attachment.path));
 
@@ -125,15 +145,11 @@ class XrayJsonReporter {
       return false;
     }
 
-    // Screenshots: Only for failed tests — passed tests generate many step screenshots
-    // that balloon the payload and cause Xray HTTP 500 errors. Compared case-insensitively
-    // because callers may pass either Playwright ("passed") or Xray ("PASSED") status —
-    // a previous bug let "PASSED" !== "passed" leak every screenshot into the payload.
-    if (contentType.includes('image')) {
-      return String(testStatus).toLowerCase() !== 'passed';
-    }
-
-    // JSON API responses and other non-visual attachments: always include
+    // JSON API responses, other non-visual attachments, and screenshots are all eligible
+    // here. Whether a SCREENSHOT is actually kept is decided by the caller
+    // (collectStepEvidence): Then-step screenshots are always kept as verification
+    // evidence (pass or fail), while screenshots on other steps are kept only when the
+    // test failed. The per-item size cap still applies in either case.
     return true;
   }
 
@@ -166,7 +182,7 @@ class XrayJsonReporter {
     indices: number[],
     attachments: any[],
     testStatus: string,
-    includeImages = true,
+    isThenStep = true,
   ): Promise<XrayEvidence[]> {
     const evidence: XrayEvidence[] = [];
 
@@ -180,11 +196,14 @@ class XrayJsonReporter {
       for (const attachment of stepAttachments) {
         const contentType = attachment.contentType || 'application/octet-stream';
 
-        // Image inclusion is gated on the overall test status (screenshots only for
-        // failed tests); `includeImages` further restricts images to Then-steps.
+        // Screenshots: keep Then-step captures always (verification evidence, pass or
+        // fail); keep screenshots on other steps only when the test failed. Compared
+        // case-insensitively since callers may pass Playwright ("passed") or Xray
+        // ("PASSED") status. Non-image evidence (JSON responses) is unaffected.
+        const allowImage = isThenStep || String(testStatus).toLowerCase() !== 'passed';
         if (
           this.shouldIncludeEvidence(attachment, testStatus, contentType) &&
-          (!contentType.includes('image') || includeImages)
+          (!contentType.includes('image') || allowImage)
         ) {
           let base64Data: string | null = null;
           let filename = attachment.name || 'attachment';
@@ -398,26 +417,36 @@ class XrayJsonReporter {
     const failedCount = tests.filter(t => t.status === 'FAILED').length;
     const todoCount = tests.filter(t => t.status === 'TODO').length;
 
+    const pipelineUrl = this.getPipelineUrl();
+    // Description shown on the execution issue. The env line carries the tag filter used
+    // to pick the tests ("ALL" when none was applied), and we link the whole workflow.
+    const description =
+      `Automated test execution for ${targetEnv} environment | Test tag: ${this.testTagLabel()}\n\n` +
+      `Results: ${passedCount} passed, ${failedCount} failed, ${todoCount} skipped` +
+      (pipelineUrl ? `\n\nCircleCI pipeline: ${pipelineUrl}` : '');
+
     // If the pre-run frontload step created an execution, import results INTO it (it's
-    // Xray-created, so import-ready, and already linked to the trigger ticket).
+    // Xray-created, so import-ready, and already linked to the trigger ticket). We pass
+    // `info` so this import also UPDATES the description from the frontload's
+    // "queued — results pending" text to the real pass/fail/skip counts.
     const targetExec = process.env.XRAY_TARGET_EXECUTION?.trim();
     if (targetExec) {
-      return { testExecutionKey: targetExec, tests };
+      return {
+        testExecutionKey: targetExec,
+        info: { summary: `Playwright Test Execution - ${new Date().toISOString()}`, description },
+        tests,
+      };
     }
 
     // Otherwise auto-create a new execution. Test Executions created by the Jira Automation
     // aren't registered in Xray's backend ("test execution ... not found"), so they reject
     // every import; an Xray-created execution is import-ready immediately. We link this new
     // execution to the triggering ticket after upload (see linkExecutionToTrigger).
-    const pipelineUrl = process.env.CIRCLE_BUILD_URL;
     return {
       testExecutionKey: undefined,
       info: {
         summary: `Playwright Test Execution - ${new Date().toISOString()}`,
-        description:
-          `Automated test execution for ${targetEnv} environment\n\n` +
-          `Results: ${passedCount} passed, ${failedCount} failed, ${todoCount} skipped` +
-          (pipelineUrl ? `\n\nCircleCI pipeline: ${pipelineUrl}` : ''),
+        description,
         startDate: playwrightResult.stats?.startTime || new Date().toISOString(),
         finishDate: new Date(
           new Date(playwrightResult.stats?.startTime || Date.now()).getTime() +
@@ -633,6 +662,54 @@ class XrayJsonReporter {
     }
   }
 
+  /**
+   * Sets a Test Execution's description directly via the Jira REST API. Used after results
+   * are imported INTO a pre-created (frontload) execution: Xray does not reliably apply the
+   * import's `info` object to an already-existing execution, so the frontload's
+   * "queued — results pending" text would otherwise never update to the final counts.
+   * Uses REST v2 (accepts a plain-text description, which Jira Cloud stores as ADF).
+   * Non-fatal: the results are already uploaded regardless of whether this succeeds.
+   */
+  private async updateExecutionDescription(
+    key: string,
+    description: string,
+    selfUrl: string,
+  ): Promise<void> {
+    if (!env.JIRA_EMAIL || !env.JIRA_API_KEY) {
+      console.log(
+        `${this.styles.warning} JIRA_EMAIL/JIRA_API_KEY not set — skipping description update for ${key}.`,
+      );
+      return;
+    }
+    let baseUrl: string;
+    try {
+      baseUrl = new URL(selfUrl).origin;
+    } catch {
+      console.log(`${this.styles.warning} Could not derive Jira base URL from "${selfUrl}".`);
+      return;
+    }
+    const auth = Buffer.from(`${env.JIRA_EMAIL}:${env.JIRA_API_KEY}`).toString('base64');
+    try {
+      const res = await fetch(`${baseUrl}/rest/api/2/issue/${key}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', Authorization: `Basic ${auth}` },
+        body: JSON.stringify({ fields: { description } }),
+      });
+      if (res.ok || res.status === 204) {
+        console.log(`${this.styles.success} Updated description of ${key} with final results.`);
+      } else {
+        const text = await res.text();
+        console.log(
+          `${this.styles.warning} Failed to update description of ${key} (HTTP ${res.status}): ${text.slice(0, 200)}`,
+        );
+      }
+    } catch (error) {
+      console.log(
+        `${this.styles.warning} Error updating description of ${key}: ${(error as Error).message}`,
+      );
+    }
+  }
+
   /** Fetch the set of existing Test summaries in the project (paginated). */
   private async fetchExistingTestSummaries(): Promise<Set<string>> {
     const token = await this.authenticateWithXray();
@@ -687,12 +764,12 @@ class XrayJsonReporter {
       console.log(`${this.styles.warning} No already-known tests to frontload; skipping pre-creation.`);
       return null;
     }
-    const pipelineUrl = process.env.CIRCLE_BUILD_URL;
+    const pipelineUrl = this.getPipelineUrl();
     const payload: XrayExecutionResult = {
       info: {
         summary: `Playwright Test Execution - ${new Date().toISOString()}`,
         description:
-          `Automated test execution for ${env.TARGET_ENV} environment\n\n` +
+          `Automated test execution for ${env.TARGET_ENV} environment | Test tag: ${this.testTagLabel()}\n\n` +
           `${known.length} test(s) queued — results pending.` +
           (pipelineUrl ? `\n\nCircleCI pipeline: ${pipelineUrl}` : ''),
       },
@@ -995,6 +1072,13 @@ class XrayJsonReporter {
         newKey !== originalExecKey
       ) {
         await this.linkExecutionToTrigger(newKey, originalExecKey, newSelf);
+      }
+
+      // If results were imported INTO a pre-created frontload execution, refresh its
+      // description from "queued — results pending" to the final pass/fail/skip counts.
+      const targetKey = process.env.XRAY_TARGET_EXECUTION?.trim();
+      if (targetKey && newSelf && xrayResult.info?.description) {
+        await this.updateExecutionDescription(targetKey, xrayResult.info.description, newSelf);
       }
 
       const totalDuration = Date.now() - processStart;
