@@ -255,6 +255,10 @@ jobs:
             echo "export TARGET_ENV=\"<< pipeline.parameters.testEnvironment >>\"" >> $BASH_ENV
             echo "export TEST_EXECUTION_KEY=\"<< pipeline.parameters.testExecKey >>\"" >> $BASH_ENV
             echo "export XRAY_PROJECT_KEY=\"<< pipeline.parameters.xrayProjectKey >>\"" >> $BASH_ENV
+            # TEST_TAGS is needed here too: the post-run description records the tag filter
+            # ("Test tag: ..."), and without it the upload would overwrite the frontload
+            # description with "ALL".
+            echo "export TEST_TAGS=\"<< pipeline.parameters.testTags >>\"" >> $BASH_ENV
       - restore_cache:
           keys:
             - dependency-cache-{{ checksum "package.json" }}
