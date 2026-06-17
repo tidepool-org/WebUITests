@@ -218,6 +218,92 @@ class XrayJsonReporter {
     return 'passed';
   }
 
+  /** Friendly phrase for a Playwright/expect matcher (e.g. toContainText -> "contain text"). */
+  private describeMatcher(matcher: string): string {
+    const map: Record<string, string> = {
+      toContainText: 'contain text',
+      toHaveText: 'have text',
+      toHaveValue: 'have value',
+      toHaveAttribute: 'have attribute',
+      toHaveClass: 'have class',
+      toHaveURL: 'have URL',
+      toHaveTitle: 'have title',
+      toHaveCount: 'have count',
+      toBe: 'equal',
+      toEqual: 'equal',
+      toContain: 'contain',
+      toBeVisible: 'be visible',
+      toBeHidden: 'be hidden',
+      toBeEnabled: 'be enabled',
+      toBeDisabled: 'be disabled',
+      toBeChecked: 'be checked',
+      toBeFocused: 'be focused',
+      toBeEmpty: 'be empty',
+    };
+    if (map[matcher]) return map[matcher];
+    // Fallback: drop leading "to", split camelCase into words.
+    return (
+      matcher.replace(/^to/, '').replace(/([A-Z])/g, ' $1').trim().toLowerCase() || matcher
+    );
+  }
+
+  /** Pulls a readable target out of a locator string (e.g. locator('#x') -> "#x"). */
+  private describeLocator(locator?: string): string {
+    if (!locator) return '';
+    const m = locator.match(/locator\((['"`])([\s\S]*?)\1\)/);
+    return (m ? m[2] : locator).trim();
+  }
+
+  private clip(value: string, max = 500): string {
+    const v = value.trim();
+    return v.length > max ? `${v.slice(0, max)}…` : v;
+  }
+
+  /**
+   * Turns a raw Playwright/Node error message into a concise, plain-English line suitable
+   * for an Xray step's "Actual Result" / the test comment. Web-first assertion failures
+   * (expect(locator).toX(...)) become "Expected <target> to <matcher> <expected>, but found
+   * <received>"; other errors fall back to their first meaningful line. The verbose "Call
+   * log:" section and ANSI colour codes are stripped. Never throws.
+   */
+  private humanizeError(raw?: string): string {
+    if (!raw) return 'Test failed';
+    try {
+      // Strip ANSI colour codes and drop the verbose call log.
+      let msg = raw.replace(/\[[0-9;]*m/g, '');
+      const callLogIdx = msg.indexOf('Call log:');
+      if (callLogIdx !== -1) msg = msg.slice(0, callLogIdx);
+      msg = msg.trim();
+
+      // Capture the matcher from any "expect(...).matcher(...)" line (with or without the
+      // trailing "failed"), so visibility/equality assertions condense too.
+      const matcherMatch = msg.match(/expect\([^)]*\)\.(\w+)\(/i);
+      const expectedMatch = msg.match(/Expected(?: (?:substring|string|pattern|value))?:\s*(.+)/i);
+      const receivedMatch = msg.match(/Received(?: (?:string|value))?:\s*(.+)/i);
+      const locatorMatch = msg.match(/Locator:\s*(.+)/i);
+      const timeoutMatch = msg.match(/Timeout:\s*(\d+)ms/i);
+
+      if (matcherMatch) {
+        const matcher = this.describeMatcher(matcherMatch[1]);
+        const target = this.describeLocator(locatorMatch?.[1]) || 'the value';
+        let result = `Expected ${target} to ${matcher}`;
+        if (expectedMatch) result += ` ${this.clip(expectedMatch[1])}`;
+        if (receivedMatch) result += `, but found ${this.clip(receivedMatch[1])}`;
+        if (timeoutMatch) result += ` (after ${timeoutMatch[1]}ms)`;
+        return result.trim();
+      }
+
+      // Non-assertion error (thrown Error, navigation, schema check, …): first real line.
+      const firstLine = msg
+        .split('\n')
+        .map(l => l.trim())
+        .find(Boolean);
+      return this.clip((firstLine || 'Test failed').replace(/^Error:\s*/i, ''), 600);
+    } catch {
+      return this.clip(raw, 600);
+    }
+  }
+
   /**
    * Collects inline evidence for given step indices
    */
@@ -437,14 +523,16 @@ class XrayJsonReporter {
     // record the error message on the FAILED step's actualResult. Fallback: if the test
     // failed but no step was flagged (e.g. a failure outside any test.step), mark the last
     // step failed so the failure is still visible.
+    // Condense the raw Playwright assertion dump into a readable one-liner for Xray.
+    const failureSummary = this.humanizeError(testResult.error?.message);
     if (testStatus !== 'passed' && stepResults.length > 0) {
       const failedStep = stepResults.find(s => s.status === 'FAILED');
       if (failedStep) {
-        failedStep.actualResult = testResult.error?.message || 'Test failed';
+        failedStep.actualResult = failureSummary;
       } else {
         const lastStep = stepResults[stepResults.length - 1];
         lastStep.status = 'FAILED';
-        lastStep.actualResult = testResult.error?.message || 'Test failed';
+        lastStep.actualResult = failureSummary;
       }
     }
 
@@ -458,7 +546,7 @@ class XrayJsonReporter {
         steps: stepDefinitions.length > 0 ? stepDefinitions : undefined,
       },
       status: this.getTestStatus(testStatus),
-      comment: testResult.error?.message,
+      comment: testStatus !== 'passed' ? failureSummary : testResult.error?.message,
       steps: stepResults.length > 0 ? stepResults : undefined,
     };
   }
