@@ -63,48 +63,45 @@ test.describe('Account Settings - Personal - Edit Email', () => {
         await accountSettingsPage.saveConfirm.waitFor({ state: 'visible', timeout: 5000 });
       });
 
-      // Step 7: Validate PUT request and email value (with email reversion on failure)
-      let step7ValidationError = null;
-      try {
-        await (test as any).stepNoScreenshot(
-          'Then PUT request is validated and email is set to new value',
+      // Step 7: Validate the PUT request and the new email value. If this fails, the fixture
+      // records it FAILED; the cleanup steps below still run to revert the email.
+      await (test as any).stepNoScreenshot(
+        'Then PUT request is validated and email is set to new value',
+        async () => {
+          await api.validateEndpointResponse('profile-metadata-put');
+          const putCapture = api
+            .getCaptures()
+            .find((req: any) => req.method === 'PUT' && req.url.includes('/profile'));
+          if (!putCapture) throw new Error('No PUT /profile request captured');
+          if (
+            !putCapture.requestBody ||
+            !putCapture.requestBody.email ||
+            putCapture.requestBody.email !== 'qa+TempPersonalEdit@tidepool.org'
+          ) {
+            throw new Error('PUT request did not set email to qa+TempPersonalEdit@tidepool.org');
+          }
+        },
+      );
+
+      // Steps 8-10: revert the email to its original value. These are CLEANUP steps, so they
+      // run even if step 7 (or any earlier step) failed — otherwise a failed run would leave
+      // the account on the temporary email and break later runs. Guarded on originalEmail so
+      // we only revert when step 4 actually captured/changed it.
+      if (originalEmail) {
+        await (test as any).cleanupStep(
+          'When user sets the email field to the previous value',
           async () => {
-            await api.validateEndpointResponse('profile-metadata-put');
-            const putCapture = api
-              .getCaptures()
-              .find((req: any) => req.method === 'PUT' && req.url.includes('/profile'));
-            if (!putCapture) throw new Error('No PUT /profile request captured');
-            if (
-              !putCapture.requestBody ||
-              !putCapture.requestBody.email ||
-              putCapture.requestBody.email !== 'qa+TempPersonalEdit@tidepool.org'
-            ) {
-              throw new Error('PUT request did not set email to qa+TempPersonalEdit@tidepool.org');
-            }
+            await accountSettingsPage.emailInput.fill(originalEmail);
           },
         );
-      } catch (error) {
-        step7ValidationError = error;
-      }
 
-      // Step 8: Change email field to temporary value (always execute to revert email)
-      await test.step('When user sets the email field to the previous value', async () => {
-        await accountSettingsPage.emailInput.fill(originalEmail);
-      });
+        await (test as any).cleanupStep('When user taps the save button', async () => {
+          await accountSettingsPage.saveButton.click();
+        });
 
-      // Step 9: Tap the save button
-      await test.step('When user taps the save button', async () => {
-        await accountSettingsPage.saveButton.click();
-      });
-
-      // Step 10: Confirm save changes message displays
-      await test.step('Then the save changes message displays', async () => {
-        await accountSettingsPage.saveConfirm.waitFor({ state: 'visible', timeout: 5000 });
-      });
-
-      // Re-throw step 7 validation error after email reversion (if any)
-      if (step7ValidationError) {
-        throw step7ValidationError;
+        await (test as any).cleanupStep('Then the save changes message displays', async () => {
+          await accountSettingsPage.saveConfirm.waitFor({ state: 'visible', timeout: 5000 });
+        });
       }
 
       await api.stopCapture();

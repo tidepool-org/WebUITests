@@ -24,7 +24,9 @@ export interface XrayTestStepDefinition {
  * Test step execution result (used in test.steps to record execution results)
  */
 export interface XrayTestStepResult {
-  status: 'PASSED' | 'FAILED' | 'TODO' | 'EXECUTING';
+  // Known built-in statuses are suggested for autocomplete; `(string & {})` keeps the type
+  // open so a project-defined custom step status (e.g. "SKIPPED") can be sent too.
+  status: 'PASSED' | 'FAILED' | 'TODO' | 'EXECUTING' | (string & {});
   comment?: string;
   actualResult?: string;
   evidence?: XrayEvidence[];

@@ -85,6 +85,28 @@ export const test: TestType<
       const originalStep = test.step;
       const stepTimings = new Map<string, number>();
 
+      // Continue-past-failure: once a step throws, we record it as FAILED and mark every
+      // SUBSEQUENT step as "skipped" WITHOUT running its body, so the uploaded Xray test
+      // keeps the FULL ordered step list (a tester re-running it by hand sees the whole
+      // procedure, not just up to the failure). The original error is stashed and re-thrown
+      // at teardown so Playwright still fails the test.
+      // NOTE: because we swallow the failing step's error to keep going, Playwright's own
+      // HTML report shows that step (and later ones) as passed/empty; the authoritative
+      // per-step pass/fail/skip lives in these annotations, which the Xray reporter reads.
+      let aborted = false;
+      let firstError: unknown = null;
+
+      const recordStep = (
+        name: string,
+        durationMs: number,
+        status: 'passed' | 'failed' | 'skipped',
+      ) => {
+        testInfo.annotations.push({
+          type: `Step Duration: ${name}`,
+          description: JSON.stringify({ durationMs, status }),
+        });
+      };
+
       // Create a new step function with the same interface as the original
       const newStep = function newStepWrapper<T>(
         this: any,
@@ -92,23 +114,32 @@ export const test: TestType<
         fn: (step: TestStepInfo) => Promise<T> | T,
       ) {
         return originalStep.call(this, name, async (stepInfo: TestStepInfo) => {
-          const startTime = Date.now();
+          // An earlier step already failed: record this one as skipped, don't run its body.
+          if (aborted) {
+            recordStep(name, 0, 'skipped');
+            return undefined as unknown as T;
+          }
 
+          const startTime = Date.now();
           console.time(`[step] ${name}`);
 
-          const result = await fn(stepInfo);
-
-          console.timeEnd(`[step] ${name}`);
-          const endTime = Date.now();
-          const duration = endTime - startTime;
-
-          stepTimings.set(name, duration);
-          testInfo.annotations.push({
-            type: `Step Duration: ${name}`,
-            description: `${duration}ms`,
-          });
-
-          return result;
+          try {
+            const result = await fn(stepInfo);
+            console.timeEnd(`[step] ${name}`);
+            const duration = Date.now() - startTime;
+            stepTimings.set(name, duration);
+            recordStep(name, duration, 'passed');
+            return result;
+          } catch (error) {
+            console.timeEnd(`[step] ${name}`);
+            const duration = Date.now() - startTime;
+            aborted = true;
+            firstError = error;
+            recordStep(name, duration, 'failed');
+            // Swallow here so the remaining steps run through this wrapper and get recorded
+            // as skipped; the test is failed via the re-throw at teardown below.
+            return undefined as unknown as T;
+          }
         });
       };
 
@@ -120,13 +151,46 @@ export const test: TestType<
         return originalStep.skip.call(this, name, fn);
       };
 
+      // Cleanup steps ALWAYS run, even after an earlier step failed — use them for reverts
+      // and teardown (e.g. restoring an email a test changed) that must happen regardless of
+      // the test's outcome. Unlike a normal step, a cleanup step ignores the abort flag and
+      // does NOT set it, so other cleanup steps still run. Exposed as test.cleanupStep().
+      const cleanupStep = function cleanupStepWrapper<T>(
+        this: any,
+        name: string,
+        fn: (step: TestStepInfo) => Promise<T> | T,
+      ) {
+        return originalStep.call(this, name, async (stepInfo: TestStepInfo) => {
+          const startTime = Date.now();
+          try {
+            const result = await fn(stepInfo);
+            recordStep(name, Date.now() - startTime, 'passed');
+            return result;
+          } catch (error) {
+            recordStep(name, Date.now() - startTime, 'failed');
+            // A cleanup failure must not abort the remaining cleanups; surface it in logs
+            // but don't re-throw (the primary failure, if any, still fails the test).
+            console.error(`[cleanup] step failed (continuing): ${name}`, error);
+            return undefined as unknown as T;
+          }
+        });
+      };
+
       // Replace the original step with our enhanced version
       test.step = newStep as any;
+      (test as any).cleanupStep = cleanupStep;
 
       await use(page);
 
       // Restore original test.step
       test.step = originalStep;
+      delete (test as any).cleanupStep;
+
+      // Re-throw the first step failure (after the full step list has been recorded) so
+      // Playwright marks the test failed.
+      if (firstError) {
+        throw firstError;
+      }
     },
     { auto: true },
   ],

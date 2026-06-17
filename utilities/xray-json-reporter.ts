@@ -156,6 +156,12 @@ class XrayJsonReporter {
   // Xray Cloud returns HTTP 500 on payloads over ~1MB per test.
   private readonly MAX_EVIDENCE_BYTES = 200 * 1024; // 200 KB
 
+  // Xray step status used for steps that never ran because an earlier step failed. This
+  // MUST match a step status defined in the Xray project — confirm the exact spelling/casing
+  // in the project's settings (override here or via XRAY_SKIPPED_STEP_STATUS if it differs).
+  // NOTE: 'SKIPPED' was rejected (steps stayed TODO); trying 'SKIP'.
+  private readonly SKIPPED_STEP_STATUS = process.env.XRAY_SKIPPED_STEP_STATUS?.trim() || 'SKIP';
+
   private isGivenStep(stepName: string): boolean {
     return stepName.toLowerCase().startsWith('given ');
   }
@@ -172,6 +178,44 @@ class XrayJsonReporter {
   private parseDuration(duration: string): number {
     const match = duration.match(/(\d+)/);
     return match ? parseInt(match[1], 10) : 0;
+  }
+
+  /**
+   * Parses a step annotation's description. The fixture now encodes it as JSON
+   * (`{"durationMs":123,"status":"passed|failed|skipped"}`); older runs used a plain
+   * "123ms" string, which we treat as a passed step.
+   */
+  private parseStepAnnotation(description: string): {
+    durationMs: number;
+    status: 'passed' | 'failed' | 'skipped';
+  } {
+    try {
+      const parsed = JSON.parse(description);
+      if (parsed && typeof parsed === 'object' && 'status' in parsed) {
+        return { durationMs: Number(parsed.durationMs) || 0, status: parsed.status };
+      }
+    } catch {
+      // Not JSON — fall through to the legacy "<n>ms" format.
+    }
+    return { durationMs: this.parseDuration(description), status: 'passed' };
+  }
+
+  /** Maps an internal step outcome to the Xray step status to upload. */
+  private toXrayStepStatus(
+    status: 'passed' | 'failed' | 'skipped',
+  ): XrayTestStepResult['status'] {
+    if (status === 'failed') return 'FAILED';
+    if (status === 'skipped') return this.SKIPPED_STEP_STATUS;
+    return 'PASSED';
+  }
+
+  /** Combined status for a grouped step (a When plus its Then/And steps). */
+  private combineStepStatuses(
+    statuses: Array<'passed' | 'failed' | 'skipped'>,
+  ): 'passed' | 'failed' | 'skipped' {
+    if (statuses.includes('failed')) return 'failed';
+    if (statuses.length > 0 && statuses.every(s => s === 'skipped')) return 'skipped';
+    return 'passed';
   }
 
   /**
@@ -261,8 +305,14 @@ class XrayJsonReporter {
       return { stepDefinitions, stepResults };
     }
 
-    let pendingWhen: { name: string; duration: number; index: number } | null = null;
-    let pendingThens: { name: string; duration: number; index: number }[] = [];
+    type StepInfo = {
+      name: string;
+      duration: number;
+      index: number;
+      status: 'passed' | 'failed' | 'skipped';
+    };
+    let pendingWhen: StepInfo | null = null;
+    let pendingThens: StepInfo[] = [];
 
     const flushPendingWhen = async () => {
       if (!pendingWhen) return;
@@ -280,25 +330,35 @@ class XrayJsonReporter {
 
       stepDefinitions.push(stepDef);
 
+      const groupStatus = this.combineStepStatuses([
+        pendingWhen.status,
+        ...pendingThens.map(t => t.status),
+      ]);
       const stepResult: XrayTestStepResult = {
-        status: 'PASSED',
-        comment: `Duration: ${totalDuration}ms`,
+        status: this.toXrayStepStatus(groupStatus),
+        comment:
+          groupStatus === 'skipped'
+            ? 'Skipped — a previous step failed'
+            : `Duration: ${totalDuration}ms`,
       };
 
-      // Collect evidence for the When step and all of its Then steps (JSON + screenshots).
-      const whenEvidence = await this.collectStepEvidence(
-        [pendingWhen.index],
-        attachments,
-        testStatus,
-      );
-      const thenEvidence = await this.collectStepEvidence(
-        pendingThens.map(t => t.index),
-        attachments,
-        testStatus,
-      );
-      const evidence = [...whenEvidence, ...thenEvidence];
-      if (evidence.length > 0) {
-        stepResult.evidence = evidence;
+      // Skipped steps never ran, so there is no evidence to collect for them.
+      if (groupStatus !== 'skipped') {
+        // Collect evidence for the When step and all of its Then steps (JSON + screenshots).
+        const whenEvidence = await this.collectStepEvidence(
+          [pendingWhen.index],
+          attachments,
+          testStatus,
+        );
+        const thenEvidence = await this.collectStepEvidence(
+          pendingThens.map(t => t.index),
+          attachments,
+          testStatus,
+        );
+        const evidence = [...whenEvidence, ...thenEvidence];
+        if (evidence.length > 0) {
+          stepResult.evidence = evidence;
+        }
       }
 
       stepResults.push(stepResult);
@@ -306,20 +366,25 @@ class XrayJsonReporter {
       pendingThens = [];
     };
 
-    const addStandaloneStep = async (stepName: string, duration: number, index: number) => {
+    const addStandaloneStep = async (step: StepInfo) => {
       stepDefinitions.push({
-        action: stepName,
+        action: step.name,
       });
 
       const stepResult: XrayTestStepResult = {
-        status: 'PASSED',
-        comment: `Duration: ${duration}ms`,
+        status: this.toXrayStepStatus(step.status),
+        comment:
+          step.status === 'skipped'
+            ? 'Skipped — a previous step failed'
+            : `Duration: ${step.duration}ms`,
       };
 
-      // Given/standalone steps: include JSON + screenshot evidence for the step.
-      const evidence = await this.collectStepEvidence([index], attachments, testStatus);
-      if (evidence.length > 0) {
-        stepResult.evidence = evidence;
+      // Given/standalone steps: include JSON + screenshot evidence (skipped steps have none).
+      if (step.status !== 'skipped') {
+        const evidence = await this.collectStepEvidence([step.index], attachments, testStatus);
+        if (evidence.length > 0) {
+          stepResult.evidence = evidence;
+        }
       }
 
       stepResults.push(stepResult);
@@ -328,19 +393,20 @@ class XrayJsonReporter {
     for (let i = 0; i < stepAnnotations.length; i += 1) {
       const stepAnn = stepAnnotations[i];
       const stepName = stepAnn.type.replace('Step Duration: ', '');
-      const duration = this.parseDuration(stepAnn.description);
+      const { durationMs: duration, status } = this.parseStepAnnotation(stepAnn.description);
+      const step: StepInfo = { name: stepName, duration, index: i, status };
 
       if (this.isGivenStep(stepName)) {
         await flushPendingWhen();
-        await addStandaloneStep(stepName, duration, i);
+        await addStandaloneStep(step);
       } else if (this.isWhenStep(stepName)) {
         await flushPendingWhen();
-        pendingWhen = { name: stepName, duration, index: i };
+        pendingWhen = step;
       } else if (this.isThenStep(stepName)) {
-        pendingThens.push({ name: stepName, duration, index: i });
+        pendingThens.push(step);
       } else {
         await flushPendingWhen();
-        await addStandaloneStep(stepName, duration, i);
+        await addStandaloneStep(step);
       }
     }
 
@@ -366,11 +432,20 @@ class XrayJsonReporter {
       testStatus,
     );
 
-    // Mark last step as failed if test failed — duration stays in comment, error goes in actualResult
+    // Attach the failure detail to the step that actually failed. extractSteps already set
+    // per-step statuses from the fixture annotations (PASSED / FAILED / skipped), so we just
+    // record the error message on the FAILED step's actualResult. Fallback: if the test
+    // failed but no step was flagged (e.g. a failure outside any test.step), mark the last
+    // step failed so the failure is still visible.
     if (testStatus !== 'passed' && stepResults.length > 0) {
-      const lastStep = stepResults[stepResults.length - 1];
-      lastStep.status = 'FAILED';
-      lastStep.actualResult = testResult.error?.message || 'Test failed';
+      const failedStep = stepResults.find(s => s.status === 'FAILED');
+      if (failedStep) {
+        failedStep.actualResult = testResult.error?.message || 'Test failed';
+      } else {
+        const lastStep = stepResults[stepResults.length - 1];
+        lastStep.status = 'FAILED';
+        lastStep.actualResult = testResult.error?.message || 'Test failed';
+      }
     }
 
     // Remove test-level evidence to avoid duplication (using step-level evidence instead)
@@ -1120,7 +1195,14 @@ class XrayJsonReporter {
 
     const testExecKey = env.TEST_EXECUTION_KEY;
     if (env.XRAY_CLIENT_ID && env.XRAY_CLIENT_SECRET && testExecKey && testExecKey !== 'none') {
-      console.log(`${this.styles.info} Linking to Test Execution: ${testExecKey}`);
+      // Local/inline run (e.g. from the VS Code test explorer): import results DIRECTLY into
+      // the execution named in TEST_EXECUTION_KEY (.env) instead of auto-creating a new one.
+      // The CI flow never reaches here — its shards defer (XRAY_DEFER_UPLOAD=true) and the
+      // merge job uses upload-to-xray.ts, which handles frontload/auto-create separately.
+      if (!process.env.XRAY_TARGET_EXECUTION?.trim()) {
+        process.env.XRAY_TARGET_EXECUTION = testExecKey;
+      }
+      console.log(`${this.styles.info} Updating Test Execution directly: ${testExecKey}`);
 
       // Check for multiple possible JSON file locations
       const possiblePaths = [
