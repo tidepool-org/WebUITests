@@ -47,7 +47,37 @@ async function main(): Promise<void> {
   }
 
   const reporter = new XrayJsonReporter();
-  await reporter.processAndUpload(jsonPath);
+  const automatedExecKey = await reporter.processAndUpload(jsonPath);
+
+  // SOP: on a Jira-triggered CI run that had failures, create a separate "Manual Confirmation"
+  // execution containing just the failed tests (status TO DO, no results), linked to the
+  // automated execution. Guarded by CIRCLECI so it NEVER runs for a local execution. Non-fatal
+  // — the results upload above already succeeded and decides the verdict.
+  if (process.env.CIRCLECI && automatedExecKey) {
+    try {
+      const failedTitles = await reporter.getFailedTestTitles(jsonPath);
+      if (failedTitles.length > 0) {
+        console.log(
+          `ℹ️ ${failedTitles.length} failed test(s) — creating a Manual Confirmation execution for ${automatedExecKey}.`,
+        );
+        const confirmKey = await reporter.createManualConfirmationExecution(
+          failedTitles,
+          automatedExecKey,
+        );
+        if (confirmKey) {
+          console.log(
+            `✅ Manual Confirmation execution ${confirmKey} created and linked to ${automatedExecKey}.`,
+          );
+        }
+      } else {
+        console.log('ℹ️ No failed tests — skipping Manual Confirmation execution.');
+      }
+    } catch (error) {
+      console.error(
+        `⚠️ Could not create the Manual Confirmation execution (non-fatal): ${(error as Error).message}`,
+      );
+    }
+  }
 }
 
 // Fail the CI job (non-zero exit) on any upload error, without process.exit().

@@ -31,109 +31,162 @@ ALL_WORKSPACE_KEYS.forEach((workspace: WorkspaceKey) => {
       },
       async ({ page }) => {
         // Step 1: Log in to clinician account
-        await test.step('Given clinician has been logged in', async () => {
-          await test.clinician.setup(page);
-        });
+        await test.step(
+          'Given clinician has been logged in',
+          async () => {
+            await test.clinician.setup(page);
+          },
+          {
+            detail:
+              'Log in to Tidepool Web using the automated clinician account credentials stored in 1Password.',
+          },
+        );
 
         // Step 2: Navigate to specific workspace
-        await test.step(`When user navigates to workspace ${workspace}`, async () => {
-          await test.clinician.navigateToWorkspace(workspace, page);
-        });
+        await test.step(
+          `When user navigates to workspace ${workspace}`,
+          async () => {
+            await test.clinician.navigateToWorkspace(workspace, page);
+          },
+          {
+            detail: 'Open the clinician workspace switcher and select the named clinic workspace.',
+          },
+        );
 
         // Create pages
         const clinicWorkspacePage = new ClinicianDashboardPage(page);
 
         // Step 3: Create Patient A
-        await test.step('When Patient A has been created', async () => {
-          // Check if Patient A already exists
-          await clinicWorkspacePage.searchForPatient(patientName1);
-          let patientAExists = false;
-          try {
+        await test.step(
+          'Given Patient A has been created',
+          async () => {
+            // Check if Patient A already exists
+            await clinicWorkspacePage.searchForPatient(patientName1);
+            let patientAExists = false;
+            try {
+              await expect(clinicWorkspacePage.getPatientCellByName(patientName1)).toBeVisible({
+                timeout: 3000,
+              });
+              patientAExists = true;
+            } catch {
+              patientAExists = false;
+            }
+
+            if (!patientAExists) {
+              await clinicWorkspacePage.openAndFillAddPatientDialog(
+                patientName1,
+                patientBirthdate,
+                patientMRN1,
+                patientEmail1,
+              );
+              await clinicWorkspacePage.submitAddPatientDialog();
+              await clinicWorkspacePage.closeBringDataDialog();
+            }
+
+            // Search for the patient to ensure it's visible in the list
+            await clinicWorkspacePage.searchForPatient(patientName1);
             await expect(clinicWorkspacePage.getPatientCellByName(patientName1)).toBeVisible({
-              timeout: 3000,
+              timeout: 10000,
             });
-            patientAExists = true;
-          } catch {
-            patientAExists = false;
-          }
-
-          if (!patientAExists) {
-            await clinicWorkspacePage.openAndFillAddPatientDialog(
-              patientName1,
-              patientBirthdate,
-              patientMRN1,
-              patientEmail1,
-            );
-            await clinicWorkspacePage.submitAddPatientDialog();
-            await clinicWorkspacePage.closeBringDataDialog();
-          }
-
-          // Search for the patient to ensure it's visible in the list
-          await clinicWorkspacePage.searchForPatient(patientName1);
-          await expect(clinicWorkspacePage.getPatientCellByName(patientName1)).toBeVisible({
-            timeout: 10000,
-          });
-        });
+          },
+          {
+            detail:
+              'Ensure the first test patient exists in the workspace, adding them through the Add Patient dialog if they are not already present, then confirm they appear in the patient list.',
+          },
+        );
 
         // Step 4: Create Patient B
-        await test.step('When Patient B has been created', async () => {
-          // Check if Patient B already exists
-          await clinicWorkspacePage.searchForPatient(patientName2);
-          let patientBExists = false;
-          try {
+        await test.step(
+          'And Patient B has been created',
+          async () => {
+            // Check if Patient B already exists
+            await clinicWorkspacePage.searchForPatient(patientName2);
+            let patientBExists = false;
+            try {
+              await expect(clinicWorkspacePage.getPatientCellByName(patientName2)).toBeVisible({
+                timeout: 3000,
+              });
+              patientBExists = true;
+            } catch {
+              patientBExists = false;
+            }
+
+            if (!patientBExists) {
+              await clinicWorkspacePage.openAndFillAddPatientDialog(
+                patientName2,
+                patientBirthdate,
+                patientMRN2,
+                patientEmail2,
+              );
+              await clinicWorkspacePage.submitAddPatientDialog();
+              await clinicWorkspacePage.closeBringDataDialog();
+            }
+
+            // Search for the patient to ensure it's visible in the list
+            await clinicWorkspacePage.searchForPatient(patientName2);
             await expect(clinicWorkspacePage.getPatientCellByName(patientName2)).toBeVisible({
-              timeout: 3000,
+              timeout: 10000,
             });
-            patientBExists = true;
-          } catch {
-            patientBExists = false;
-          }
-
-          if (!patientBExists) {
-            await clinicWorkspacePage.openAndFillAddPatientDialog(
-              patientName2,
-              patientBirthdate,
-              patientMRN2,
-              patientEmail2,
-            );
-            await clinicWorkspacePage.submitAddPatientDialog();
-            await clinicWorkspacePage.closeBringDataDialog();
-          }
-
-          // Search for the patient to ensure it's visible in the list
-          await clinicWorkspacePage.searchForPatient(patientName2);
-          await expect(clinicWorkspacePage.getPatientCellByName(patientName2)).toBeVisible({
-            timeout: 10000,
-          });
-        });
+          },
+          {
+            detail:
+              'Ensure the second test patient exists in the workspace, adding them through the Add Patient dialog if they are not already present, then confirm they appear in the patient list.',
+          },
+        );
 
         // Step 5: Filter by Patient A
-        await test.step("When user filters by Patient A's name", async () => {
-          await clinicWorkspacePage.searchForPatient(patientName1);
-        });
+        await test.step(
+          "When user filters by Patient A's name",
+          async () => {
+            await clinicWorkspacePage.searchForPatient(patientName1);
+          },
+          {
+            detail:
+              "Type the first patient's name into the patient list search box to filter the list.",
+          },
+        );
 
         // Step 6: Verify only Patient A is visible
-        await test.step('Then only Patient A should be visible', async () => {
-          await clinicWorkspacePage.searchForPatient(patientName1); // Search to ensure list is populated
-          const patientCell1 = clinicWorkspacePage.getPatientCellByName(patientName1);
-          const patientCell2 = clinicWorkspacePage.getPatientCellByName(patientName2);
-          await expect(patientCell1).toBeVisible();
-          await expect(patientCell2).not.toBeVisible();
-        });
+        await test.step(
+          'Then only Patient A should be visible',
+          async () => {
+            await clinicWorkspacePage.searchForPatient(patientName1); // Search to ensure list is populated
+            const patientCell1 = clinicWorkspacePage.getPatientCellByName(patientName1);
+            const patientCell2 = clinicWorkspacePage.getPatientCellByName(patientName2);
+            await expect(patientCell1).toBeVisible();
+            await expect(patientCell2).not.toBeVisible();
+          },
+          {
+            detail:
+              'Confirm the patient list shows the first patient and that the second patient is no longer listed.',
+          },
+        );
 
         // Step 7: Clear the filter
-        await test.step('When user clears the filter', async () => {
-          await clinicWorkspacePage.searchForPatient(''); // Clear search by searching for empty string
-        });
+        await test.step(
+          'When user clears the filter',
+          async () => {
+            await clinicWorkspacePage.searchForPatient(''); // Clear search by searching for empty string
+          },
+          {
+            detail: 'Clear the text in the patient list search box to remove the filter.',
+          },
+        );
 
         // Step 8: Verify both patients are visible
-        await test.step('Then both patients should be visible again', async () => {
-          await clinicWorkspacePage.searchForPatient(''); // Clear search to show all patients
-          const patientCell1 = clinicWorkspacePage.getPatientCellByName(patientName1);
-          const patientCell2 = clinicWorkspacePage.getPatientCellByName(patientName2);
-          await expect(patientCell1).toBeVisible();
-          await expect(patientCell2).toBeVisible();
-        });
+        await test.step(
+          'Then both patients should be visible again',
+          async () => {
+            await clinicWorkspacePage.searchForPatient(''); // Clear search to show all patients
+            const patientCell1 = clinicWorkspacePage.getPatientCellByName(patientName1);
+            const patientCell2 = clinicWorkspacePage.getPatientCellByName(patientName2);
+            await expect(patientCell1).toBeVisible();
+            await expect(patientCell2).toBeVisible();
+          },
+          {
+            detail: 'Confirm the patient list once again shows both the first and second patients.',
+          },
+        );
       },
     );
   });

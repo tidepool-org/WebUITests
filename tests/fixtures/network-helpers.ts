@@ -234,7 +234,7 @@ export class NetworkHelper {
   ): Promise<NetworkCapture> {
     const startTime = Date.now();
 
-    return new Promise((resolve, reject) => {
+    const capture = await new Promise<NetworkCapture>((resolve, reject) => {
       const checkForCapture = () => {
         // Look for captures after the specified timestamp
         const matches = this.captures
@@ -267,6 +267,11 @@ export class NetworkHelper {
       // Start checking
       checkForCapture();
     });
+
+    // Attach the captured response as this step's JSON evidence (deduped per step), so
+    // validation steps that only wait + compare still show their response in the report.
+    await this.attachStepJson(capture.responseBody, capture.url, capture.method);
+    return capture;
   }
 
   /**
@@ -286,6 +291,35 @@ export class NetworkHelper {
    */
   getAllCaptures(): NetworkCapture[] {
     return [...this.captures];
+  }
+
+  // The step ordinal we last attached a JSON response for. Ensures at most one response
+  // JSON per step, so a step that both waitForCaptureMatching()'s and
+  // validateEndpointResponse()'s the same call doesn't attach a duplicate.
+  private lastAttachedStepOrdinal = -1;
+
+  /**
+   * Attaches an API response as this step's JSON evidence, named by the CURRENT step ordinal
+   * (so the reporter maps it to the right step). Deduped per step. This is what makes
+   * validation steps that only wait+compare (no validateEndpointResponse) still show their
+   * captured response in the report.
+   */
+  private async attachStepJson(responseBody: any, url: string, method: string): Promise<void> {
+    if (!responseBody) return;
+    const stepCounterObj = (globalThis as any).stepCounter;
+    const { testInfo } = globalThis as any;
+    if (!stepCounterObj || !testInfo) return;
+
+    const ordinal = stepCounterObj.get();
+    if (ordinal === this.lastAttachedStepOrdinal) return;
+    this.lastAttachedStepOrdinal = ordinal;
+
+    const currentStepName = stepCounterObj.getCurrentStepName();
+    const stepNameForFile = currentStepName
+      ? currentStepName.toLowerCase().replace(/[^a-z0-9]/g, '-')
+      : 'response';
+    const fileName = `step-${ordinal.toString().padStart(2, '0')}-${stepNameForFile}-response.json`;
+    await this.saveApiResponse(responseBody, url, method, fileName, testInfo);
   }
 
   /**
@@ -333,26 +367,7 @@ export class NetworkHelper {
     const request = this.getLatestCaptureMatching(schema.method, schema.url as RegExp);
 
     if (request?.responseBody) {
-      // Access the shared step counter from the stepScreenshoter fixture
-      const stepCounterObj = (globalThis as any).stepCounter;
-      if (stepCounterObj) {
-        const stepNumber = stepCounterObj.increment();
-        const currentStepName = stepCounterObj.getCurrentStepName();
-
-        // Create consistent filename with step number and step name (like screenshots)
-        const stepNameForFile = currentStepName
-          ? currentStepName.toLowerCase().replace(/[^a-z0-9]/g, '-')
-          : endpointName.replace(/[^a-z0-9]/gi, '-');
-        const fileName = `step-${stepNumber.toString().padStart(2, '0')}-${stepNameForFile}-response.json`;
-
-        await this.saveApiResponse(
-          request.responseBody,
-          request.url,
-          schema.method,
-          fileName,
-          (globalThis as any).testInfo,
-        );
-      }
+      await this.attachStepJson(request.responseBody, request.url, schema.method);
     }
 
     return request;
@@ -611,8 +626,9 @@ export class NetworkHelper {
     // Generate comparison JSON file similar to validateEndpointResponse
     const stepCounterObj = (globalThis as any).stepCounter;
     if (stepCounterObj) {
-      // Increment for JSON file naming (this is correct behavior)
-      const stepNumber = stepCounterObj.increment();
+      // Use the CURRENT step ordinal (do not bump it) so this comparison JSON shares its
+      // step's number; the step wrappers own bumping, once per step.
+      const stepNumber = stepCounterObj.get();
       const currentStepName = stepCounterObj.getCurrentStepName();
 
       // Create comparison data object

@@ -43,7 +43,7 @@ function listTestTitles(grep: string): string[] {
   }
   const report = JSON.parse(out) as { suites?: unknown[] };
   const titles: string[] = [];
-  const walk = (s: { specs?: Array<{ title?: string }>; suites?: unknown[] }) => {
+  const walk = (s: { specs?: { title?: string }[]; suites?: unknown[] }) => {
     (s.specs ?? []).forEach(sp => sp.title && titles.push(sp.title));
     (s.suites ?? []).forEach(child => walk(child as Parameters<typeof walk>[0]));
   };
@@ -69,7 +69,9 @@ async function main(): Promise<void> {
   if (key) {
     mkdirSync('test-results', { recursive: true });
     writeFileSync(EXEC_KEY_FILE, key);
-    console.log(`✅ Frontload execution ${key} created; wrote ${EXEC_KEY_FILE} for the post-run upload.`);
+    console.log(
+      `✅ Frontload execution ${key} created; wrote ${EXEC_KEY_FILE} for the post-run upload.`,
+    );
   } else {
     console.log('ℹ️ No frontload execution created; the post-run upload will auto-create one.');
   }

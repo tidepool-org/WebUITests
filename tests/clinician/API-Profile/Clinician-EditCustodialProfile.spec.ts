@@ -38,74 +38,135 @@ ALL_WORKSPACE_KEYS.forEach((workspace: WorkspaceKey) => {
       },
       async ({ page }, testInfo) => {
         // Step 1: Log in to clinician account and setup network capture
-        await test.step('Given clinician has been logged in', async () => {
-          api = createNetworkHelper(page);
-          await api.startCapture();
-          await test.clinician.setup(page);
-        });
+        await test.step(
+          'Given clinician has been logged in',
+          async () => {
+            api = createNetworkHelper(page);
+            await api.startCapture();
+            await test.clinician.setup(page);
+          },
+          {
+            detail:
+              'Log in to Tidepool Web using the automated clinician account credentials stored in 1Password.',
+          },
+        );
 
         // Step 2: Navigate to workspace
-        await test.step(`When user navigates to workspace ${workspace}`, async () => {
-          await test.clinician.navigateToWorkspace(workspace, page);
-        });
+        await test.step(
+          `When user navigates to workspace ${workspace}`,
+          async () => {
+            await test.clinician.navigateToWorkspace(workspace, page);
+          },
+          { detail: 'Open the workspace switcher and select the target clinic workspace.' },
+        );
 
         // Step 3: Access custodial patient
-        await test.step('When user accesses a custodial patient summary', async () => {
-          await test.clinician.findAndAccessPatientByPartialName(CUSTODIAL_PATIENT_SEARCH, page);
-        });
+        await test.step(
+          'And user accesses a custodial patient summary',
+          async () => {
+            await test.clinician.findAndAccessPatientByPartialName(CUSTODIAL_PATIENT_SEARCH, page);
+          },
+          {
+            detail:
+              'Search the patient list for the custodial patient and open their summary view.',
+          },
+        );
 
         // Step 4: Navigate to profile
-        await test.step('When user navigates to Profile Edit page', async () => {
-          await test.clinician.navigateTo('ProfileEdit', page);
-        });
+        await test.step(
+          'And user navigates to Profile Edit page',
+          async () => {
+            await test.clinician.navigateTo('ProfileEdit', page);
+          },
+          { detail: 'Open the patient Profile Edit page from the navigation menu.' },
+        );
 
         // Step 5: Capture GET response
-        await test.step('Then profile endpoint responds with GET request consistent with schema [no-screenshot]', async () => {
-          await api.validateEndpointResponse('profile-metadata-get');
-        });
+        await test.step(
+          'Then profile endpoint responds with GET request consistent with schema [no-screenshot]',
+          async () => {
+            await api.validateEndpointResponse('profile-metadata-get');
+          },
+          {
+            detail:
+              'Confirm the profile-metadata GET endpoint responds and the payload matches the expected schema.',
+          },
+        );
 
         // Create Profile page for following steps
         const profilePage = new ProfilePage(page);
 
         // Step 7: Change profile fields (custodial access)
-        await test.step('When user updates profile fields', async () => {
-          // Get current diagnosis index and calculate next one (1-7, wrapping)
-          const currentDiagnosisIndex = await profilePage.getCurrentDiagnosisIndex();
-          let nextDiagnosisIndex = currentDiagnosisIndex + 1;
-          if (nextDiagnosisIndex > 7 || nextDiagnosisIndex === 0) {
-            nextDiagnosisIndex = 1;
-          }
+        await test.step(
+          'When user updates profile fields',
+          async () => {
+            // Get current diagnosis index and calculate next one (1-7, wrapping)
+            const currentDiagnosisIndex = await profilePage.getCurrentDiagnosisIndex();
+            let nextDiagnosisIndex = currentDiagnosisIndex + 1;
+            if (nextDiagnosisIndex > 7 || nextDiagnosisIndex === 0) {
+              nextDiagnosisIndex = 1;
+            }
 
-          // Update fields using ProfilePage methods
-          await profilePage.fillFullName(updatedName);
-          await profilePage.fillBirthDate(updateBirthDate);
-          await profilePage.fillMRN(updateMRN);
-          await profilePage.selectDiagnosisType(nextDiagnosisIndex);
-          await profilePage.fillEmail(updateEmail);
-        });
+            // Update fields using ProfilePage methods
+            await profilePage.fillFullName(updatedName);
+            await profilePage.fillBirthDate(updateBirthDate);
+            await profilePage.fillMRN(updateMRN);
+            await profilePage.selectDiagnosisType(nextDiagnosisIndex);
+            await profilePage.fillEmail(updateEmail);
+          },
+          {
+            detail:
+              'Enter new values for the full name, birth date, MRN, and email fields, and select a different diagnosis type.',
+          },
+        );
 
         // Step 8: Save profile edit
-        await test.step('When user saves profile changes', async () => {
-          await profilePage.saveProfile();
-        });
+        await test.step(
+          'And user saves profile changes',
+          async () => {
+            await profilePage.saveProfile();
+          },
+          { detail: 'Click Save to submit the updated profile.' },
+        );
 
         // Step 13: Navigate to workspace
-        await test.step(`When user navigates to workspace ${workspace}`, async () => {
-          await test.clinician.navigateToWorkspace(workspace, page);
-          // Wait for patient list to be ready before search interactions
-          const dashboard = new ClinicianDashboardPage(page);
-          await dashboard.waitForLoadState();
-        });
+        await test.step(
+          `And user navigates to workspace ${workspace}`,
+          async () => {
+            await test.clinician.navigateToWorkspace(workspace, page);
+            // Wait for patient list to be ready before search interactions
+            const dashboard = new ClinicianDashboardPage(page);
+            await dashboard.waitForLoadState();
+          },
+          {
+            detail:
+              'Open the workspace switcher and select the target clinic workspace, then wait for the patient list to load.',
+          },
+        );
 
         // Step 3: Access custodial patient
-        await test.step('When user accesses a custodial patient summary', async () => {
-          await test.clinician.findAndAccessPatientByPartialName(CUSTODIAL_PATIENT_SEARCH, page);
-        });
+        await test.step(
+          'And user accesses a custodial patient summary',
+          async () => {
+            await test.clinician.findAndAccessPatientByPartialName(CUSTODIAL_PATIENT_SEARCH, page);
+          },
+          {
+            detail:
+              'Search the patient list for the custodial patient and open their summary view.',
+          },
+        );
 
         // Navigate back to Profile Edit page to trigger a fresh GET with updated values
-        await test.step('When user navigates to Profile Edit page', async () => {
-          await test.clinician.navigateTo('ProfileEdit', page);
-        });
+        await test.step(
+          'And user navigates to Profile Edit page',
+          async () => {
+            await test.clinician.navigateTo('ProfileEdit', page);
+          },
+          {
+            detail:
+              'Open the patient Profile Edit page again to trigger a fresh load of the saved values.',
+          },
+        );
 
         // Step 9: Validate captured response and creation values
         await (test as any).stepNoScreenshot(
@@ -122,6 +183,10 @@ ALL_WORKSPACE_KEYS.forEach((workspace: WorkspaceKey) => {
             };
 
             api.validateResponseFields(producerGetCapture, expectedFieldValues);
+          },
+          {
+            detail:
+              'Confirm the profile-metadata GET endpoint responds, matches the expected schema, and the payload reflects the saved profile values.',
           },
         );
         await api.stopCapture();

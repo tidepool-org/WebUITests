@@ -36,17 +36,28 @@ test.describe('Claimed Account Settings edit (Full Name only) updates Profile en
       // ========== PHASE 1: CLAIMED USER EDITS PROFILE ==========
 
       // Step 1: Log in to clinician account and setup network capture
-      await test.step('Given claimed account has been logged in', async () => {
-        api = createNetworkHelper(page);
-        await api.startCapture();
-        await page.goto('/data');
-        await patientTest.patient.setup(page);
-      });
+      await test.step(
+        'Given claimed account has been logged in',
+        async () => {
+          api = createNetworkHelper(page);
+          await api.startCapture();
+          await page.goto('/data');
+          await patientTest.patient.setup(page);
+        },
+        {
+          detail:
+            'Log in to Tidepool Web using the automated claimed patient account credentials stored in 1Password.',
+        },
+      );
 
       // Step 2: Navigate to account settings
-      await test.step('When user navigates to account settings', async () => {
-        await accountTest.account.navigateTo('AccountSettings', page);
-      });
+      await test.step(
+        'When user navigates to account settings',
+        async () => {
+          await accountTest.account.navigateTo('AccountSettings', page);
+        },
+        { detail: 'Open the account settings page from the main navigation.' },
+      );
 
       // Step 3: GET response is pulled and validated
       await (test as any).stepNoScreenshot(
@@ -54,32 +65,48 @@ test.describe('Claimed Account Settings edit (Full Name only) updates Profile en
         async () => {
           await api.validateEndpointResponse('profile-metadata-get');
         },
+        {
+          detail:
+            'Confirm the profile GET endpoint responds and the payload matches the expected schema.',
+        },
       );
 
       // Create new acccount settings page for the following test
       const accountSettingsPage = new AccountSettingsPage(page);
 
       // Step 4: Change the Full Name field to a new value
-      await test.step('When user updates the Full Name field', async () => {
-        newName = `Claimed User Updated ${Math.floor(Math.random() * 10000)}`; // Remove let declaration
-        const nameInput = page.getByRole('textbox', { name: /full name/i });
-        await nameInput.fill(newName);
-      });
+      await test.step(
+        'When user updates the Full Name field',
+        async () => {
+          newName = `Claimed User Updated ${Math.floor(Math.random() * 10000)}`; // Remove let declaration
+          const nameInput = page.getByRole('textbox', { name: /full name/i });
+          await nameInput.fill(newName);
+        },
+        { detail: 'Enter a new value in the Full Name field.' },
+      );
 
       // Step 5: Tap the Save button — record timestamp so we can anchor capture lookups to this moment
-      await test.step('When user taps the save button', async () => {
-        saveTimestamp = Date.now();
-        await accountSettingsPage.saveButton.click();
-      });
+      await test.step(
+        'And user taps the save button',
+        async () => {
+          saveTimestamp = Date.now();
+          await accountSettingsPage.saveButton.click();
+        },
+        { detail: 'Click the Save button to submit the change.' },
+      );
 
       // Step 6: Confirm save changes message displays
-      await test.step('Then the save changes message displays', async () => {
-        await accountSettingsPage.saveConfirm.waitFor({ state: 'visible', timeout: 5000 });
-      });
+      await test.step(
+        'Then the save changes message displays',
+        async () => {
+          await accountSettingsPage.saveConfirm.waitFor({ state: 'visible', timeout: 5000 });
+        },
+        { detail: 'Confirm the save-confirmation message appears.' },
+      );
 
       // Step 7: Validate PUT request fired after save with the new name in its body
       await (test as any).stepNoScreenshot(
-        'Then PUT request is validated and name is set to new value',
+        'And PUT request is validated and name is set to new value',
         async () => {
           // Wait for a PUT that was captured AFTER the save button was clicked.
           // Using waitForCaptureMatching prevents false-matches against any prior PUT
@@ -102,12 +129,20 @@ test.describe('Claimed Account Settings edit (Full Name only) updates Profile en
             );
           }
         },
+        {
+          detail:
+            'Confirm the profile PUT endpoint fires after saving and its payload matches the expected schema and updated name.',
+        },
       );
 
       // Step 8: Navigate to Profile page
-      await test.step('When user navigates to Profile page', async () => {
-        await patientTest.patient.navigateTo('Profile', page);
-      });
+      await test.step(
+        'When user navigates to Profile page',
+        async () => {
+          await patientTest.patient.navigateTo('Profile', page);
+        },
+        { detail: 'Open the Profile page from the navigation.' },
+      );
 
       // Step 9: Confirm GET request after navigation to Profile reflects the saved name
       await (test as any).stepNoScreenshot(
@@ -128,32 +163,49 @@ test.describe('Claimed Account Settings edit (Full Name only) updates Profile en
             );
           }
         },
+        {
+          detail:
+            'Confirm the profile GET endpoint after navigation returns the saved name, matching the prior PUT.',
+        },
       );
 
       // ========== PHASE 2: SHARED USER VIEWS PROFILE ==========
 
       // Step 10: Switch to shared user authentication and go directly to Profile
       let sharedNavTimestamp: number;
-      await test.step('When shared user views claimed user profile', async () => {
-        sharedNavTimestamp = Date.now();
-        await accountTest.account.switchUser('shared', page);
-        await page.goto('/data');
-        await patientTest.patient.setup(page);
-        // Wait a moment for the page to stabilize after user switch
-        await page.waitForTimeout(500);
-        // Navigate directly to Profile in the same step to avoid redundancy
-        await patientTest.patient.navigateTo('Profile', page);
-      });
+      await test.step(
+        'When shared user views claimed user profile',
+        async () => {
+          sharedNavTimestamp = Date.now();
+          await accountTest.account.switchUser('shared', page);
+          await page.goto('/data');
+          await patientTest.patient.setup(page);
+          // Wait a moment for the page to stabilize after user switch
+          await page.waitForTimeout(500);
+          // Navigate directly to Profile in the same step to avoid redundancy
+          await patientTest.patient.navigateTo('Profile', page);
+        },
+        {
+          detail:
+            'Log in as the automated shared member account credentials stored in 1Password and open the claimed user Profile page.',
+        },
+      );
 
       // Step 11: Verify Edit button is not present for shared users
-      await test.step('Then Edit button should not be present for shared patients', async () => {
-        const profilePage = new ProfilePage(page);
-        await profilePage.editButtonDisplays(false);
-      });
+      await test.step(
+        'Then Edit button should not be present for shared patients',
+        async () => {
+          const profilePage = new ProfilePage(page);
+          await profilePage.editButtonDisplays(false);
+        },
+        {
+          detail: 'Confirm the Edit button is not visible for a shared member viewing the profile.',
+        },
+      );
 
       // Step 12: Validate shared user sees updated profile data
       await (test as any).stepNoScreenshot(
-        'Then shared user sees view-only claimed profile data with matching data',
+        'And shared user sees view-only claimed profile data with matching data',
         async () => {
           const sharedGetCapture = await api.waitForCaptureMatching(
             'GET',
@@ -170,25 +222,43 @@ test.describe('Claimed Account Settings edit (Full Name only) updates Profile en
             );
           }
         },
+        {
+          detail:
+            'Confirm the profile GET endpoint for the shared member returns the saved name in a view-only payload.',
+        },
       );
 
       // ========== PHASE 3: CLINICIAN VIEWS PROFILE ==========
 
       // Step 13: Switch to clinician user authentication
       let clinicianNavTimestamp: number;
-      await test.step('When clinician accesses patient workspace', async () => {
-        clinicianNavTimestamp = Date.now();
-        await accountTest.account.switchUser('clinician', page);
-        await page.goto('/');
-        await clinicTest.clinician.navigateToWorkspace(CUSTODIAL_WORKSPACE, page);
-      });
+      await test.step(
+        'When clinician accesses patient workspace',
+        async () => {
+          clinicianNavTimestamp = Date.now();
+          await accountTest.account.switchUser('clinician', page);
+          await page.goto('/');
+          await clinicTest.clinician.navigateToWorkspace(CUSTODIAL_WORKSPACE, page);
+        },
+        {
+          detail:
+            'Log in as the automated clinician account credentials stored in 1Password and open the patient workspace.',
+        },
+      );
 
       // Step 14: Access the specific claimed patient that was modified by the producer test
-      await test.step('When user accesses the claimed patient modified by producer test', async () => {
-        await clinicTest.clinician.findAndAccessPatientByPartialName(CLAIMED_PATIENT_SEARCH, page);
-        // Navigate directly to Profile in the same step to avoid redundancy
-        await clinicTest.clinician.navigateTo('Profile', page);
-      });
+      await test.step(
+        'And user accesses the claimed patient modified by producer test',
+        async () => {
+          await clinicTest.clinician.findAndAccessPatientByPartialName(
+            CLAIMED_PATIENT_SEARCH,
+            page,
+          );
+          // Navigate directly to Profile in the same step to avoid redundancy
+          await clinicTest.clinician.navigateTo('Profile', page);
+        },
+        { detail: 'Search for the claimed patient by name and open their Profile page.' },
+      );
 
       // Step 15: Validate clinician sees updated profile data
       await (test as any).stepNoScreenshot(
@@ -208,6 +278,10 @@ test.describe('Claimed Account Settings edit (Full Name only) updates Profile en
               `Clinician GET fullName "${clinicianGetCapture.responseBody?.fullName}" does not match saved name "${newName}"`,
             );
           }
+        },
+        {
+          detail:
+            'Confirm the profile GET endpoint for the clinician returns the saved name with no save access.',
         },
       );
     },

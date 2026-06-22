@@ -130,7 +130,11 @@ class XrayJsonReporter {
    * Videos and screenshots are only included for failed tests to keep payloads small.
    * JSON API responses are always included.
    */
-  private shouldIncludeEvidence(attachment: any, _testStatus: string, contentType: string): boolean {
+  private shouldIncludeEvidence(
+    attachment: any,
+    _testStatus: string,
+    contentType: string,
+  ): boolean {
     // Check if attachment has embedded base64 data (from JSON) or file path
     const hasData = !!attachment.body || (attachment.path && fs.existsSync(attachment.path));
 
@@ -152,9 +156,11 @@ class XrayJsonReporter {
     return true;
   }
 
-  // Maximum size (bytes) for a single evidence item sent to Xray.
-  // Xray Cloud returns HTTP 500 on payloads over ~1MB per test.
-  private readonly MAX_EVIDENCE_BYTES = 200 * 1024; // 200 KB
+  // Xray step status used for steps that never ran because an earlier step failed. This
+  // MUST match a step status defined in the Xray project — confirm the exact spelling/casing
+  // in the project's settings (override here or via XRAY_SKIPPED_STEP_STATUS if it differs).
+  // NOTE: 'SKIPPED' was rejected (steps stayed TODO); trying 'SKIP'.
+  private readonly SKIPPED_STEP_STATUS = process.env.XRAY_SKIPPED_STEP_STATUS?.trim() || 'SKIP';
 
   private isGivenStep(stepName: string): boolean {
     return stepName.toLowerCase().startsWith('given ');
@@ -165,13 +171,161 @@ class XrayJsonReporter {
   }
 
   private isThenStep(stepName: string): boolean {
-    const lower = stepName.toLowerCase();
-    return lower.startsWith('then ') || lower.startsWith('and ');
+    return stepName.toLowerCase().startsWith('then ');
+  }
+
+  // "And" continues whatever the previous keyword was: after a When it extends the action,
+  // after a Then it extends the expected. (Playwright itself doesn't parse these — only this
+  // reporter does.)
+  private isAndStep(stepName: string): boolean {
+    return stepName.toLowerCase().startsWith('and ');
   }
 
   private parseDuration(duration: string): number {
     const match = duration.match(/(\d+)/);
     return match ? parseInt(match[1], 10) : 0;
+  }
+
+  /**
+   * Parses a step annotation's description. The fixture now encodes it as JSON
+   * (`{"durationMs":123,"status":"passed|failed|skipped"}`); older runs used a plain
+   * "123ms" string, which we treat as a passed step.
+   */
+  private parseStepAnnotation(description: string): {
+    durationMs: number;
+    status: 'passed' | 'failed' | 'skipped';
+    detail?: string;
+  } {
+    try {
+      const parsed = JSON.parse(description);
+      if (parsed && typeof parsed === 'object' && 'status' in parsed) {
+        return {
+          durationMs: Number(parsed.durationMs) || 0,
+          status: parsed.status,
+          detail: typeof parsed.detail === 'string' ? parsed.detail : undefined,
+        };
+      }
+    } catch {
+      // Not JSON — fall through to the legacy "<n>ms" format.
+    }
+    return { durationMs: this.parseDuration(description), status: 'passed' };
+  }
+
+  /**
+   * Formats an Xray step Action/Result cell as a bold header (the step text) followed by an
+   * optional tester-facing detail on a new line. Uses Jira-wiki bold (`*…*`), which Xray
+   * Cloud renders in step fields.
+   */
+  private formatStepCell(header: string, detail?: string): string {
+    const bold = `*${header}*`;
+    return detail && detail.trim() ? `${bold}\n${detail.trim()}` : bold;
+  }
+
+  /** Maps an internal step outcome to the Xray step status to upload. */
+  private toXrayStepStatus(status: 'passed' | 'failed' | 'skipped'): XrayTestStepResult['status'] {
+    if (status === 'failed') return 'FAILED';
+    if (status === 'skipped') return this.SKIPPED_STEP_STATUS;
+    return 'PASSED';
+  }
+
+  /** Combined status for a grouped step (a When plus its Then/And steps). */
+  private combineStepStatuses(
+    statuses: ('passed' | 'failed' | 'skipped')[],
+  ): 'passed' | 'failed' | 'skipped' {
+    if (statuses.includes('failed')) return 'failed';
+    if (statuses.length > 0 && statuses.every(s => s === 'skipped')) return 'skipped';
+    return 'passed';
+  }
+
+  /** Friendly phrase for a Playwright/expect matcher (e.g. toContainText -> "contain text"). */
+  private describeMatcher(matcher: string): string {
+    const map: Record<string, string> = {
+      toContainText: 'contain text',
+      toHaveText: 'have text',
+      toHaveValue: 'have value',
+      toHaveAttribute: 'have attribute',
+      toHaveClass: 'have class',
+      toHaveURL: 'have URL',
+      toHaveTitle: 'have title',
+      toHaveCount: 'have count',
+      toBe: 'equal',
+      toEqual: 'equal',
+      toContain: 'contain',
+      toBeVisible: 'be visible',
+      toBeHidden: 'be hidden',
+      toBeEnabled: 'be enabled',
+      toBeDisabled: 'be disabled',
+      toBeChecked: 'be checked',
+      toBeFocused: 'be focused',
+      toBeEmpty: 'be empty',
+    };
+    if (map[matcher]) return map[matcher];
+    // Fallback: drop leading "to", split camelCase into words.
+    return (
+      matcher
+        .replace(/^to/, '')
+        .replace(/([A-Z])/g, ' $1')
+        .trim()
+        .toLowerCase() || matcher
+    );
+  }
+
+  /** Pulls a readable target out of a locator string (e.g. locator('#x') -> "#x"). */
+  private describeLocator(locator?: string): string {
+    if (!locator) return '';
+    const m = locator.match(/locator\((['"`])([\s\S]*?)\1\)/);
+    return (m ? m[2] : locator).trim();
+  }
+
+  private clip(value: string, max = 500): string {
+    const v = value.trim();
+    return v.length > max ? `${v.slice(0, max)}…` : v;
+  }
+
+  /**
+   * Turns a raw Playwright/Node error message into a concise, plain-English line suitable
+   * for an Xray step's "Actual Result" / the test comment. Web-first assertion failures
+   * (expect(locator).toX(...)) become "Expected <target> to <matcher> <expected>, but found
+   * <received>"; other errors fall back to their first meaningful line. The verbose "Call
+   * log:" section and ANSI colour codes are stripped. Never throws.
+   */
+  private humanizeError(raw?: string): string {
+    if (!raw) return 'Test failed';
+    try {
+      // Strip ANSI colour codes and drop the verbose call log.
+      // eslint-disable-next-line no-control-regex -- the ESC byte is required to match ANSI
+      let msg = raw.replace(/\[[0-9;]*m/g, '');
+      const callLogIdx = msg.indexOf('Call log:');
+      if (callLogIdx !== -1) msg = msg.slice(0, callLogIdx);
+      msg = msg.trim();
+
+      // Capture the matcher from any "expect(...).matcher(...)" line (with or without the
+      // trailing "failed"), so visibility/equality assertions condense too.
+      const matcherMatch = msg.match(/expect\([^)]*\)\.(\w+)\(/i);
+      const expectedMatch = msg.match(/Expected(?: (?:substring|string|pattern|value))?:\s*(.+)/i);
+      const receivedMatch = msg.match(/Received(?: (?:string|value))?:\s*(.+)/i);
+      const locatorMatch = msg.match(/Locator:\s*(.+)/i);
+      const timeoutMatch = msg.match(/Timeout:\s*(\d+)ms/i);
+
+      if (matcherMatch) {
+        const matcher = this.describeMatcher(matcherMatch[1]);
+        const target = this.describeLocator(locatorMatch?.[1]) || 'the value';
+        let result = `Expected ${target} to ${matcher}`;
+        if (expectedMatch) result += ` ${this.clip(expectedMatch[1])}`;
+        if (receivedMatch) result += `, but found ${this.clip(receivedMatch[1])}`;
+        if (timeoutMatch) result += ` (after ${timeoutMatch[1]}ms)`;
+        return result.trim();
+      }
+
+      // Non-assertion error (thrown Error, navigation, schema check, …): first real line.
+      const firstLine = msg
+        .split('\n')
+        .map(l => l.trim())
+        .find(Boolean);
+      return this.clip((firstLine || 'Test failed').replace(/^Error:\s*/i, ''), 600);
+    } catch {
+      return this.clip(raw, 600);
+    }
   }
 
   /**
@@ -181,6 +335,7 @@ class XrayJsonReporter {
     indices: number[],
     attachments: any[],
     testStatus: string,
+    includeImages = true,
   ): Promise<XrayEvidence[]> {
     const evidence: XrayEvidence[] = [];
 
@@ -193,42 +348,32 @@ class XrayJsonReporter {
 
       for (const attachment of stepAttachments) {
         const contentType = attachment.contentType || 'application/octet-stream';
+        const isImage = contentType.includes('image');
 
-        // Include every step's evidence: JSON responses AND all screenshots, on any step,
-        // pass or fail. Videos are still excluded (size) by shouldIncludeEvidence, and the
-        // per-item size cap below still applies.
-        if (this.shouldIncludeEvidence(attachment, testStatus, contentType)) {
+        // Videos are excluded by shouldIncludeEvidence. JSON (and other non-image) evidence
+        // is always collected; screenshots are collected only when the caller asks for them
+        // (the block decides: Then screenshots on a pass, every screenshot on a failure).
+        // There is intentionally NO per-item size cap.
+        const eligible =
+          this.shouldIncludeEvidence(attachment, testStatus, contentType) &&
+          (!isImage || includeImages);
+
+        if (eligible) {
           let base64Data: string | null = null;
           let filename = attachment.name || 'attachment';
 
-          // Check if attachment has embedded base64 data (from JSON)
           if (attachment.body) {
-            // Handle both Buffer and string cases
             base64Data =
               typeof attachment.body === 'string'
                 ? attachment.body
                 : attachment.body.toString('base64');
-          }
-          // Check if attachment has file path to read from
-          else if (attachment.path && fs.existsSync(attachment.path)) {
+          } else if (attachment.path && fs.existsSync(attachment.path)) {
             base64Data = await this.fileToBase64(attachment.path);
             filename = path.basename(attachment.path);
           }
 
           if (base64Data) {
-            // Skip evidence items that exceed the size cap to prevent Xray HTTP 500 errors
-            const byteSize = Buffer.byteLength(base64Data, 'utf8');
-            if (byteSize > this.MAX_EVIDENCE_BYTES) {
-              console.log(
-                `${this.styles.warning} Skipping oversized evidence (${(byteSize / 1024).toFixed(0)}KB > ${this.MAX_EVIDENCE_BYTES / 1024}KB): ${filename}`,
-              );
-            } else {
-              evidence.push({
-                data: base64Data,
-                filename,
-                contentType,
-              });
-            }
+            evidence.push({ data: base64Data, filename, contentType });
           }
         }
       }
@@ -261,90 +406,118 @@ class XrayJsonReporter {
       return { stepDefinitions, stepResults };
     }
 
-    let pendingWhen: { name: string; duration: number; index: number } | null = null;
-    let pendingThens: { name: string; duration: number; index: number }[] = [];
+    interface StepInfo {
+      name: string;
+      duration: number;
+      index: number;
+      status: 'passed' | 'failed' | 'skipped';
+      detail?: string;
+    }
+    // Each block becomes ONE Xray step row. A block's `actions` (a When/Given plus any
+    // following "And" steps) form the Action cell; its `results` (a Then plus any following
+    // "And" steps) form the Expected/Result cell. "And" continues whichever section was last
+    // appended to, so "When … / And …" condenses into a single action rather than leaving a
+    // blank Expected. A Given (or a When with no Then) simply has no Expected, which is fine.
+    interface Block {
+      actions: StepInfo[];
+      results: StepInfo[];
+    }
+    const blocks: Block[] = [];
+    let current: Block | null = null;
+    let lastSection: 'action' | 'result' = 'action';
 
-    const flushPendingWhen = async () => {
-      if (!pendingWhen) return;
-
-      const totalDuration =
-        pendingWhen.duration + pendingThens.reduce((sum, t) => sum + t.duration, 0);
-
-      const stepDef: XrayTestStepDefinition = {
-        action: pendingWhen.name,
-      };
-
-      if (pendingThens.length > 0) {
-        stepDef.result = pendingThens.map(t => t.name).join('\n');
-      }
-
-      stepDefinitions.push(stepDef);
-
-      const stepResult: XrayTestStepResult = {
-        status: 'PASSED',
-        comment: `Duration: ${totalDuration}ms`,
-      };
-
-      // Collect evidence for the When step and all of its Then steps (JSON + screenshots).
-      const whenEvidence = await this.collectStepEvidence(
-        [pendingWhen.index],
-        attachments,
-        testStatus,
-      );
-      const thenEvidence = await this.collectStepEvidence(
-        pendingThens.map(t => t.index),
-        attachments,
-        testStatus,
-      );
-      const evidence = [...whenEvidence, ...thenEvidence];
-      if (evidence.length > 0) {
-        stepResult.evidence = evidence;
-      }
-
-      stepResults.push(stepResult);
-      pendingWhen = null;
-      pendingThens = [];
-    };
-
-    const addStandaloneStep = async (stepName: string, duration: number, index: number) => {
-      stepDefinitions.push({
-        action: stepName,
-      });
-
-      const stepResult: XrayTestStepResult = {
-        status: 'PASSED',
-        comment: `Duration: ${duration}ms`,
-      };
-
-      // Given/standalone steps: include JSON + screenshot evidence for the step.
-      const evidence = await this.collectStepEvidence([index], attachments, testStatus);
-      if (evidence.length > 0) {
-        stepResult.evidence = evidence;
-      }
-
-      stepResults.push(stepResult);
+    const makeBlock = (step: StepInfo): Block => {
+      const block: Block = { actions: [step], results: [] };
+      blocks.push(block);
+      lastSection = 'action';
+      return block;
     };
 
     for (let i = 0; i < stepAnnotations.length; i += 1) {
       const stepAnn = stepAnnotations[i];
       const stepName = stepAnn.type.replace('Step Duration: ', '');
-      const duration = this.parseDuration(stepAnn.description);
+      const {
+        durationMs: duration,
+        status,
+        detail,
+      } = this.parseStepAnnotation(stepAnn.description);
+      const step: StepInfo = { name: stepName, duration, index: i, status, detail };
 
-      if (this.isGivenStep(stepName)) {
-        await flushPendingWhen();
-        await addStandaloneStep(stepName, duration, i);
-      } else if (this.isWhenStep(stepName)) {
-        await flushPendingWhen();
-        pendingWhen = { name: stepName, duration, index: i };
+      if (this.isAndStep(stepName)) {
+        // Continue the current block's most-recently-extended section (action or expected).
+        if (!current) {
+          current = makeBlock(step);
+        } else if (lastSection === 'result') {
+          current.results.push(step);
+        } else {
+          current.actions.push(step);
+        }
       } else if (this.isThenStep(stepName)) {
-        pendingThens.push({ name: stepName, duration, index: i });
+        // Expected for the current block; an orphan Then (no action yet) starts its own block.
+        if (!current) {
+          current = makeBlock(step);
+        } else {
+          current.results.push(step);
+          lastSection = 'result';
+        }
       } else {
-        await flushPendingWhen();
-        await addStandaloneStep(stepName, duration, i);
+        // Given / When / anything else begins a new action block.
+        current = makeBlock(step);
       }
     }
 
-    await flushPendingWhen();
+    for (const block of blocks) {
+      const allSteps = [...block.actions, ...block.results];
+
+      // Action cell = each action step as a bold header + its detail; Result cell likewise.
+      const stepDef: XrayTestStepDefinition = {
+        action: block.actions.map(s => this.formatStepCell(s.name, s.detail)).join('\n'),
+      };
+      if (block.results.length > 0) {
+        stepDef.result = block.results.map(s => this.formatStepCell(s.name, s.detail)).join('\n');
+      }
+      stepDefinitions.push(stepDef);
+
+      const groupStatus = this.combineStepStatuses(allSteps.map(s => s.status));
+      const totalDuration = allSteps.reduce((sum, s) => sum + s.duration, 0);
+      const stepResult: XrayTestStepResult = {
+        status: this.toXrayStepStatus(groupStatus),
+        comment:
+          groupStatus === 'skipped'
+            ? 'Skipped — a previous step failed'
+            : `Duration: ${totalDuration}ms`,
+      };
+
+      // Evidence (skipped steps never ran, so they have none):
+      // - Always attach JSON (API-check) evidence from every step in the block.
+      // - On a PASS, attach screenshots from the Then (result) steps only — the verification
+      //   image for the compacted step.
+      // - On a FAILURE anywhere in the block (When/And/Then), attach EVERY screenshot from the
+      //   block so the failure is fully captured.
+      if (groupStatus !== 'skipped') {
+        const blockFailed = groupStatus === 'failed';
+        // Result steps: JSON + their screenshots (the Then verification image).
+        const resultEvidence = await this.collectStepEvidence(
+          block.results.map(s => s.index),
+          attachments,
+          testStatus,
+          true,
+        );
+        // Action steps: JSON always; screenshots only when the block failed.
+        const actionEvidence = await this.collectStepEvidence(
+          block.actions.map(s => s.index),
+          attachments,
+          testStatus,
+          blockFailed,
+        );
+        const evidence = [...actionEvidence, ...resultEvidence];
+        if (evidence.length > 0) {
+          stepResult.evidence = evidence;
+        }
+      }
+
+      stepResults.push(stepResult);
+    }
 
     return { stepDefinitions, stepResults };
   }
@@ -366,11 +539,22 @@ class XrayJsonReporter {
       testStatus,
     );
 
-    // Mark last step as failed if test failed — duration stays in comment, error goes in actualResult
+    // Attach the failure detail to the step that actually failed. extractSteps already set
+    // per-step statuses from the fixture annotations (PASSED / FAILED / skipped), so we just
+    // record the error message on the FAILED step's actualResult. Fallback: if the test
+    // failed but no step was flagged (e.g. a failure outside any test.step), mark the last
+    // step failed so the failure is still visible.
+    // Condense the raw Playwright assertion dump into a readable one-liner for Xray.
+    const failureSummary = this.humanizeError(testResult.error?.message);
     if (testStatus !== 'passed' && stepResults.length > 0) {
-      const lastStep = stepResults[stepResults.length - 1];
-      lastStep.status = 'FAILED';
-      lastStep.actualResult = testResult.error?.message || 'Test failed';
+      const failedStep = stepResults.find(s => s.status === 'FAILED');
+      if (failedStep) {
+        failedStep.actualResult = failureSummary;
+      } else {
+        const lastStep = stepResults[stepResults.length - 1];
+        lastStep.status = 'FAILED';
+        lastStep.actualResult = failureSummary;
+      }
     }
 
     // Remove test-level evidence to avoid duplication (using step-level evidence instead)
@@ -383,7 +567,7 @@ class XrayJsonReporter {
         steps: stepDefinitions.length > 0 ? stepDefinitions : undefined,
       },
       status: this.getTestStatus(testStatus),
-      comment: testResult.error?.message,
+      comment: testStatus !== 'passed' ? failureSummary : testResult.error?.message,
       steps: stepResults.length > 0 ? stepResults : undefined,
     };
   }
@@ -412,8 +596,9 @@ class XrayJsonReporter {
     // to pick the tests ("ALL" when none was applied), and we link the whole workflow.
     const description =
       `Automated test execution for ${targetEnv} environment | Test tag: ${this.testTagLabel()}\n\n` +
-      `Results: ${passedCount} passed, ${failedCount} failed, ${todoCount} skipped` +
-      (pipelineUrl ? `\n\nCircleCI pipeline: ${pipelineUrl}` : '');
+      `Results: ${passedCount} passed, ${failedCount} failed, ${todoCount} skipped${
+        pipelineUrl ? `\n\nCircleCI pipeline: ${pipelineUrl}` : ''
+      }`;
 
     // If the pre-run frontload step created an execution, import results INTO it (it's
     // Xray-created, so import-ready, and already linked to the trigger ticket). We pass
@@ -558,6 +743,53 @@ class XrayJsonReporter {
   // Jira link type connecting a Test Execution to the ticket it tests (outward "tests").
   private readonly EXECUTION_LINK_TYPE = 'Test';
 
+  /** Derives the Jira base URL (origin) from an issue's `self` URL. */
+  private baseUrlFrom(selfUrl: string): string | undefined {
+    try {
+      return new URL(selfUrl).origin;
+    } catch {
+      console.log(`${this.styles.warning} Could not derive Jira base URL from "${selfUrl}".`);
+      return undefined;
+    }
+  }
+
+  /**
+   * POSTs a Jira issue link of the configured type (outward "tests" → inward "is tested by")
+   * between two issues. Non-fatal: logs and returns on any failure.
+   */
+  private async linkIssues(baseUrl: string, outwardKey: string, inwardKey: string): Promise<void> {
+    if (!env.JIRA_EMAIL || !env.JIRA_API_KEY) {
+      console.log(`${this.styles.warning} JIRA_EMAIL/JIRA_API_KEY not set — skipping issue link.`);
+      return;
+    }
+    const auth = Buffer.from(`${env.JIRA_EMAIL}:${env.JIRA_API_KEY}`).toString('base64');
+    try {
+      const response = await fetch(`${baseUrl}/rest/api/3/issueLink`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Basic ${auth}` },
+        body: JSON.stringify({
+          type: { name: this.EXECUTION_LINK_TYPE },
+          outwardIssue: { key: outwardKey },
+          inwardIssue: { key: inwardKey },
+        }),
+      });
+      if (response.ok || response.status === 201) {
+        console.log(
+          `${this.styles.success} Linked ${outwardKey} → ${inwardKey} ("${this.EXECUTION_LINK_TYPE}").`,
+        );
+      } else {
+        const text = await response.text();
+        console.log(
+          `${this.styles.warning} Failed to link ${outwardKey} → ${inwardKey} (HTTP ${response.status}): ${text.slice(0, 200)}`,
+        );
+      }
+    } catch (error) {
+      console.log(
+        `${this.styles.warning} Error linking ${outwardKey} → ${inwardKey}: ${(error as Error).message}`,
+      );
+    }
+  }
+
   /**
    * Links the freshly auto-created execution to the ORIGINAL TRIGGERING TICKET (the
    * Task/Story that fired the Jira Automation), using the same "Test" link the automation
@@ -587,18 +819,17 @@ class XrayJsonReporter {
     // Find the triggering ticket via the original execution's "Test" link.
     let triggerKey: string | undefined;
     try {
-      const res = await fetch(
-        `${baseUrl}/rest/api/3/issue/${originalExecKey}?fields=issuelinks`,
-        { headers },
-      );
+      const res = await fetch(`${baseUrl}/rest/api/3/issue/${originalExecKey}?fields=issuelinks`, {
+        headers,
+      });
       if (res.ok) {
         const data = (await res.json()) as {
           fields?: {
-            issuelinks?: Array<{
+            issuelinks?: {
               type?: { name?: string };
               outwardIssue?: { key: string };
               inwardIssue?: { key: string };
-            }>;
+            }[];
           };
         };
         const testLink = (data.fields?.issuelinks ?? []).find(
@@ -625,31 +856,7 @@ class XrayJsonReporter {
 
     // Replicate the automation's link: triggering ticket as the outward ("tests") side,
     // the new execution as the inward ("is tested by") side.
-    try {
-      const response = await fetch(`${baseUrl}/rest/api/3/issueLink`, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({
-          type: { name: this.EXECUTION_LINK_TYPE },
-          outwardIssue: { key: triggerKey },
-          inwardIssue: { key: newKey },
-        }),
-      });
-      if (response.ok || response.status === 201) {
-        console.log(
-          `${this.styles.success} Linked execution ${newKey} to triggering ticket ${triggerKey} ("${this.EXECUTION_LINK_TYPE}").`,
-        );
-      } else {
-        const text = await response.text();
-        console.log(
-          `${this.styles.warning} Failed to link ${newKey} to ${triggerKey} (HTTP ${response.status}): ${text.slice(0, 200)}`,
-        );
-      }
-    } catch (error) {
-      console.log(
-        `${this.styles.warning} Error linking ${newKey} to ${triggerKey}: ${(error as Error).message}`,
-      );
-    }
+    await this.linkIssues(baseUrl, triggerKey, newKey);
   }
 
   /**
@@ -715,7 +922,7 @@ class XrayJsonReporter {
         body: JSON.stringify({ query }),
       });
       const json = (await res.json()) as {
-        data?: { getTests?: { total?: number; results?: Array<{ jira?: { summary?: string } }> } };
+        data?: { getTests?: { total?: number; results?: { jira?: { summary?: string } }[] } };
       };
       const data = json.data?.getTests;
       if (!data) break;
@@ -751,7 +958,9 @@ class XrayJsonReporter {
       `${this.styles.info} Frontload: ${known.length} known test(s) to pre-load; ${skipped} new test(s) skipped (they'll appear with results after the run).`,
     );
     if (known.length === 0) {
-      console.log(`${this.styles.warning} No already-known tests to frontload; skipping pre-creation.`);
+      console.log(
+        `${this.styles.warning} No already-known tests to frontload; skipping pre-creation.`,
+      );
       return null;
     }
     const pipelineUrl = this.getPipelineUrl();
@@ -760,8 +969,9 @@ class XrayJsonReporter {
         summary: `Playwright Test Execution - ${new Date().toISOString()}`,
         description:
           `Automated test execution for ${env.TARGET_ENV} environment | Test tag: ${this.testTagLabel()}\n\n` +
-          `${known.length} test(s) queued — results pending.` +
-          (pipelineUrl ? `\n\nCircleCI pipeline: ${pipelineUrl}` : ''),
+          `${known.length} test(s) queued — results pending.${
+            pipelineUrl ? `\n\nCircleCI pipeline: ${pipelineUrl}` : ''
+          }`,
       },
       tests: known.map(summary => ({
         testInfo: { summary, type: 'Manual' as const, projectKey: env.XRAY_PROJECT_KEY || 'QAE' },
@@ -772,8 +982,78 @@ class XrayJsonReporter {
     const issue = resp.testExecIssue ?? resp;
     const newKey = issue?.key;
     const newSelf = issue?.self;
-    if (newKey && newSelf && originalExecKey && originalExecKey !== 'none' && originalExecKey.trim() !== '') {
+    if (
+      newKey &&
+      newSelf &&
+      originalExecKey &&
+      originalExecKey !== 'none' &&
+      originalExecKey.trim() !== ''
+    ) {
       await this.linkExecutionToTrigger(newKey, originalExecKey, newSelf);
+    }
+    return newKey ?? null;
+  }
+
+  /** Summaries (titles) of the tests that FAILED in a Playwright results file. */
+  async getFailedTestTitles(playwrightJsonPath: string): Promise<string[]> {
+    const playwrightResult = JSON.parse(fs.readFileSync(playwrightJsonPath, 'utf8'));
+    const tests: XrayTest[] = [];
+    for (const suite of playwrightResult.suites || []) {
+      await this.processSuite(suite, tests);
+    }
+    const failed = tests
+      .filter(t => t.status === 'FAILED')
+      .map(t => t.testInfo?.summary)
+      .filter((s): s is string => !!s);
+    return [...new Set(failed)];
+  }
+
+  /**
+   * SOP follow-up for a Jira-triggered run with failures: create a NEW Test Execution that
+   * holds ONLY the failed tests, each referenced by name (so Xray fills in their steps) with
+   * status TO DO and no results — a clean slate for a tester to manually re-run/confirm the
+   * failures. The execution is named after, and linked ("Test") to, the automated execution
+   * it confirms. Returns the new execution key. (Caller decides when to invoke this; it is
+   * NOT run on local executions.)
+   */
+  async createManualConfirmationExecution(
+    failedTitles: string[],
+    automatedExecKey: string,
+  ): Promise<string | null> {
+    if (!(env.XRAY_CLIENT_ID && env.XRAY_CLIENT_SECRET)) {
+      console.log(
+        `${this.styles.warning} No Xray credentials — skipping manual-confirmation execution.`,
+      );
+      return null;
+    }
+    const titles = [...new Set(failedTitles)];
+    if (titles.length === 0) return null;
+
+    const pipelineUrl = this.getPipelineUrl();
+    const payload: XrayExecutionResult = {
+      info: {
+        summary: `Manual Confirmation of Automated Execution: ${automatedExecKey}`,
+        description:
+          `Manual confirmation of ${titles.length} failed test(s) from automated execution ${automatedExecKey}.\n\n` +
+          `Re-run these by hand to confirm whether each failure is real or a false negative.${
+            pipelineUrl ? `\n\nCircleCI pipeline: ${pipelineUrl}` : ''
+          }`,
+      },
+      tests: titles.map(summary => ({
+        testInfo: { summary, type: 'Manual' as const, projectKey: env.XRAY_PROJECT_KEY || 'QAE' },
+        status: 'TODO' as const,
+      })),
+    };
+
+    const resp = await this.uploadSingleBatch(payload, 'manual-confirmation');
+    const issue = resp.testExecIssue ?? resp;
+    const newKey = issue?.key;
+    const newSelf = issue?.self;
+    if (newKey && newSelf) {
+      // Link the manual-confirmation execution to the automated execution it confirms:
+      // manual-confirmation ("tests") → automated execution ("is tested by").
+      const baseUrl = this.baseUrlFrom(newSelf);
+      if (baseUrl) await this.linkIssues(baseUrl, newKey, automatedExecKey);
     }
     return newKey ?? null;
   }
@@ -985,10 +1265,10 @@ class XrayJsonReporter {
   /**
    * Main method to process and upload results
    */
-  async processAndUpload(playwrightJsonPath: string): Promise<void> {
+  async processAndUpload(playwrightJsonPath: string): Promise<string | undefined> {
     if (!(env.XRAY_CLIENT_ID && env.XRAY_CLIENT_SECRET)) {
       console.log(`${this.styles.warning} No Xray credentials found, skipping upload to JIRA Xray`);
-      return;
+      return undefined;
     }
 
     try {
@@ -1036,7 +1316,7 @@ class XrayJsonReporter {
 
       if (xrayResult.tests.length === 0) {
         console.log(`${this.styles.warning} No tests to upload, skipping Xray upload`);
-        return;
+        return undefined;
       }
 
       // Auto-creates a new execution (see convertPlaywrightJsonToXray) and returns it.
@@ -1074,6 +1354,9 @@ class XrayJsonReporter {
       const totalDuration = Date.now() - processStart;
       console.log(`${this.styles.upload} Xray upload completed successfully (${totalDuration}ms)`);
       console.log(`${this.styles.separator}\n`);
+
+      // The execution the results landed in (the frontload target, or the auto-created one).
+      return newKey ?? process.env.XRAY_TARGET_EXECUTION?.trim() ?? undefined;
     } catch (error) {
       console.error(`${this.styles.error} Failed to process and upload:`, error);
       throw error;
@@ -1120,7 +1403,14 @@ class XrayJsonReporter {
 
     const testExecKey = env.TEST_EXECUTION_KEY;
     if (env.XRAY_CLIENT_ID && env.XRAY_CLIENT_SECRET && testExecKey && testExecKey !== 'none') {
-      console.log(`${this.styles.info} Linking to Test Execution: ${testExecKey}`);
+      // Local/inline run (e.g. from the VS Code test explorer): import results DIRECTLY into
+      // the execution named in TEST_EXECUTION_KEY (.env) instead of auto-creating a new one.
+      // The CI flow never reaches here — its shards defer (XRAY_DEFER_UPLOAD=true) and the
+      // merge job uses upload-to-xray.ts, which handles frontload/auto-create separately.
+      if (!process.env.XRAY_TARGET_EXECUTION?.trim()) {
+        process.env.XRAY_TARGET_EXECUTION = testExecKey;
+      }
+      console.log(`${this.styles.info} Updating Test Execution directly: ${testExecKey}`);
 
       // Check for multiple possible JSON file locations
       const possiblePaths = [
