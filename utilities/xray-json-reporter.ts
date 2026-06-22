@@ -743,6 +743,53 @@ class XrayJsonReporter {
   // Jira link type connecting a Test Execution to the ticket it tests (outward "tests").
   private readonly EXECUTION_LINK_TYPE = 'Test';
 
+  /** Derives the Jira base URL (origin) from an issue's `self` URL. */
+  private baseUrlFrom(selfUrl: string): string | undefined {
+    try {
+      return new URL(selfUrl).origin;
+    } catch {
+      console.log(`${this.styles.warning} Could not derive Jira base URL from "${selfUrl}".`);
+      return undefined;
+    }
+  }
+
+  /**
+   * POSTs a Jira issue link of the configured type (outward "tests" → inward "is tested by")
+   * between two issues. Non-fatal: logs and returns on any failure.
+   */
+  private async linkIssues(baseUrl: string, outwardKey: string, inwardKey: string): Promise<void> {
+    if (!env.JIRA_EMAIL || !env.JIRA_API_KEY) {
+      console.log(`${this.styles.warning} JIRA_EMAIL/JIRA_API_KEY not set — skipping issue link.`);
+      return;
+    }
+    const auth = Buffer.from(`${env.JIRA_EMAIL}:${env.JIRA_API_KEY}`).toString('base64');
+    try {
+      const response = await fetch(`${baseUrl}/rest/api/3/issueLink`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Basic ${auth}` },
+        body: JSON.stringify({
+          type: { name: this.EXECUTION_LINK_TYPE },
+          outwardIssue: { key: outwardKey },
+          inwardIssue: { key: inwardKey },
+        }),
+      });
+      if (response.ok || response.status === 201) {
+        console.log(
+          `${this.styles.success} Linked ${outwardKey} → ${inwardKey} ("${this.EXECUTION_LINK_TYPE}").`,
+        );
+      } else {
+        const text = await response.text();
+        console.log(
+          `${this.styles.warning} Failed to link ${outwardKey} → ${inwardKey} (HTTP ${response.status}): ${text.slice(0, 200)}`,
+        );
+      }
+    } catch (error) {
+      console.log(
+        `${this.styles.warning} Error linking ${outwardKey} → ${inwardKey}: ${(error as Error).message}`,
+      );
+    }
+  }
+
   /**
    * Links the freshly auto-created execution to the ORIGINAL TRIGGERING TICKET (the
    * Task/Story that fired the Jira Automation), using the same "Test" link the automation
@@ -809,31 +856,7 @@ class XrayJsonReporter {
 
     // Replicate the automation's link: triggering ticket as the outward ("tests") side,
     // the new execution as the inward ("is tested by") side.
-    try {
-      const response = await fetch(`${baseUrl}/rest/api/3/issueLink`, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({
-          type: { name: this.EXECUTION_LINK_TYPE },
-          outwardIssue: { key: triggerKey },
-          inwardIssue: { key: newKey },
-        }),
-      });
-      if (response.ok || response.status === 201) {
-        console.log(
-          `${this.styles.success} Linked execution ${newKey} to triggering ticket ${triggerKey} ("${this.EXECUTION_LINK_TYPE}").`,
-        );
-      } else {
-        const text = await response.text();
-        console.log(
-          `${this.styles.warning} Failed to link ${newKey} to ${triggerKey} (HTTP ${response.status}): ${text.slice(0, 200)}`,
-        );
-      }
-    } catch (error) {
-      console.log(
-        `${this.styles.warning} Error linking ${newKey} to ${triggerKey}: ${(error as Error).message}`,
-      );
-    }
+    await this.linkIssues(baseUrl, triggerKey, newKey);
   }
 
   /**
@@ -967,6 +990,70 @@ class XrayJsonReporter {
       originalExecKey.trim() !== ''
     ) {
       await this.linkExecutionToTrigger(newKey, originalExecKey, newSelf);
+    }
+    return newKey ?? null;
+  }
+
+  /** Summaries (titles) of the tests that FAILED in a Playwright results file. */
+  async getFailedTestTitles(playwrightJsonPath: string): Promise<string[]> {
+    const playwrightResult = JSON.parse(fs.readFileSync(playwrightJsonPath, 'utf8'));
+    const tests: XrayTest[] = [];
+    for (const suite of playwrightResult.suites || []) {
+      await this.processSuite(suite, tests);
+    }
+    const failed = tests
+      .filter(t => t.status === 'FAILED')
+      .map(t => t.testInfo?.summary)
+      .filter((s): s is string => !!s);
+    return [...new Set(failed)];
+  }
+
+  /**
+   * SOP follow-up for a Jira-triggered run with failures: create a NEW Test Execution that
+   * holds ONLY the failed tests, each referenced by name (so Xray fills in their steps) with
+   * status TO DO and no results — a clean slate for a tester to manually re-run/confirm the
+   * failures. The execution is named after, and linked ("Test") to, the automated execution
+   * it confirms. Returns the new execution key. (Caller decides when to invoke this; it is
+   * NOT run on local executions.)
+   */
+  async createManualConfirmationExecution(
+    failedTitles: string[],
+    automatedExecKey: string,
+  ): Promise<string | null> {
+    if (!(env.XRAY_CLIENT_ID && env.XRAY_CLIENT_SECRET)) {
+      console.log(
+        `${this.styles.warning} No Xray credentials — skipping manual-confirmation execution.`,
+      );
+      return null;
+    }
+    const titles = [...new Set(failedTitles)];
+    if (titles.length === 0) return null;
+
+    const pipelineUrl = this.getPipelineUrl();
+    const payload: XrayExecutionResult = {
+      info: {
+        summary: `Manual Confirmation of Automated Execution: ${automatedExecKey}`,
+        description:
+          `Manual confirmation of ${titles.length} failed test(s) from automated execution ${automatedExecKey}.\n\n` +
+          `Re-run these by hand to confirm whether each failure is real or a false negative.${
+            pipelineUrl ? `\n\nCircleCI pipeline: ${pipelineUrl}` : ''
+          }`,
+      },
+      tests: titles.map(summary => ({
+        testInfo: { summary, type: 'Manual' as const, projectKey: env.XRAY_PROJECT_KEY || 'QAE' },
+        status: 'TODO' as const,
+      })),
+    };
+
+    const resp = await this.uploadSingleBatch(payload, 'manual-confirmation');
+    const issue = resp.testExecIssue ?? resp;
+    const newKey = issue?.key;
+    const newSelf = issue?.self;
+    if (newKey && newSelf) {
+      // Link the manual-confirmation execution to the automated execution it confirms:
+      // manual-confirmation ("tests") → automated execution ("is tested by").
+      const baseUrl = this.baseUrlFrom(newSelf);
+      if (baseUrl) await this.linkIssues(baseUrl, newKey, automatedExecKey);
     }
     return newKey ?? null;
   }
@@ -1178,10 +1265,10 @@ class XrayJsonReporter {
   /**
    * Main method to process and upload results
    */
-  async processAndUpload(playwrightJsonPath: string): Promise<void> {
+  async processAndUpload(playwrightJsonPath: string): Promise<string | undefined> {
     if (!(env.XRAY_CLIENT_ID && env.XRAY_CLIENT_SECRET)) {
       console.log(`${this.styles.warning} No Xray credentials found, skipping upload to JIRA Xray`);
-      return;
+      return undefined;
     }
 
     try {
@@ -1229,7 +1316,7 @@ class XrayJsonReporter {
 
       if (xrayResult.tests.length === 0) {
         console.log(`${this.styles.warning} No tests to upload, skipping Xray upload`);
-        return;
+        return undefined;
       }
 
       // Auto-creates a new execution (see convertPlaywrightJsonToXray) and returns it.
@@ -1267,6 +1354,9 @@ class XrayJsonReporter {
       const totalDuration = Date.now() - processStart;
       console.log(`${this.styles.upload} Xray upload completed successfully (${totalDuration}ms)`);
       console.log(`${this.styles.separator}\n`);
+
+      // The execution the results landed in (the frontload target, or the auto-created one).
+      return newKey ?? process.env.XRAY_TARGET_EXECUTION?.trim() ?? undefined;
     } catch (error) {
       console.error(`${this.styles.error} Failed to process and upload:`, error);
       throw error;
