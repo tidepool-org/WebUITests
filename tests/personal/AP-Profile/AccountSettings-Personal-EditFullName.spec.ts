@@ -31,17 +31,28 @@ test.describe('Personal Account Settings edit (Full Name only) updates Profile e
       // ========== PHASE 1: PERSONAL USER EDITS PROFILE ==========
 
       // Step 1: Log in to personal account and setup network capture
-      await test.step('Given Personal account has been logged in', async () => {
-        api = createNetworkHelper(page);
-        await api.startCapture();
-        await page.goto('/data');
-        await patientTest.patient.setup(page);
-      });
+      await test.step(
+        'Given Personal account has been logged in',
+        async () => {
+          api = createNetworkHelper(page);
+          await api.startCapture();
+          await page.goto('/data');
+          await patientTest.patient.setup(page);
+        },
+        {
+          detail:
+            'Log in to Tidepool Web using the automated personal account credentials stored in 1Password.',
+        },
+      );
 
       // Step 2: Navigate to account settings
-      await test.step('When user navigates to account settings', async () => {
-        await accountTest.account.navigateTo('AccountSettings', page);
-      });
+      await test.step(
+        'When user navigates to account settings',
+        async () => {
+          await accountTest.account.navigateTo('AccountSettings', page);
+        },
+        { detail: 'Open the Account Settings page from the navigation menu.' },
+      );
 
       // Step 3: GET response is pulled and validated
       await (test as any).stepNoScreenshot(
@@ -49,31 +60,47 @@ test.describe('Personal Account Settings edit (Full Name only) updates Profile e
         async () => {
           await api.validateEndpointResponse('profile-metadata-get');
         },
+        {
+          detail:
+            'Confirm the profile GET endpoint responds and the payload matches the expected schema.',
+        },
       );
 
       // Create new acccount settings page for the following test
       const accountSettingsPage = new AccountSettingsPage(page);
 
       // Step 4: Change the Full Name field to a new value
-      await test.step('When user updates the Full Name field', async () => {
-        newName = `Personal User Updated ${Math.floor(Math.random() * 10000)}`; // Remove let declaration
-        const nameInput = page.getByRole('textbox', { name: /full name/i });
-        await nameInput.fill(newName);
-      });
+      await test.step(
+        'When user updates the Full Name field',
+        async () => {
+          newName = `Personal User Updated ${Math.floor(Math.random() * 10000)}`; // Remove let declaration
+          const nameInput = page.getByRole('textbox', { name: /full name/i });
+          await nameInput.fill(newName);
+        },
+        { detail: 'Enter a new value into the Full Name field.' },
+      );
 
       // Step 5: Tap the Save button
-      await test.step('When user taps the save button', async () => {
-        await accountSettingsPage.saveButton.click();
-      });
+      await test.step(
+        'And user taps the save button',
+        async () => {
+          await accountSettingsPage.saveButton.click();
+        },
+        { detail: 'Click the Save button to submit the change.' },
+      );
 
       // Step 6: Confirm save changes message displays
-      await test.step('Then the save changes message displays', async () => {
-        await accountSettingsPage.saveConfirm.waitFor({ state: 'visible', timeout: 5000 });
-      });
+      await test.step(
+        'Then the save changes message displays',
+        async () => {
+          await accountSettingsPage.saveConfirm.waitFor({ state: 'visible', timeout: 5000 });
+        },
+        { detail: 'Confirm the save-confirmation message appears.' },
+      );
 
       // Step 7: Validate PUT request and save value
       await (test as any).stepNoScreenshot(
-        'Then PUT request is validated and name is set to new value',
+        'And PUT request is validated and name is set to new value',
         async () => {
           await api.validateEndpointResponse('profile-metadata-put');
           putCapture = api
@@ -88,12 +115,20 @@ test.describe('Personal Account Settings edit (Full Name only) updates Profile e
             throw new Error(`PUT request did not set fullName to ${newName}`);
           }
         },
+        {
+          detail:
+            'Confirm the profile PUT endpoint responds and the request payload sets the full name to the new value.',
+        },
       );
 
       // Step 8: Navigate to Profile page
-      await test.step('When user navigates to Profile page', async () => {
-        await patientTest.patient.navigateTo('Profile', page);
-      });
+      await test.step(
+        'When user navigates to Profile page',
+        async () => {
+          await patientTest.patient.navigateTo('Profile', page);
+        },
+        { detail: 'Open the Profile page from the navigation menu.' },
+      );
 
       // Step 9: Confirm GET request matches the saved PUT request
       await (test as any).stepNoScreenshot(
@@ -128,6 +163,10 @@ test.describe('Personal Account Settings edit (Full Name only) updates Profile e
             console.log('Later GET captures found:', laterGetCaptures.length);
             throw new Error('GET response fullName does not match PUT request fullName');
           }
+        },
+        {
+          detail:
+            'Confirm the profile GET endpoint responds and the returned full name matches the value saved by the PUT request.',
         },
       );
     },

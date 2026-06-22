@@ -23,23 +23,38 @@ test.describe('Account Settings - Personal - Edit Email', () => {
     },
     async ({ page }) => {
       // Step 1: Log in to personal account and setup network capture
-      await test.step('Given personal account has been logged in', async () => {
-        api = createNetworkHelper(page);
-        await api.startCapture();
-        await page.goto('/data');
-        await patientTest.patient.setup(page);
-      });
+      await test.step(
+        'Given personal account has been logged in',
+        async () => {
+          api = createNetworkHelper(page);
+          await api.startCapture();
+          await page.goto('/data');
+          await patientTest.patient.setup(page);
+        },
+        {
+          detail:
+            'Log in to Tidepool Web using the automated personal account credentials stored in 1Password.',
+        },
+      );
 
       // Step 2: Navigate to account settings
-      await test.step('When user navigates to account settings', async () => {
-        await accountTest.account.navigateTo('AccountSettings', page);
-      });
+      await test.step(
+        'When user navigates to account settings',
+        async () => {
+          await accountTest.account.navigateTo('AccountSettings', page);
+        },
+        { detail: 'Open the account settings page from the navigation menu.' },
+      );
 
       // Step 3: Validate profile GET response
       await (test as any).stepNoScreenshot(
         'Then profile endpoint responds with GET request consistent with schema ',
         async () => {
           await api.validateEndpointResponse('profile-metadata-get');
+        },
+        {
+          detail:
+            'Confirm the profile metadata GET endpoint responds and the payload matches the expected schema.',
         },
       );
 
@@ -48,25 +63,37 @@ test.describe('Account Settings - Personal - Edit Email', () => {
       let originalEmail = '';
 
       // Step 4: Read and change email field to temporary value
-      await test.step('When user updates the email field', async () => {
-        originalEmail = await accountSettingsPage.emailInput.inputValue();
-        await accountSettingsPage.emailInput.fill('qa+TempPersonalEdit@tidepool.org');
-      });
+      await test.step(
+        'When user updates the email field',
+        async () => {
+          originalEmail = await accountSettingsPage.emailInput.inputValue();
+          await accountSettingsPage.emailInput.fill('qa+TempPersonalEdit@tidepool.org');
+        },
+        { detail: 'Enter a new value in the email field, replacing the existing email address.' },
+      );
 
       // Step 5: Tap the save button
-      await test.step('When user taps the save button', async () => {
-        await accountSettingsPage.saveButton.click();
-      });
+      await test.step(
+        'And user taps the save button',
+        async () => {
+          await accountSettingsPage.saveButton.click();
+        },
+        { detail: 'Click the Save button to submit the email change.' },
+      );
 
       // Step 6: Confirm save changes message displays
-      await test.step('Then the save changes message displays', async () => {
-        await accountSettingsPage.saveConfirm.waitFor({ state: 'visible', timeout: 5000 });
-      });
+      await test.step(
+        'Then the save changes message displays',
+        async () => {
+          await accountSettingsPage.saveConfirm.waitFor({ state: 'visible', timeout: 5000 });
+        },
+        { detail: 'Confirm the save confirmation message appears after submitting the change.' },
+      );
 
       // Step 7: Validate the PUT request and the new email value. If this fails, the fixture
       // records it FAILED; the cleanup steps below still run to revert the email.
       await (test as any).stepNoScreenshot(
-        'Then PUT request is validated and email is set to new value',
+        'And PUT request is validated and email is set to new value',
         async () => {
           await api.validateEndpointResponse('profile-metadata-put');
           const putCapture = api
@@ -81,6 +108,10 @@ test.describe('Account Settings - Personal - Edit Email', () => {
             throw new Error('PUT request did not set email to qa+TempPersonalEdit@tidepool.org');
           }
         },
+        {
+          detail:
+            'Confirm the profile PUT endpoint responds and the request payload reflects the updated email value.',
+        },
       );
 
       // Steps 8-10: revert the email to its original value. These are CLEANUP steps, so they
@@ -93,15 +124,27 @@ test.describe('Account Settings - Personal - Edit Email', () => {
           async () => {
             await accountSettingsPage.emailInput.fill(originalEmail);
           },
+          {
+            detail:
+              'Change the email field back to the original email address recorded before the edit.',
+          },
         );
 
-        await (test as any).cleanupStep('When user taps the save button', async () => {
-          await accountSettingsPage.saveButton.click();
-        });
+        await (test as any).cleanupStep(
+          'And user taps the save button',
+          async () => {
+            await accountSettingsPage.saveButton.click();
+          },
+          { detail: 'Click the Save button to submit the reverted email.' },
+        );
 
-        await (test as any).cleanupStep('Then the save changes message displays', async () => {
-          await accountSettingsPage.saveConfirm.waitFor({ state: 'visible', timeout: 5000 });
-        });
+        await (test as any).cleanupStep(
+          'Then the save changes message displays',
+          async () => {
+            await accountSettingsPage.saveConfirm.waitFor({ state: 'visible', timeout: 5000 });
+          },
+          { detail: 'Confirm the save confirmation message appears after reverting the email.' },
+        );
       }
 
       await api.stopCapture();
