@@ -23,10 +23,30 @@ interface CustomFixtures {
 }
 
 // Define the test type with custom fixtures
-export const test: TestType<
+// Options accepted by our wrapped test.step / cleanupStep / stepNoScreenshot: the standard
+// Playwright step options plus an optional `detail` — a short, tester-facing description of
+// what the step does under the hood (not exact values). It renders below a bold header (the
+// step text) in the Xray step's Action (When/Given) or Result (Then) cell.
+interface StepDetailOptions {
+  box?: boolean;
+  timeout?: number;
+  detail?: string;
+}
+type StepBody<T> = (step: TestStepInfo) => T | Promise<T>;
+interface DetailStep {
+  <T>(title: string, body: StepBody<T>, options?: StepDetailOptions): Promise<T>;
+  skip<T>(title: string, body: StepBody<T>): Promise<T>;
+}
+type ExtendedTest = TestType<
   PlaywrightTestArgs & PlaywrightTestOptions & CustomFixtures,
   PlaywrightWorkerArgs & PlaywrightWorkerOptions
-> = base.extend({
+> & {
+  step: DetailStep;
+  stepNoScreenshot<T>(title: string, body: StepBody<T>, options?: StepDetailOptions): Promise<T>;
+  cleanupStep<T>(title: string, body: StepBody<T>, options?: StepDetailOptions): Promise<T>;
+};
+
+export const test = base.extend<CustomFixtures>({
   page: async ({ page }, use, testInfo) => {
     const modifiedTestInfo = testInfo;
     modifiedTestInfo.snapshotSuffix = '';
@@ -100,10 +120,13 @@ export const test: TestType<
         name: string,
         durationMs: number,
         status: 'passed' | 'failed' | 'skipped',
+        detail?: string,
       ) => {
         testInfo.annotations.push({
           type: `Step Duration: ${name}`,
-          description: JSON.stringify({ durationMs, status }),
+          description: JSON.stringify(
+            detail ? { durationMs, status, detail } : { durationMs, status },
+          ),
         });
       };
 
@@ -112,11 +135,12 @@ export const test: TestType<
         this: any,
         name: string,
         fn: (step: TestStepInfo) => Promise<T> | T,
+        options?: StepDetailOptions,
       ) {
         return originalStep.call(this, name, async (stepInfo: TestStepInfo) => {
           // An earlier step already failed: record this one as skipped, don't run its body.
           if (aborted) {
-            recordStep(name, 0, 'skipped');
+            recordStep(name, 0, 'skipped', options?.detail);
             return undefined as unknown as T;
           }
 
@@ -128,14 +152,14 @@ export const test: TestType<
             console.timeEnd(`[step] ${name}`);
             const duration = Date.now() - startTime;
             stepTimings.set(name, duration);
-            recordStep(name, duration, 'passed');
+            recordStep(name, duration, 'passed', options?.detail);
             return result;
           } catch (error) {
             console.timeEnd(`[step] ${name}`);
             const duration = Date.now() - startTime;
             aborted = true;
             firstError = error;
-            recordStep(name, duration, 'failed');
+            recordStep(name, duration, 'failed', options?.detail);
             // Swallow here so the remaining steps run through this wrapper and get recorded
             // as skipped; the test is failed via the re-throw at teardown below.
             return undefined as unknown as T;
@@ -159,15 +183,19 @@ export const test: TestType<
         this: any,
         name: string,
         fn: (step: TestStepInfo) => Promise<T> | T,
+        options?: StepDetailOptions,
       ) {
+        // Bump the shared step ordinal (owned by the stepScreenshoter fixture) so cleanup
+        // steps keep the screenshot/JSON numbering aligned with the reporter's step index.
+        (globalThis as any).stepCounter?.increment?.();
         return originalStep.call(this, name, async (stepInfo: TestStepInfo) => {
           const startTime = Date.now();
           try {
             const result = await fn(stepInfo);
-            recordStep(name, Date.now() - startTime, 'passed');
+            recordStep(name, Date.now() - startTime, 'passed', options?.detail);
             return result;
           } catch (error) {
-            recordStep(name, Date.now() - startTime, 'failed');
+            recordStep(name, Date.now() - startTime, 'failed', options?.detail);
             // A cleanup failure must not abort the remaining cleanups; surface it in logs
             // but don't re-throw (the primary failure, if any, still fails the test).
             console.error(`[cleanup] step failed (continuing): ${name}`, error);
@@ -189,7 +217,7 @@ export const test: TestType<
       // Re-throw the first step failure (after the full step list has been recorded) so
       // Playwright marks the test failed.
       if (firstError) {
-        throw firstError;
+        throw firstError instanceof Error ? firstError : new Error(String(firstError));
       }
     },
     { auto: true },
@@ -233,55 +261,78 @@ export const test: TestType<
         this: any,
         name: string,
         fn: (step: TestStepInfo) => Promise<T> | T,
+        options?: StepDetailOptions,
       ) {
-        return originalStep.call(this, name, async (stepInfo: TestStepInfo) => {
-          // Set current step name for network helpers (clean name without [no-screenshot])
-          const stepCounterObj = (globalThis as any).stepCounter;
-          if (stepCounterObj) {
-            const cleanName = name.replace(/\s*\[no-screenshot\]\s*/g, '').trim();
-            stepCounterObj.setCurrentStepName(cleanName);
-          }
-
-          const result = await fn(stepInfo);
-
-          // Skip screenshot if step name contains [no-screenshot]
-          if (name.includes('[no-screenshot]')) {
-            return result;
-          }
-
-          // Take screenshot after step completion
-          stepCounter += 1;
-          try {
-            if (!page.isClosed()) {
-              // Use clean name for filename (without [no-screenshot])
+        // Assign this step its ordinal up-front, in invocation order. Every step bumps the
+        // counter exactly once (here, in stepNoScreenshot, and in cleanupStep), so the
+        // ordinal matches the reporter's per-step index even across [no-screenshot] and
+        // skipped steps — screenshots and API JSON for a step all carry this same number.
+        stepCounter += 1;
+        const stepOrdinal = stepCounter;
+        return originalStep.call(
+          this,
+          name,
+          async (stepInfo: TestStepInfo) => {
+            // Set current step name for network helpers (clean name without [no-screenshot])
+            const stepCounterObj = (globalThis as any).stepCounter;
+            if (stepCounterObj) {
               const cleanName = name.replace(/\s*\[no-screenshot\]\s*/g, '').trim();
-              const screenshotName = `step-${stepCounter.toString().padStart(2, '0')}-${cleanName.toLowerCase().replace(/[^a-z0-9]/g, '-')}.png`;
+              stepCounterObj.setCurrentStepName(cleanName);
+            }
 
-              // Take screenshot directly to buffer (no local file)
-              const screenshot = await page.screenshot({
-                fullPage: true,
-              });
+            // Run the step body, but capture any error so we can STILL take a screenshot of the
+            // failure state before re-throwing — a failing step's screenshot is exactly what a
+            // reviewer needs, and previously the throw skipped the capture below entirely.
+            let result: T | undefined;
+            let stepFailed = false;
+            let stepError: unknown;
+            try {
+              result = await fn(stepInfo);
+            } catch (error) {
+              stepFailed = true;
+              stepError = error;
+            }
 
-              // Attach to Playwright report AND force test-results folder creation
-              if (testInfo && typeof testInfo.attach === 'function') {
-                await testInfo.attach(screenshotName, {
-                  body: screenshot,
-                  contentType: 'image/png',
-                });
+            // Take screenshot after the step — on success OR failure — unless it opts out.
+            if (!name.includes('[no-screenshot]')) {
+              try {
+                if (!page.isClosed()) {
+                  // Use clean name for filename (without [no-screenshot])
+                  const cleanName = name.replace(/\s*\[no-screenshot\]\s*/g, '').trim();
+                  const screenshotName = `step-${stepOrdinal.toString().padStart(2, '0')}-${cleanName.toLowerCase().replace(/[^a-z0-9]/g, '-')}.png`;
 
-                // Also save to test-results for organized viewing (single source)
-                const testResultsDir = path.join(testInfo.outputDir, 'attachments');
-                await fs.promises.mkdir(testResultsDir, { recursive: true });
-                const screenshotPath = path.join(testResultsDir, screenshotName);
-                await fs.promises.writeFile(screenshotPath, screenshot);
+                  // Take screenshot directly to buffer (no local file)
+                  const screenshot = await page.screenshot({
+                    fullPage: true,
+                  });
+
+                  // Attach to Playwright report AND force test-results folder creation
+                  if (testInfo && typeof testInfo.attach === 'function') {
+                    await testInfo.attach(screenshotName, {
+                      body: screenshot,
+                      contentType: 'image/png',
+                    });
+
+                    // Also save to test-results for organized viewing (single source)
+                    const testResultsDir = path.join(testInfo.outputDir, 'attachments');
+                    await fs.promises.mkdir(testResultsDir, { recursive: true });
+                    const screenshotPath = path.join(testResultsDir, screenshotName);
+                    await fs.promises.writeFile(screenshotPath, screenshot);
+                  }
+                }
+              } catch {
+                // Screenshot capture failed, continue without screenshot
               }
             }
-          } catch (error) {
-            // Screenshot capture failed, continue without screenshot
-          }
 
-          return result;
-        });
+            // Propagate the original failure so the timer wrapper records this step as failed.
+            if (stepFailed) {
+              throw stepError instanceof Error ? stepError : new Error(String(stepError));
+            }
+            return result as T;
+          },
+          options,
+        );
       };
 
       // Add the skip method to match the original test.step interface
@@ -297,21 +348,30 @@ export const test: TestType<
         this: any,
         name: string,
         fn: (step: TestStepInfo) => Promise<T> | T,
+        options?: StepDetailOptions,
       ) {
-        return originalStep.call(this, name, async (stepInfo: TestStepInfo) => {
-          // Set current step name for network helpers (clean name)
-          const stepCounterObj = (globalThis as any).stepCounter;
-          if (stepCounterObj) {
-            stepCounterObj.setCurrentStepName(name);
-          }
+        // Bump the ordinal too (no screenshot, but its API JSON still gets this step's number,
+        // and the count stays aligned with the reporter's per-step index).
+        stepCounter += 1;
+        return originalStep.call(
+          this,
+          name,
+          async (stepInfo: TestStepInfo) => {
+            // Set current step name for network helpers (clean name)
+            const stepCounterObj = (globalThis as any).stepCounter;
+            if (stepCounterObj) {
+              stepCounterObj.setCurrentStepName(name);
+            }
 
-          const result = await fn(stepInfo);
+            const result = await fn(stepInfo);
 
-          // No screenshot taken for this step type
-          // console.log(`⏭️  API step completed without screenshot: ${name}`);
+            // No screenshot taken for this step type
+            // console.log(`⏭️  API step completed without screenshot: ${name}`);
 
-          return result;
-        });
+            return result;
+          },
+          options,
+        );
       };
 
       // Replace the original step with our enhanced version
@@ -346,7 +406,7 @@ export const test: TestType<
     },
     { auto: true },
   ],
-});
+}) as unknown as ExtendedTest;
 
 export { expect } from '@playwright/test';
 
