@@ -130,7 +130,11 @@ class XrayJsonReporter {
    * Videos and screenshots are only included for failed tests to keep payloads small.
    * JSON API responses are always included.
    */
-  private shouldIncludeEvidence(attachment: any, _testStatus: string, contentType: string): boolean {
+  private shouldIncludeEvidence(
+    attachment: any,
+    _testStatus: string,
+    contentType: string,
+  ): boolean {
     // Check if attachment has embedded base64 data (from JSON) or file path
     const hasData = !!attachment.body || (attachment.path && fs.existsSync(attachment.path));
 
@@ -152,10 +156,6 @@ class XrayJsonReporter {
     return true;
   }
 
-  // Maximum size (bytes) for a single evidence item sent to Xray.
-  // Xray Cloud returns HTTP 500 on payloads over ~1MB per test.
-  private readonly MAX_EVIDENCE_BYTES = 200 * 1024; // 200 KB
-
   // Xray step status used for steps that never ran because an earlier step failed. This
   // MUST match a step status defined in the Xray project — confirm the exact spelling/casing
   // in the project's settings (override here or via XRAY_SKIPPED_STEP_STATUS if it differs).
@@ -171,8 +171,14 @@ class XrayJsonReporter {
   }
 
   private isThenStep(stepName: string): boolean {
-    const lower = stepName.toLowerCase();
-    return lower.startsWith('then ') || lower.startsWith('and ');
+    return stepName.toLowerCase().startsWith('then ');
+  }
+
+  // "And" continues whatever the previous keyword was: after a When it extends the action,
+  // after a Then it extends the expected. (Playwright itself doesn't parse these — only this
+  // reporter does.)
+  private isAndStep(stepName: string): boolean {
+    return stepName.toLowerCase().startsWith('and ');
   }
 
   private parseDuration(duration: string): number {
@@ -188,11 +194,16 @@ class XrayJsonReporter {
   private parseStepAnnotation(description: string): {
     durationMs: number;
     status: 'passed' | 'failed' | 'skipped';
+    detail?: string;
   } {
     try {
       const parsed = JSON.parse(description);
       if (parsed && typeof parsed === 'object' && 'status' in parsed) {
-        return { durationMs: Number(parsed.durationMs) || 0, status: parsed.status };
+        return {
+          durationMs: Number(parsed.durationMs) || 0,
+          status: parsed.status,
+          detail: typeof parsed.detail === 'string' ? parsed.detail : undefined,
+        };
       }
     } catch {
       // Not JSON — fall through to the legacy "<n>ms" format.
@@ -200,10 +211,18 @@ class XrayJsonReporter {
     return { durationMs: this.parseDuration(description), status: 'passed' };
   }
 
+  /**
+   * Formats an Xray step Action/Result cell as a bold header (the step text) followed by an
+   * optional tester-facing detail on a new line. Uses Jira-wiki bold (`*…*`), which Xray
+   * Cloud renders in step fields.
+   */
+  private formatStepCell(header: string, detail?: string): string {
+    const bold = `*${header}*`;
+    return detail && detail.trim() ? `${bold}\n${detail.trim()}` : bold;
+  }
+
   /** Maps an internal step outcome to the Xray step status to upload. */
-  private toXrayStepStatus(
-    status: 'passed' | 'failed' | 'skipped',
-  ): XrayTestStepResult['status'] {
+  private toXrayStepStatus(status: 'passed' | 'failed' | 'skipped'): XrayTestStepResult['status'] {
     if (status === 'failed') return 'FAILED';
     if (status === 'skipped') return this.SKIPPED_STEP_STATUS;
     return 'PASSED';
@@ -211,7 +230,7 @@ class XrayJsonReporter {
 
   /** Combined status for a grouped step (a When plus its Then/And steps). */
   private combineStepStatuses(
-    statuses: Array<'passed' | 'failed' | 'skipped'>,
+    statuses: ('passed' | 'failed' | 'skipped')[],
   ): 'passed' | 'failed' | 'skipped' {
     if (statuses.includes('failed')) return 'failed';
     if (statuses.length > 0 && statuses.every(s => s === 'skipped')) return 'skipped';
@@ -243,7 +262,11 @@ class XrayJsonReporter {
     if (map[matcher]) return map[matcher];
     // Fallback: drop leading "to", split camelCase into words.
     return (
-      matcher.replace(/^to/, '').replace(/([A-Z])/g, ' $1').trim().toLowerCase() || matcher
+      matcher
+        .replace(/^to/, '')
+        .replace(/([A-Z])/g, ' $1')
+        .trim()
+        .toLowerCase() || matcher
     );
   }
 
@@ -270,6 +293,7 @@ class XrayJsonReporter {
     if (!raw) return 'Test failed';
     try {
       // Strip ANSI colour codes and drop the verbose call log.
+      // eslint-disable-next-line no-control-regex -- the ESC byte is required to match ANSI
       let msg = raw.replace(/\[[0-9;]*m/g, '');
       const callLogIdx = msg.indexOf('Call log:');
       if (callLogIdx !== -1) msg = msg.slice(0, callLogIdx);
@@ -311,6 +335,7 @@ class XrayJsonReporter {
     indices: number[],
     attachments: any[],
     testStatus: string,
+    includeImages = true,
   ): Promise<XrayEvidence[]> {
     const evidence: XrayEvidence[] = [];
 
@@ -323,42 +348,32 @@ class XrayJsonReporter {
 
       for (const attachment of stepAttachments) {
         const contentType = attachment.contentType || 'application/octet-stream';
+        const isImage = contentType.includes('image');
 
-        // Include every step's evidence: JSON responses AND all screenshots, on any step,
-        // pass or fail. Videos are still excluded (size) by shouldIncludeEvidence, and the
-        // per-item size cap below still applies.
-        if (this.shouldIncludeEvidence(attachment, testStatus, contentType)) {
+        // Videos are excluded by shouldIncludeEvidence. JSON (and other non-image) evidence
+        // is always collected; screenshots are collected only when the caller asks for them
+        // (the block decides: Then screenshots on a pass, every screenshot on a failure).
+        // There is intentionally NO per-item size cap.
+        const eligible =
+          this.shouldIncludeEvidence(attachment, testStatus, contentType) &&
+          (!isImage || includeImages);
+
+        if (eligible) {
           let base64Data: string | null = null;
           let filename = attachment.name || 'attachment';
 
-          // Check if attachment has embedded base64 data (from JSON)
           if (attachment.body) {
-            // Handle both Buffer and string cases
             base64Data =
               typeof attachment.body === 'string'
                 ? attachment.body
                 : attachment.body.toString('base64');
-          }
-          // Check if attachment has file path to read from
-          else if (attachment.path && fs.existsSync(attachment.path)) {
+          } else if (attachment.path && fs.existsSync(attachment.path)) {
             base64Data = await this.fileToBase64(attachment.path);
             filename = path.basename(attachment.path);
           }
 
           if (base64Data) {
-            // Skip evidence items that exceed the size cap to prevent Xray HTTP 500 errors
-            const byteSize = Buffer.byteLength(base64Data, 'utf8');
-            if (byteSize > this.MAX_EVIDENCE_BYTES) {
-              console.log(
-                `${this.styles.warning} Skipping oversized evidence (${(byteSize / 1024).toFixed(0)}KB > ${this.MAX_EVIDENCE_BYTES / 1024}KB): ${filename}`,
-              );
-            } else {
-              evidence.push({
-                data: base64Data,
-                filename,
-                contentType,
-              });
-            }
+            evidence.push({ data: base64Data, filename, contentType });
           }
         }
       }
@@ -391,35 +406,80 @@ class XrayJsonReporter {
       return { stepDefinitions, stepResults };
     }
 
-    type StepInfo = {
+    interface StepInfo {
       name: string;
       duration: number;
       index: number;
       status: 'passed' | 'failed' | 'skipped';
+      detail?: string;
+    }
+    // Each block becomes ONE Xray step row. A block's `actions` (a When/Given plus any
+    // following "And" steps) form the Action cell; its `results` (a Then plus any following
+    // "And" steps) form the Expected/Result cell. "And" continues whichever section was last
+    // appended to, so "When … / And …" condenses into a single action rather than leaving a
+    // blank Expected. A Given (or a When with no Then) simply has no Expected, which is fine.
+    interface Block {
+      actions: StepInfo[];
+      results: StepInfo[];
+    }
+    const blocks: Block[] = [];
+    let current: Block | null = null;
+    let lastSection: 'action' | 'result' = 'action';
+
+    const makeBlock = (step: StepInfo): Block => {
+      const block: Block = { actions: [step], results: [] };
+      blocks.push(block);
+      lastSection = 'action';
+      return block;
     };
-    let pendingWhen: StepInfo | null = null;
-    let pendingThens: StepInfo[] = [];
 
-    const flushPendingWhen = async () => {
-      if (!pendingWhen) return;
+    for (let i = 0; i < stepAnnotations.length; i += 1) {
+      const stepAnn = stepAnnotations[i];
+      const stepName = stepAnn.type.replace('Step Duration: ', '');
+      const {
+        durationMs: duration,
+        status,
+        detail,
+      } = this.parseStepAnnotation(stepAnn.description);
+      const step: StepInfo = { name: stepName, duration, index: i, status, detail };
 
-      const totalDuration =
-        pendingWhen.duration + pendingThens.reduce((sum, t) => sum + t.duration, 0);
-
-      const stepDef: XrayTestStepDefinition = {
-        action: pendingWhen.name,
-      };
-
-      if (pendingThens.length > 0) {
-        stepDef.result = pendingThens.map(t => t.name).join('\n');
+      if (this.isAndStep(stepName)) {
+        // Continue the current block's most-recently-extended section (action or expected).
+        if (!current) {
+          current = makeBlock(step);
+        } else if (lastSection === 'result') {
+          current.results.push(step);
+        } else {
+          current.actions.push(step);
+        }
+      } else if (this.isThenStep(stepName)) {
+        // Expected for the current block; an orphan Then (no action yet) starts its own block.
+        if (!current) {
+          current = makeBlock(step);
+        } else {
+          current.results.push(step);
+          lastSection = 'result';
+        }
+      } else {
+        // Given / When / anything else begins a new action block.
+        current = makeBlock(step);
       }
+    }
 
+    for (const block of blocks) {
+      const allSteps = [...block.actions, ...block.results];
+
+      // Action cell = each action step as a bold header + its detail; Result cell likewise.
+      const stepDef: XrayTestStepDefinition = {
+        action: block.actions.map(s => this.formatStepCell(s.name, s.detail)).join('\n'),
+      };
+      if (block.results.length > 0) {
+        stepDef.result = block.results.map(s => this.formatStepCell(s.name, s.detail)).join('\n');
+      }
       stepDefinitions.push(stepDef);
 
-      const groupStatus = this.combineStepStatuses([
-        pendingWhen.status,
-        ...pendingThens.map(t => t.status),
-      ]);
+      const groupStatus = this.combineStepStatuses(allSteps.map(s => s.status));
+      const totalDuration = allSteps.reduce((sum, s) => sum + s.duration, 0);
       const stepResult: XrayTestStepResult = {
         status: this.toXrayStepStatus(groupStatus),
         comment:
@@ -428,75 +488,36 @@ class XrayJsonReporter {
             : `Duration: ${totalDuration}ms`,
       };
 
-      // Skipped steps never ran, so there is no evidence to collect for them.
+      // Evidence (skipped steps never ran, so they have none):
+      // - Always attach JSON (API-check) evidence from every step in the block.
+      // - On a PASS, attach screenshots from the Then (result) steps only — the verification
+      //   image for the compacted step.
+      // - On a FAILURE anywhere in the block (When/And/Then), attach EVERY screenshot from the
+      //   block so the failure is fully captured.
       if (groupStatus !== 'skipped') {
-        // Collect evidence for the When step and all of its Then steps (JSON + screenshots).
-        const whenEvidence = await this.collectStepEvidence(
-          [pendingWhen.index],
+        const blockFailed = groupStatus === 'failed';
+        // Result steps: JSON + their screenshots (the Then verification image).
+        const resultEvidence = await this.collectStepEvidence(
+          block.results.map(s => s.index),
           attachments,
           testStatus,
+          true,
         );
-        const thenEvidence = await this.collectStepEvidence(
-          pendingThens.map(t => t.index),
+        // Action steps: JSON always; screenshots only when the block failed.
+        const actionEvidence = await this.collectStepEvidence(
+          block.actions.map(s => s.index),
           attachments,
           testStatus,
+          blockFailed,
         );
-        const evidence = [...whenEvidence, ...thenEvidence];
+        const evidence = [...actionEvidence, ...resultEvidence];
         if (evidence.length > 0) {
           stepResult.evidence = evidence;
         }
       }
 
       stepResults.push(stepResult);
-      pendingWhen = null;
-      pendingThens = [];
-    };
-
-    const addStandaloneStep = async (step: StepInfo) => {
-      stepDefinitions.push({
-        action: step.name,
-      });
-
-      const stepResult: XrayTestStepResult = {
-        status: this.toXrayStepStatus(step.status),
-        comment:
-          step.status === 'skipped'
-            ? 'Skipped — a previous step failed'
-            : `Duration: ${step.duration}ms`,
-      };
-
-      // Given/standalone steps: include JSON + screenshot evidence (skipped steps have none).
-      if (step.status !== 'skipped') {
-        const evidence = await this.collectStepEvidence([step.index], attachments, testStatus);
-        if (evidence.length > 0) {
-          stepResult.evidence = evidence;
-        }
-      }
-
-      stepResults.push(stepResult);
-    };
-
-    for (let i = 0; i < stepAnnotations.length; i += 1) {
-      const stepAnn = stepAnnotations[i];
-      const stepName = stepAnn.type.replace('Step Duration: ', '');
-      const { durationMs: duration, status } = this.parseStepAnnotation(stepAnn.description);
-      const step: StepInfo = { name: stepName, duration, index: i, status };
-
-      if (this.isGivenStep(stepName)) {
-        await flushPendingWhen();
-        await addStandaloneStep(step);
-      } else if (this.isWhenStep(stepName)) {
-        await flushPendingWhen();
-        pendingWhen = step;
-      } else if (this.isThenStep(stepName)) {
-        pendingThens.push(step);
-      } else {
-        await flushPendingWhen();
-        await addStandaloneStep(step);
-      }
     }
-
-    await flushPendingWhen();
 
     return { stepDefinitions, stepResults };
   }
@@ -575,8 +596,9 @@ class XrayJsonReporter {
     // to pick the tests ("ALL" when none was applied), and we link the whole workflow.
     const description =
       `Automated test execution for ${targetEnv} environment | Test tag: ${this.testTagLabel()}\n\n` +
-      `Results: ${passedCount} passed, ${failedCount} failed, ${todoCount} skipped` +
-      (pipelineUrl ? `\n\nCircleCI pipeline: ${pipelineUrl}` : '');
+      `Results: ${passedCount} passed, ${failedCount} failed, ${todoCount} skipped${
+        pipelineUrl ? `\n\nCircleCI pipeline: ${pipelineUrl}` : ''
+      }`;
 
     // If the pre-run frontload step created an execution, import results INTO it (it's
     // Xray-created, so import-ready, and already linked to the trigger ticket). We pass
@@ -750,18 +772,17 @@ class XrayJsonReporter {
     // Find the triggering ticket via the original execution's "Test" link.
     let triggerKey: string | undefined;
     try {
-      const res = await fetch(
-        `${baseUrl}/rest/api/3/issue/${originalExecKey}?fields=issuelinks`,
-        { headers },
-      );
+      const res = await fetch(`${baseUrl}/rest/api/3/issue/${originalExecKey}?fields=issuelinks`, {
+        headers,
+      });
       if (res.ok) {
         const data = (await res.json()) as {
           fields?: {
-            issuelinks?: Array<{
+            issuelinks?: {
               type?: { name?: string };
               outwardIssue?: { key: string };
               inwardIssue?: { key: string };
-            }>;
+            }[];
           };
         };
         const testLink = (data.fields?.issuelinks ?? []).find(
@@ -878,7 +899,7 @@ class XrayJsonReporter {
         body: JSON.stringify({ query }),
       });
       const json = (await res.json()) as {
-        data?: { getTests?: { total?: number; results?: Array<{ jira?: { summary?: string } }> } };
+        data?: { getTests?: { total?: number; results?: { jira?: { summary?: string } }[] } };
       };
       const data = json.data?.getTests;
       if (!data) break;
@@ -914,7 +935,9 @@ class XrayJsonReporter {
       `${this.styles.info} Frontload: ${known.length} known test(s) to pre-load; ${skipped} new test(s) skipped (they'll appear with results after the run).`,
     );
     if (known.length === 0) {
-      console.log(`${this.styles.warning} No already-known tests to frontload; skipping pre-creation.`);
+      console.log(
+        `${this.styles.warning} No already-known tests to frontload; skipping pre-creation.`,
+      );
       return null;
     }
     const pipelineUrl = this.getPipelineUrl();
@@ -923,8 +946,9 @@ class XrayJsonReporter {
         summary: `Playwright Test Execution - ${new Date().toISOString()}`,
         description:
           `Automated test execution for ${env.TARGET_ENV} environment | Test tag: ${this.testTagLabel()}\n\n` +
-          `${known.length} test(s) queued — results pending.` +
-          (pipelineUrl ? `\n\nCircleCI pipeline: ${pipelineUrl}` : ''),
+          `${known.length} test(s) queued — results pending.${
+            pipelineUrl ? `\n\nCircleCI pipeline: ${pipelineUrl}` : ''
+          }`,
       },
       tests: known.map(summary => ({
         testInfo: { summary, type: 'Manual' as const, projectKey: env.XRAY_PROJECT_KEY || 'QAE' },
@@ -935,7 +959,13 @@ class XrayJsonReporter {
     const issue = resp.testExecIssue ?? resp;
     const newKey = issue?.key;
     const newSelf = issue?.self;
-    if (newKey && newSelf && originalExecKey && originalExecKey !== 'none' && originalExecKey.trim() !== '') {
+    if (
+      newKey &&
+      newSelf &&
+      originalExecKey &&
+      originalExecKey !== 'none' &&
+      originalExecKey.trim() !== ''
+    ) {
       await this.linkExecutionToTrigger(newKey, originalExecKey, newSelf);
     }
     return newKey ?? null;
