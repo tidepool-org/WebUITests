@@ -490,25 +490,27 @@ class XrayJsonReporter {
 
       // Evidence (skipped steps never ran, so they have none):
       // - Always attach JSON (API-check) evidence from every step in the block.
-      // - On a PASS, attach screenshots from the Then (result) steps only — the verification
-      //   image for the compacted step.
-      // - On a FAILURE anywhere in the block (When/And/Then), attach EVERY screenshot from the
-      //   block so the failure is fully captured.
+      // - Attach screenshots for When, And, and Then steps (the action/expected of the work),
+      //   plus every step in a FAILED block so a failure is fully captured.
+      // - DO NOT attach Given screenshots (preconditions) unless the block failed. A block
+      //   whose first action is a Given is treated as a precondition block.
       if (groupStatus !== 'skipped') {
         const blockFailed = groupStatus === 'failed';
-        // Result steps: JSON + their screenshots (the Then verification image).
+        const isGivenBlock = this.isGivenStep(block.actions[0]?.name ?? '');
+        // Result steps (Then/And): JSON + screenshots, always.
         const resultEvidence = await this.collectStepEvidence(
           block.results.map(s => s.index),
           attachments,
           testStatus,
           true,
         );
-        // Action steps: JSON always; screenshots only when the block failed.
+        // Action steps: JSON always; screenshots for When/And action steps (i.e. not a Given
+        // block) or whenever the block failed.
         const actionEvidence = await this.collectStepEvidence(
           block.actions.map(s => s.index),
           attachments,
           testStatus,
-          blockFailed,
+          blockFailed || !isGivenBlock,
         );
         const evidence = [...actionEvidence, ...resultEvidence];
         if (evidence.length > 0) {
