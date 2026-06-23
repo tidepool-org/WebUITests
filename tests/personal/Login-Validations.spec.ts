@@ -32,7 +32,7 @@ test.describe('Login into application', () => {
         },
         {
           detail:
-            'Open the Tidepool Web login page and sign in using the automated clinician account credentials stored in 1Password.',
+            'Open the Tidepool Web login page and sign in using the automated clinician account credentials stored in 1Password as "UI Auto Clinician".',
         },
       );
 
@@ -166,7 +166,7 @@ test.describe('Login into application', () => {
         },
         {
           detail:
-            'Open the login page and sign in using the automated clinician account username from 1Password together with an incorrect password.',
+            'Open the login page and sign in using the automated clinician account username from 1Password ("UI Auto Clinician") together with an incorrect password.',
         },
       );
 

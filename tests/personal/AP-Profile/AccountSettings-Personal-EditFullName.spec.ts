@@ -41,7 +41,7 @@ test.describe('Personal Account Settings edit (Full Name only) updates Profile e
         },
         {
           detail:
-            'Log in to Tidepool Web using the automated personal account credentials stored in 1Password.',
+            'Log in to Tidepool Web using the automated personal account credentials stored in 1Password as "UI Auto Personal Patient".',
         },
       );
 

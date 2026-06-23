@@ -33,7 +33,7 @@ test.describe('Account Settings - Personal - Edit Email', () => {
         },
         {
           detail:
-            'Log in to Tidepool Web using the automated personal account credentials stored in 1Password.',
+            'Log in to Tidepool Web using the automated personal account credentials stored in 1Password as "UI Auto Personal Patient".',
         },
       );
 

@@ -42,7 +42,7 @@ test.describe('Comprehensive Profile Access Test: Edit as Claimed, View as Share
         },
         {
           detail:
-            'Log in to Tidepool Web using the automated claimed patient account credentials stored in 1Password.',
+            'Log in to Tidepool Web using the automated claimed patient account credentials stored in 1Password as "UI Auto Claimed Patient".',
         },
       );
 
@@ -157,7 +157,7 @@ test.describe('Comprehensive Profile Access Test: Edit as Claimed, View as Share
         },
         {
           detail:
-            'Log in to Tidepool Web using the automated shared member account credentials stored in 1Password and open the claimed user data.',
+            'Log in to Tidepool Web using the automated shared member account credentials stored in 1Password as "UI Auto Shared Member" and open the claimed user data.',
         },
       );
 
@@ -204,7 +204,7 @@ test.describe('Comprehensive Profile Access Test: Edit as Claimed, View as Share
         },
         {
           detail:
-            'Log in to Tidepool Web using the automated clinician account credentials stored in 1Password and open the clinic workspace.',
+            'Log in to Tidepool Web using the automated clinician account credentials stored in 1Password as "UI Auto Clinician" and open the clinic workspace.',
         },
       );
 

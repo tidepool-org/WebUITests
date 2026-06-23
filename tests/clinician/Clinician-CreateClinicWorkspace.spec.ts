@@ -23,7 +23,7 @@ test.describe('Clinic Account may create a new workspace', () => {
         },
         {
           detail:
-            'Log in to Tidepool Web using the automated clinician account credentials stored in 1Password, signing in to an account that already has multiple workspaces.',
+            'Log in to Tidepool Web using the automated clinician account credentials stored in 1Password as "UI Auto Clinician", signing in to an account that already has multiple workspaces.',
         },
       );
 

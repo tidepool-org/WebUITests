@@ -46,7 +46,7 @@ test.describe('Claimed Account Settings edit (Full Name only) updates Profile en
         },
         {
           detail:
-            'Log in to Tidepool Web using the automated claimed patient account credentials stored in 1Password.',
+            'Log in to Tidepool Web using the automated claimed patient account credentials stored in 1Password as "UI Auto Claimed Patient".',
         },
       );
 
@@ -187,7 +187,7 @@ test.describe('Claimed Account Settings edit (Full Name only) updates Profile en
         },
         {
           detail:
-            'Log in as the automated shared member account credentials stored in 1Password and open the claimed user Profile page.',
+            'Log in as the automated shared member account credentials stored in 1Password as "UI Auto Shared Member" and open the claimed user Profile page.',
         },
       );
 
@@ -242,7 +242,7 @@ test.describe('Claimed Account Settings edit (Full Name only) updates Profile en
         },
         {
           detail:
-            'Log in as the automated clinician account credentials stored in 1Password and open the patient workspace.',
+            'Log in as the automated clinician account credentials stored in 1Password as "UI Auto Clinician" and open the patient workspace.',
         },
       );
 

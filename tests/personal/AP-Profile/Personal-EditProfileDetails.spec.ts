@@ -37,7 +37,7 @@ test.describe('Personal Accounts allow access and modification of profile detail
         },
         {
           detail:
-            'Log in to Tidepool Web using the automated personal account credentials stored in 1Password.',
+            'Log in to Tidepool Web using the automated personal account credentials stored in 1Password as "UI Auto Personal Patient".',
         },
       );
 

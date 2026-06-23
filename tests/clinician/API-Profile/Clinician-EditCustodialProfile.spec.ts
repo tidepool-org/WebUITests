@@ -47,7 +47,7 @@ ALL_WORKSPACE_KEYS.forEach((workspace: WorkspaceKey) => {
           },
           {
             detail:
-              'Log in to Tidepool Web using the automated clinician account credentials stored in 1Password.',
+              'Log in to Tidepool Web using the automated clinician account credentials stored in 1Password as "UI Auto Clinician".',
           },
         );
 

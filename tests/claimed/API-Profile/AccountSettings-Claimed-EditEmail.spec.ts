@@ -22,9 +22,9 @@ test.describe('Account Settings - Claimed - Edit Email', () => {
       ]),
     },
     async ({ page }) => {
-      // Step 1: Log in to clinician account and setup network capture
+      // Step 1: Log in to claimed account and setup network capture
       await test.step(
-        'Given clinician has been logged in',
+        'Given claimed account has been logged in',
         async () => {
           api = createNetworkHelper(page);
           await api.startCapture();
@@ -33,7 +33,7 @@ test.describe('Account Settings - Claimed - Edit Email', () => {
         },
         {
           detail:
-            'Log in to Tidepool Web using the automated clinician account credentials stored in 1Password.',
+            'Log in to Tidepool Web using the automated claimed patient account credentials stored in 1Password as "UI Auto Claimed Patient".',
         },
       );
 
