@@ -51,10 +51,21 @@ function listTestTitles(grep: string): string[] {
   return titles;
 }
 
+/** Normalize a pipeline param to a real value, treating empty/'none' as absent. */
+function resolveKey(raw: string | undefined): string | undefined {
+  const v = raw?.trim();
+  return v && v !== 'none' ? v : undefined;
+}
+
 async function main(): Promise<void> {
-  const originalExecKey = process.env.TEST_EXECUTION_KEY;
-  if (!originalExecKey || originalExecKey === 'none' || originalExecKey.trim() === '') {
-    console.log('ℹ️ No TEST_EXECUTION_KEY provided — skipping frontload pre-creation.');
+  // The triggering ticket comes from TRIGGER_ISSUE (webhook {{triggerIssue.key}}); fall back
+  // to TEST_EXECUTION_KEY for legacy triggers that still pass a Jira-created execution.
+  const triggerIssue = resolveKey(process.env.TRIGGER_ISSUE);
+  const originalExecKey = process.env.TEST_EXECUTION_KEY ?? 'none';
+  if (!triggerIssue && !resolveKey(originalExecKey)) {
+    console.log(
+      'ℹ️ No TRIGGER_ISSUE or TEST_EXECUTION_KEY provided — skipping frontload pre-creation.',
+    );
     return;
   }
 

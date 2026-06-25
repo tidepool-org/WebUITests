@@ -10,6 +10,13 @@ parameters:
   testExecKey:
     type: string
     default: 'none'
+  # The Jira ticket (Task/Story) that fired the automation. Passed directly by the
+  # webhook ({{triggerIssue.key}}) so CI can link its auto-created Xray execution
+  # straight to this ticket — no throwaway Jira-side execution needed. 'none' on plain
+  # commits and local triggers.
+  triggerIssue:
+    type: string
+    default: 'none'
   testTags:
     type: string
     default: ''
@@ -49,6 +56,7 @@ jobs:
           command: |
             echo "export TARGET_ENV=\"<< pipeline.parameters.testEnvironment >>\"" >> $BASH_ENV
             echo "export TEST_EXECUTION_KEY=\"<< pipeline.parameters.testExecKey >>\"" >> $BASH_ENV
+            echo "export TRIGGER_ISSUE=\"<< pipeline.parameters.triggerIssue >>\"" >> $BASH_ENV
             echo "export TEST_TAGS=\"<< pipeline.parameters.testTags >>\"" >> $BASH_ENV
             echo "export XRAY_PROJECT_KEY=\"<< pipeline.parameters.xrayProjectKey >>\"" >> $BASH_ENV
       - restore_cache:
@@ -254,6 +262,7 @@ jobs:
           command: |
             echo "export TARGET_ENV=\"<< pipeline.parameters.testEnvironment >>\"" >> $BASH_ENV
             echo "export TEST_EXECUTION_KEY=\"<< pipeline.parameters.testExecKey >>\"" >> $BASH_ENV
+            echo "export TRIGGER_ISSUE=\"<< pipeline.parameters.triggerIssue >>\"" >> $BASH_ENV
             echo "export XRAY_PROJECT_KEY=\"<< pipeline.parameters.xrayProjectKey >>\"" >> $BASH_ENV
             # TEST_TAGS is needed here too: the post-run description records the tag filter
             # ("Test tag: ..."), and without it the upload would overwrite the frontload

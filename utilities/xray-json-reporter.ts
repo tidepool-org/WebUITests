@@ -745,6 +745,17 @@ class XrayJsonReporter {
   // Jira link type connecting a Test Execution to the ticket it tests (outward "tests").
   private readonly EXECUTION_LINK_TYPE = 'Test';
 
+  /**
+   * The triggering ticket passed directly by the webhook via the TRIGGER_ISSUE pipeline
+   * parameter ({{triggerIssue.key}}), or undefined when absent/'none'. When present we link
+   * the auto-created execution straight to this ticket and skip the legacy lookup that
+   * discovered the ticket from a throwaway Jira-created execution's "Test" link.
+   */
+  private triggerTicketFromEnv(): string | undefined {
+    const value = process.env.TRIGGER_ISSUE?.trim();
+    return value && value !== 'none' ? value : undefined;
+  }
+
   /** Derives the Jira base URL (origin) from an issue's `self` URL. */
   private baseUrlFrom(selfUrl: string): string | undefined {
     try {
@@ -815,38 +826,50 @@ class XrayJsonReporter {
       console.log(`${this.styles.warning} Could not derive Jira base URL from "${selfUrl}".`);
       return;
     }
-    const auth = Buffer.from(`${env.JIRA_EMAIL}:${env.JIRA_API_KEY}`).toString('base64');
-    const headers = { 'Content-Type': 'application/json', Authorization: `Basic ${auth}` };
+    // Prefer the trigger ticket passed directly by the webhook (TRIGGER_ISSUE). Linking to
+    // it needs no throwaway Jira-created execution and no discovery call.
+    let triggerKey: string | undefined = this.triggerTicketFromEnv();
 
-    // Find the triggering ticket via the original execution's "Test" link.
-    let triggerKey: string | undefined;
-    try {
-      const res = await fetch(`${baseUrl}/rest/api/3/issue/${originalExecKey}?fields=issuelinks`, {
-        headers,
-      });
-      if (res.ok) {
-        const data = (await res.json()) as {
-          fields?: {
-            issuelinks?: {
-              type?: { name?: string };
-              outwardIssue?: { key: string };
-              inwardIssue?: { key: string };
-            }[];
-          };
-        };
-        const testLink = (data.fields?.issuelinks ?? []).find(
-          l => l.type?.name === this.EXECUTION_LINK_TYPE,
-        );
-        triggerKey = (testLink?.outwardIssue ?? testLink?.inwardIssue)?.key;
-      } else {
+    // Legacy fallback: no direct trigger ticket, so discover it from the original
+    // (Jira-created) execution's "Test" link.
+    if (!triggerKey) {
+      if (!originalExecKey || originalExecKey === 'none' || originalExecKey.trim() === '') {
         console.log(
-          `${this.styles.warning} Could not read links of ${originalExecKey} (HTTP ${res.status}).`,
+          `${this.styles.warning} No TRIGGER_ISSUE and no original execution key — cannot identify the triggering ticket. Skipping link for ${newKey}.`,
+        );
+        return;
+      }
+      const auth = Buffer.from(`${env.JIRA_EMAIL}:${env.JIRA_API_KEY}`).toString('base64');
+      const headers = { 'Content-Type': 'application/json', Authorization: `Basic ${auth}` };
+      try {
+        const res = await fetch(
+          `${baseUrl}/rest/api/3/issue/${originalExecKey}?fields=issuelinks`,
+          { headers },
+        );
+        if (res.ok) {
+          const data = (await res.json()) as {
+            fields?: {
+              issuelinks?: {
+                type?: { name?: string };
+                outwardIssue?: { key: string };
+                inwardIssue?: { key: string };
+              }[];
+            };
+          };
+          const testLink = (data.fields?.issuelinks ?? []).find(
+            l => l.type?.name === this.EXECUTION_LINK_TYPE,
+          );
+          triggerKey = (testLink?.outwardIssue ?? testLink?.inwardIssue)?.key;
+        } else {
+          console.log(
+            `${this.styles.warning} Could not read links of ${originalExecKey} (HTTP ${res.status}).`,
+          );
+        }
+      } catch (error) {
+        console.log(
+          `${this.styles.warning} Error reading links of ${originalExecKey}: ${(error as Error).message}`,
         );
       }
-    } catch (error) {
-      console.log(
-        `${this.styles.warning} Error reading links of ${originalExecKey}: ${(error as Error).message}`,
-      );
     }
 
     if (!triggerKey) {
@@ -987,9 +1010,8 @@ class XrayJsonReporter {
     if (
       newKey &&
       newSelf &&
-      originalExecKey &&
-      originalExecKey !== 'none' &&
-      originalExecKey.trim() !== ''
+      (this.triggerTicketFromEnv() ||
+        (originalExecKey && originalExecKey !== 'none' && originalExecKey.trim() !== ''))
     ) {
       await this.linkExecutionToTrigger(newKey, originalExecKey, newSelf);
     }
@@ -1058,11 +1080,14 @@ class XrayJsonReporter {
       const baseUrl = this.baseUrlFrom(newSelf);
       if (baseUrl) await this.linkIssues(baseUrl, newKey, automatedExecKey);
 
-      // Also link it to the triggering ticket (the issue under test that generated the run),
-      // discovered from the original Jira execution's "Test" link — same ticket the automated
-      // execution was linked to.
-      if (triggerExecKey && triggerExecKey !== 'none' && triggerExecKey.trim() !== '') {
-        await this.linkExecutionToTrigger(newKey, triggerExecKey, newSelf);
+      // Also link it to the triggering ticket (the issue under test that generated the run) —
+      // the TRIGGER_ISSUE webhook param when present, else discovered from the original Jira
+      // execution's "Test" link — the same ticket the automated execution was linked to.
+      if (
+        this.triggerTicketFromEnv() ||
+        (triggerExecKey && triggerExecKey !== 'none' && triggerExecKey.trim() !== '')
+      ) {
+        await this.linkExecutionToTrigger(newKey, triggerExecKey ?? 'none', newSelf);
       }
     }
     return newKey ?? null;
@@ -1332,8 +1357,9 @@ class XrayJsonReporter {
       // Auto-creates a new execution (see convertPlaywrightJsonToXray) and returns it.
       const uploadResult = await this.uploadToXray(xrayResult);
 
-      // Link the new auto-created execution to the original triggering ticket (found via
-      // the original Jira-created execution's "Test" link), matching the automation.
+      // Link the new auto-created execution to the triggering ticket — the TRIGGER_ISSUE
+      // webhook param when present, else discovered from the original Jira-created
+      // execution's "Test" link (legacy).
       const originalExecKey = testExecKey;
       // Xray returns the execution at the top level ({id,key,self}); fall back to the
       // nested testExecIssue shape just in case.
@@ -1346,12 +1372,11 @@ class XrayJsonReporter {
         !process.env.XRAY_TARGET_EXECUTION?.trim() &&
         newKey &&
         newSelf &&
-        originalExecKey &&
-        originalExecKey !== 'none' &&
-        originalExecKey.trim() !== '' &&
-        newKey !== originalExecKey
+        newKey !== originalExecKey &&
+        (this.triggerTicketFromEnv() ||
+          (originalExecKey && originalExecKey !== 'none' && originalExecKey.trim() !== ''))
       ) {
-        await this.linkExecutionToTrigger(newKey, originalExecKey, newSelf);
+        await this.linkExecutionToTrigger(newKey, originalExecKey ?? 'none', newSelf);
       }
 
       // If results were imported INTO a pre-created frontload execution, refresh its

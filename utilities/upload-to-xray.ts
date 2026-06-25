@@ -21,12 +21,20 @@ const DEFAULT_MERGED_PATH = 'test-results/merged.json';
 async function main(): Promise<void> {
   const jsonPath = process.argv[2] || DEFAULT_MERGED_PATH;
 
-  // Only upload when an execution is targeted. The Jira Automation flow always passes
-  // a real TEST_EXECUTION_KEY; plain commits leave it as 'none', and we skip rather
-  // than auto-create a throwaway execution on every build.
-  const execKey = process.env.TEST_EXECUTION_KEY;
-  if (!execKey || execKey === 'none' || execKey.trim() === '') {
-    console.log('ℹ️ No TEST_EXECUTION_KEY provided — skipping Xray upload (nothing to link to).');
+  // Only upload when a run was triggered from Jira. The webhook passes the triggering ticket
+  // as TRIGGER_ISSUE ({{triggerIssue.key}}); legacy triggers pass a Jira-created execution as
+  // TEST_EXECUTION_KEY. Plain commits leave both 'none', and we skip rather than auto-create a
+  // throwaway execution on every build.
+  const resolve = (raw: string | undefined): string | undefined => {
+    const v = raw?.trim();
+    return v && v !== 'none' ? v : undefined;
+  };
+  const triggerIssue = resolve(process.env.TRIGGER_ISSUE);
+  const execKey = resolve(process.env.TEST_EXECUTION_KEY);
+  if (!triggerIssue && !execKey) {
+    console.log(
+      'ℹ️ No TRIGGER_ISSUE or TEST_EXECUTION_KEY provided — skipping Xray upload (nothing to link to).',
+    );
     return;
   }
 
@@ -64,7 +72,8 @@ async function main(): Promise<void> {
           failedTitles,
           automatedExecKey,
           // The issue under test that triggered the automation — link the manual confirmation
-          // to it too (discovered from this execution key's "Test" link).
+          // to it too. The reporter prefers TRIGGER_ISSUE; this legacy execution key is the
+          // fallback it discovers the ticket from.
           execKey,
         );
         if (confirmKey) {
