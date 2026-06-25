@@ -1021,6 +1021,7 @@ class XrayJsonReporter {
   async createManualConfirmationExecution(
     failedTitles: string[],
     automatedExecKey: string,
+    triggerExecKey?: string,
   ): Promise<string | null> {
     if (!(env.XRAY_CLIENT_ID && env.XRAY_CLIENT_SECRET)) {
       console.log(
@@ -1056,6 +1057,13 @@ class XrayJsonReporter {
       // manual-confirmation ("tests") → automated execution ("is tested by").
       const baseUrl = this.baseUrlFrom(newSelf);
       if (baseUrl) await this.linkIssues(baseUrl, newKey, automatedExecKey);
+
+      // Also link it to the triggering ticket (the issue under test that generated the run),
+      // discovered from the original Jira execution's "Test" link — same ticket the automated
+      // execution was linked to.
+      if (triggerExecKey && triggerExecKey !== 'none' && triggerExecKey.trim() !== '') {
+        await this.linkExecutionToTrigger(newKey, triggerExecKey, newSelf);
+      }
     }
     return newKey ?? null;
   }

@@ -63,10 +63,13 @@ async function main(): Promise<void> {
         const confirmKey = await reporter.createManualConfirmationExecution(
           failedTitles,
           automatedExecKey,
+          // The issue under test that triggered the automation — link the manual confirmation
+          // to it too (discovered from this execution key's "Test" link).
+          execKey,
         );
         if (confirmKey) {
           console.log(
-            `✅ Manual Confirmation execution ${confirmKey} created and linked to ${automatedExecKey}.`,
+            `✅ Manual Confirmation execution ${confirmKey} created and linked to automated execution ${automatedExecKey} and the triggering ticket.`,
           );
         }
       } else {
