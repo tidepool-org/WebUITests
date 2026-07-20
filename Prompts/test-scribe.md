@@ -7,4 +7,4 @@ Save generated test file in the tests directory
 Execute the test file and iterate until the test passes
 Make sure to store direct page object information like hard coded locators and urls are stored within the appropriate 'page' or 'navigation' script in the page-objects folder
 contain all logic for checks within appropriately named helper scripts in the tests/fixtures folder.
-Tests shoudld be made in the patient or clinician folders depending on the current login being used
+Tests should be made in the patient or clinician folders depending on the current login being used
