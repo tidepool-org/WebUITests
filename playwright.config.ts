@@ -94,7 +94,7 @@ export default defineConfig({
       ? [
           {
             name: 'bs-chrome-personal',
-            testMatch: '**/patient/**/*.spec.ts',
+            testMatch: '**/personal/**/*.spec.ts',
             use: {
               storageState: 'tests/.auth/personal.json',
               connectOptions: { wsEndpoint: buildBrowserStackEndpoint('Personal Patient Tests') },
