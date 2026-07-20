@@ -190,17 +190,59 @@ export const test = base.extend<CustomFixtures>({
         (globalThis as any).stepCounter?.increment?.();
         return originalStep.call(this, name, async (stepInfo: TestStepInfo) => {
           const startTime = Date.now();
+
+          // Run the body, capturing any error so we can STILL screenshot the end state (pass OR
+          // fail) before recording. Cleanup steps run the raw Playwright step and thus bypass
+          // the stepScreenshoter wrapper, so without this they'd produce no evidence at all.
+          let result: T | undefined;
+          let failed = false;
+          let cleanupError: unknown;
           try {
-            const result = await fn(stepInfo);
-            recordStep(name, Date.now() - startTime, 'passed', options?.detail);
-            return result;
+            result = await fn(stepInfo);
           } catch (error) {
-            recordStep(name, Date.now() - startTime, 'failed', options?.detail);
+            failed = true;
+            cleanupError = error;
+          }
+          const duration = Date.now() - startTime;
+
+          // Take a screenshot for this cleanup step (unless it opts out), named with the step's
+          // ordinal so the Xray reporter maps it to this step (it matches attachments by the
+          // `step-NN` filename prefix). Mirrors the stepScreenshoter fixture's capture/attach.
+          if (!name.includes('[no-screenshot]')) {
+            try {
+              if (!page.isClosed()) {
+                const ordinal = (globalThis as any).stepCounter?.get?.() ?? 0;
+                const cleanName = name.replace(/\s*\[no-screenshot\]\s*/g, '').trim();
+                const screenshotName = `step-${ordinal
+                  .toString()
+                  .padStart(2, '0')}-${cleanName.toLowerCase().replace(/[^a-z0-9]/g, '-')}.png`;
+                const screenshot = await page.screenshot({ fullPage: true });
+                if (testInfo && typeof testInfo.attach === 'function') {
+                  await testInfo.attach(screenshotName, {
+                    body: screenshot,
+                    contentType: 'image/png',
+                  });
+                  const testResultsDir = path.join(testInfo.outputDir, 'attachments');
+                  await fs.promises.mkdir(testResultsDir, { recursive: true });
+                  await fs.promises.writeFile(
+                    path.join(testResultsDir, screenshotName),
+                    screenshot,
+                  );
+                }
+              }
+            } catch {
+              // Screenshot capture failed; continue without evidence.
+            }
+          }
+
+          recordStep(name, duration, failed ? 'failed' : 'passed', options?.detail);
+          if (failed) {
             // A cleanup failure must not abort the remaining cleanups; surface it in logs
             // but don't re-throw (the primary failure, if any, still fails the test).
-            console.error(`[cleanup] step failed (continuing): ${name}`, error);
+            console.error(`[cleanup] step failed (continuing): ${name}`, cleanupError);
             return undefined as unknown as T;
           }
+          return result as T;
         });
       };
 

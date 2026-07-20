@@ -28,6 +28,20 @@ export default class WorkspacesPage {
     await this.page.goto(this.url);
   }
 
+  /**
+   * Wait until the workspaces list has fully rendered: the heading is present, at least one
+   * workspace card has painted, and the network has settled. Load-state based (no fixed delay) —
+   * useful before asserting on the list or capturing an evidence screenshot so the screen is
+   * fully loaded. Assumes the account has at least one workspace.
+   */
+  async waitUntilLoaded(): Promise<void> {
+    await this.header.waitFor({ state: 'visible' });
+    await this.page.getByRole('button', { name: 'Go To Workspace' }).first().waitFor({
+      state: 'visible',
+    });
+    await this.page.waitForLoadState('networkidle');
+  }
+
   async visitFirstClinic(): Promise<void> {
     await this.page.getByRole('button', { name: 'Go To Workspace' }).first().click();
   }
