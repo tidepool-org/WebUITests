@@ -48,26 +48,24 @@ export const TEST_TAGS = {
   REGRESSION: '@regression',
 
   // Priority
-  PRIORITY_CRITICAL: '@critical',
-  PRIORITY_HIGH: '@high',
-  PRIORITY_MEDIUM: '@medium',
-  PRIORITY_LOW: '@low',
+  CRITICAL: '@critical',
+  HIGH: '@high',
+  MEDIUM: '@medium',
+  LOW: '@low',
 
   // Endpoint API Testing
   API_PROFILE: '@api_profile',
   API_USER: '@api_user',
+
+  // WIP Tag for tests under development
+  WIP: '@wip',
 };
 
 // Tag Categories for Validation
 export const TAG_CATEGORIES = {
   USER_TYPES: [TEST_TAGS.PATIENT, TEST_TAGS.CLINICIAN],
   TEST_TYPES: [TEST_TAGS.API, TEST_TAGS.UI, TEST_TAGS.SMOKE, TEST_TAGS.REGRESSION],
-  PRIORITIES: [
-    TEST_TAGS.PRIORITY_CRITICAL,
-    TEST_TAGS.PRIORITY_HIGH,
-    TEST_TAGS.PRIORITY_MEDIUM,
-    TEST_TAGS.PRIORITY_LOW,
-  ],
+  PRIORITIES: [TEST_TAGS.CRITICAL, TEST_TAGS.HIGH, TEST_TAGS.MEDIUM, TEST_TAGS.LOW],
 };
 
 /**
@@ -101,8 +99,7 @@ export function validateRequiredTags(tags: string[]) {
 export function createValidatedTags(tags: string[]) {
   const validation = validateRequiredTags(tags);
   if (!validation.isValid) {
-    const errorMessage = `Test tags validation failed: ${validation.message}`;
-    throw new Error(errorMessage);
+    throw new Error(`Test tags validation failed: ${validation.message}`);
   }
   return tags;
 }

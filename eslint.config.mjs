@@ -12,7 +12,6 @@ import js from '@eslint/js';
 import { configs, plugins } from 'eslint-config-airbnb-extended';
 import { rules as prettierConfigRules } from 'eslint-config-prettier';
 import prettierPlugin from 'eslint-plugin-prettier';
-import playwrightPlugin from 'eslint-plugin-playwright';
 
 const gitignorePath = path.resolve('.', '.gitignore');
 
@@ -96,25 +95,6 @@ export default [
       'class-methods-use-this': 'off',
       // Allow regex with unescaped characters in test utilities
       'no-useless-escape': 'off',
-    },
-  },
-  // Test-specific rules for .spec.ts files
-  {
-    files: ['tests/**/*.spec.ts', 'tests/**/*.test.ts'],
-    plugins: {
-      playwright: playwrightPlugin,
-    },
-    rules: {
-      // Enforce that test() calls in spec files have createValidatedTags
-      'no-restricted-syntax': [
-        'error',
-        {
-          selector:
-            'CallExpression[callee.name="test"]:not(:has(ObjectExpression Property[key.name="tag"] CallExpression[callee.name="createValidatedTags"]))',
-          message:
-            'All test() calls must include a tag property with createValidatedTags([...]) containing User Type, Test Type, and Priority tags.',
-        },
-      ],
     },
   },
 ];

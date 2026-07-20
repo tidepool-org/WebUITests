@@ -6,16 +6,21 @@ export class ProfilePage {
   // Centralized field locators
   private fieldLocators: Record<string, Locator>;
 
+  private saveButton: Locator;
+
   constructor(page: Page) {
     this.page = page;
     this.fieldLocators = {
-      fullName: this.page.getByRole('textbox', { name: 'Full name' }),
-      birthDate: this.page.getByRole('textbox', { name: 'Date of birth' }),
+      fullName: this.page.getByRole('textbox', { name: 'Full Name' }),
+      birthDate: this.page.getByRole('textbox', { name: 'Birthdate' }),
+      dateOfBirth: this.page.getByRole('textbox', { name: 'Date of Birth' }), // for claimed profile version
       mrn: this.page.getByRole('textbox', { name: 'MRN' }),
-      diagnosisDate: this.page.getByRole('textbox', { name: 'Date of diagnosis' }),
+      // diagnosisDate: this.page.getByRole('textbox', { name: 'Date of diagnosis' }),
       clinicalNotes: this.page.getByRole('textbox', { name: 'Anything you would like to share' }),
       email: this.page.getByRole('textbox', { name: /email/i }),
     };
+
+    this.saveButton = this.page.getByRole('button', { name: 'Save Changes' });
   }
 
   // Generic fill method for text fields
@@ -28,32 +33,6 @@ export class ProfilePage {
       throw new Error(`Field '${field}' not found or not visible`);
     }
   }
-
-  // //select a Target Range from the dropdown
-  // async selectTargetRange(index: number): Promise<void> {
-  //   const targetRangeCombo = this.page.getByRole('combobox', { name: 'Target Range' });
-  //   if (await targetRangeCombo.isVisible({ timeout: 3000 })) {
-  //     await targetRangeCombo.selectOption({ index });
-  //   }
-  // }
-
-  // // get the current Target Range index from the dropdown
-  // async getCurrentTargetRangeIndex(): Promise<number> {
-  //   const targetRangeCombo = this.page.getByRole('combobox', { name: 'Target Range' });
-  //   if (await targetRangeCombo.isVisible({ timeout: 3000 })) {
-  //     const currentValue = await targetRangeCombo.inputValue();
-  //     const options = await targetRangeCombo.locator('option').all();
-
-  //     // Find current index by checking option values
-  //     for (let i = 0; i < options.length; i++) {
-  //       const optionValue = await options[i].getAttribute('value');
-  //       if (optionValue === currentValue) {
-  //         return i;
-  //       }
-  //     }
-  //   }
-  //   return 1; // Default to 1 if not found
-  // }
 
   // Select a diagnosis type from the dropdown
   async selectDiagnosisType(index: number): Promise<void> {
@@ -90,6 +69,10 @@ export class ProfilePage {
     return this.fillField('birthDate', date);
   }
 
+  async fillDateOfBirth(date: string) {
+    return this.fillField('dateOfBirth', date); // redundant for claimed profile version
+  }
+
   async fillMRN(mrn: string) {
     return this.fillField('mrn', mrn);
   }
@@ -106,40 +89,12 @@ export class ProfilePage {
     return this.fillField('email', email);
   }
 
-  async saveProfile(): Promise<void> {
-    // Save button locators
-    const saveButtons = [
-      this.page.getByRole('button', { name: 'Save changes' }),
-      this.page.getByRole('button', { name: 'Save Profile' }),
-      this.page.getByRole('button', { name: 'Save' }),
-    ];
-
-    // Wait for the PUT request to complete after clicking save
-    const saveProfilePromise = this.page.waitForResponse(
-      response =>
-        response.url().includes('/metadata/') &&
-        response.url().includes('/profile') &&
-        response.request().method() === 'GET',
-    );
-
-    let clicked = false;
-    for (const btn of saveButtons) {
-      if (await btn.isVisible({ timeout: 5000 }).catch(() => false)) {
-        await btn.click();
-        clicked = true;
-        break;
-      }
-    }
-    if (!clicked) throw new Error('No save button found');
-
-    await this.page.reload();
-
-    // Wait for the GET request to complete (with timeout)
-    try {
-      await saveProfilePromise;
-    } catch (error) {
-      console.log('⚠️ GET request timeout - continuing anyway');
-    }
+  async saveProfile() {
+    await this.saveButton.click();
+    // Wait for the Save Changes button to become hidden — this means the edit form
+    // has either closed (dialog) or navigated away (full-page route). Both indicate
+    // the save completed and the UI has fully transitioned out of edit mode.
+    await this.saveButton.waitFor({ state: 'hidden', timeout: 10000 });
   }
 
   /**

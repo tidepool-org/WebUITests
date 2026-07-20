@@ -16,6 +16,14 @@ export interface NetworkCapture {
   timestamp: number;
 }
 
+export interface ClinicCreationCapture {
+  // The id the clinic service assigns to the newly created workspace.
+  clinicId?: string;
+  // The headers the app sent on the create call (incl. x-tidepool-session-token), replayed on
+  // the DELETE so cleanup authenticates exactly as the app does.
+  authHeaders: Record<string, string>;
+}
+
 const ENDPOINTS = {
   profile: /\/data\/[^\/]+$/, // GET requests for patient data
   profileUpdate: /\/data\/[^\/]+$/, // PUT requests for patient data updates
@@ -33,8 +41,95 @@ export class NetworkHelper {
 
   private isCapturing = false;
 
+  private clinicCreation: ClinicCreationCapture = { authHeaders: {} };
+
   constructor(page: Page) {
     this.page = page;
+  }
+
+  /**
+   * Start listening for the clinic-creation POST (/v1/clinics) so the workspace it creates can
+   * later be deleted via {@link deleteCreatedClinic}. Call this BEFORE submitting the
+   * create-clinic form. Captures the new clinic's id from the response and the auth headers the
+   * app sent (incl. x-tidepool-session-token). Passive by design — it never throws or fails the
+   * test; if the create call is never seen, deleteCreatedClinic() reports the missing data.
+   */
+  captureClinicCreation(): void {
+    // If we've already captured the created clinic, don't register another listener.
+    if (this.clinicCreation.clinicId) return;
+
+    const handler = async (response: Response) => {
+      try {
+        const request = response.request();
+        if (request.method() === 'POST' && /\/v1\/clinics(\?.*)?$/.test(response.url())) {
+          this.clinicCreation.authHeaders = await request.allHeaders();
+          const body = await response.json().catch(() => undefined);
+          this.clinicCreation.clinicId =
+            body?.id ?? body?.clinicId ?? body?.clinic?.id ?? this.clinicCreation.clinicId;
+          console.log(
+            `🏥 Captured clinic create: id=${this.clinicCreation.clinicId ?? 'UNKNOWN'} ` +
+              `(POST ${response.url()} -> ${response.status()})`,
+          );
+
+          // Stop listening once we've seen the create response.
+          this.page.off('response', handler);
+        }
+      } catch {
+        // Never let capture break the test; deleteCreatedClinic() reports missing data instead.
+      }
+    };
+
+    this.page.on('response', handler);
+  }
+
+  /** The clinic id captured by {@link captureClinicCreation}, if the create call was seen. */
+  getCreatedClinicId(): string | undefined {
+    return this.clinicCreation.clinicId;
+  }
+
+  /**
+   * Delete the clinic workspace captured by {@link captureClinicCreation} via the clinic API,
+   * reusing the auth header the app sent on the create call. Throws with a clear message if the
+   * clinic id or an auth header was never captured, or if the API responds with a non-2xx status.
+   * @param baseUrl - The environment host (e.g. env.BASE_URL); DELETE hits {baseUrl}/v1/clinics/{id}.
+   * @returns The HTTP status code of the DELETE response.
+   */
+  async deleteCreatedClinic(baseUrl: string): Promise<number> {
+    const { clinicId, authHeaders } = this.clinicCreation;
+    if (!clinicId) {
+      throw new Error(
+        'No clinic id was captured from the create-clinic response; cannot delete the workspace. ' +
+          'Call captureClinicCreation() before submitting the form, and check that creating a ' +
+          'clinic still POSTs to /v1/clinics.',
+      );
+    }
+
+    const sessionToken = authHeaders['x-tidepool-session-token'];
+    const { authorization } = authHeaders;
+    if (!sessionToken && !authorization) {
+      throw new Error(
+        'No auth header (x-tidepool-session-token / authorization) was captured from the create ' +
+          'request; cannot authenticate the delete.',
+      );
+    }
+
+    const deleteHeaders: Record<string, string> = {};
+    if (sessionToken) deleteHeaders['x-tidepool-session-token'] = sessionToken;
+    if (authorization) deleteHeaders.authorization = authorization;
+
+    // baseUrl is the real environment host (e.g. https://qa2.development.tidepool.org); the
+    // clinic service lives on that same host at /v1/clinics/{clinicId}.
+    const deleteUrl = `${baseUrl.replace(/\/$/, '')}/v1/clinics/${clinicId}`;
+    const response = await this.page.request.delete(deleteUrl, { headers: deleteHeaders });
+
+    console.log(`🗑️  DELETE ${deleteUrl} -> ${response.status()}`);
+    if (!response.ok()) {
+      const bodyText = await response.text().catch(() => '');
+      throw new Error(
+        `Expected clinic deletion to succeed but got HTTP ${response.status()}: ${bodyText}`,
+      );
+    }
+    return response.status();
   }
 
   async startCapture(): Promise<void> {
@@ -219,6 +314,62 @@ export class NetworkHelper {
   }
 
   /**
+   * Wait for and get the most recent capture matching method and URL pattern after a specific timestamp
+   * @param method - HTTP method to match
+   * @param urlPattern - URL pattern to match
+   * @param afterTimestamp - Only consider captures after this timestamp (defaults to now)
+   * @param timeoutMs - Maximum time to wait in milliseconds (default 10000)
+   * @returns Promise that resolves with the matching capture or rejects on timeout
+   */
+  async waitForCaptureMatching(
+    method: string,
+    urlPattern: RegExp,
+    afterTimestamp: number = Date.now(),
+    timeoutMs = 10000,
+  ): Promise<NetworkCapture> {
+    const startTime = Date.now();
+
+    const capture = await new Promise<NetworkCapture>((resolve, reject) => {
+      const checkForCapture = () => {
+        // Look for captures after the specified timestamp
+        const matches = this.captures
+          .filter(
+            c => c.method === method && urlPattern.test(c.url) && c.timestamp > afterTimestamp,
+          )
+          .sort((a, b) => b.timestamp - a.timestamp);
+
+        if (matches.length > 0) {
+          resolve(matches[0]);
+          return;
+        }
+
+        // Check if we've exceeded the timeout
+        if (Date.now() - startTime > timeoutMs) {
+          reject(
+            new Error(
+              `Timeout waiting for ${method} request matching ${urlPattern} after timestamp ${afterTimestamp}. ` +
+                `Total captures: ${this.captures.length}, ` +
+                `Matching method/URL: ${this.captures.filter(c => c.method === method && urlPattern.test(c.url)).length}`,
+            ),
+          );
+          return;
+        }
+
+        // Check again in 100ms
+        setTimeout(checkForCapture, 100);
+      };
+
+      // Start checking
+      checkForCapture();
+    });
+
+    // Attach the captured response as this step's JSON evidence (deduped per step), so
+    // validation steps that only wait + compare still show their response in the report.
+    await this.attachStepJson(capture.responseBody, capture.url, capture.method);
+    return capture;
+  }
+
+  /**
    * Get all captures for a specific endpoint
    */
   getCapturesForEndpoint(endpointName: string): NetworkCapture[] {
@@ -235,6 +386,35 @@ export class NetworkHelper {
    */
   getAllCaptures(): NetworkCapture[] {
     return [...this.captures];
+  }
+
+  // The step ordinal we last attached a JSON response for. Ensures at most one response
+  // JSON per step, so a step that both waitForCaptureMatching()'s and
+  // validateEndpointResponse()'s the same call doesn't attach a duplicate.
+  private lastAttachedStepOrdinal = -1;
+
+  /**
+   * Attaches an API response as this step's JSON evidence, named by the CURRENT step ordinal
+   * (so the reporter maps it to the right step). Deduped per step. This is what makes
+   * validation steps that only wait+compare (no validateEndpointResponse) still show their
+   * captured response in the report.
+   */
+  private async attachStepJson(responseBody: any, url: string, method: string): Promise<void> {
+    if (!responseBody) return;
+    const stepCounterObj = (globalThis as any).stepCounter;
+    const { testInfo } = globalThis as any;
+    if (!stepCounterObj || !testInfo) return;
+
+    const ordinal = stepCounterObj.get();
+    if (ordinal === this.lastAttachedStepOrdinal) return;
+    this.lastAttachedStepOrdinal = ordinal;
+
+    const currentStepName = stepCounterObj.getCurrentStepName();
+    const stepNameForFile = currentStepName
+      ? currentStepName.toLowerCase().replace(/[^a-z0-9]/g, '-')
+      : 'response';
+    const fileName = `step-${ordinal.toString().padStart(2, '0')}-${stepNameForFile}-response.json`;
+    await this.saveApiResponse(responseBody, url, method, fileName, testInfo);
   }
 
   /**
@@ -282,26 +462,7 @@ export class NetworkHelper {
     const request = this.getLatestCaptureMatching(schema.method, schema.url as RegExp);
 
     if (request?.responseBody) {
-      // Access the shared step counter from the stepScreenshoter fixture
-      const stepCounterObj = (globalThis as any).stepCounter;
-      if (stepCounterObj) {
-        const stepNumber = stepCounterObj.increment();
-        const currentStepName = stepCounterObj.getCurrentStepName();
-
-        // Create consistent filename with step number and step name (like screenshots)
-        const stepNameForFile = currentStepName
-          ? currentStepName.toLowerCase().replace(/[^a-z0-9]/g, '-')
-          : endpointName.replace(/[^a-z0-9]/gi, '-');
-        const fileName = `step-${stepNumber.toString().padStart(2, '0')}-${stepNameForFile}-response.json`;
-
-        await this.saveApiResponse(
-          request.responseBody,
-          request.url,
-          schema.method,
-          fileName,
-          (globalThis as any).testInfo,
-        );
-      }
+      await this.attachStepJson(request.responseBody, request.url, schema.method);
     }
 
     return request;
@@ -443,11 +604,25 @@ export class NetworkHelper {
   /**
    * Helper method to get nested object values using dot notation
    * @param obj - The object to search
-   * @param nestedPath - The dot-notation path (e.g., 'patient.birthday')
+   * @param path - The dot-notation path (e.g., 'patient.birthday' or 'patient.emails[0].address')
    * @returns The value at the path or undefined
    */
-  private getNestedValue(obj: any, nestedPath: string): any {
-    return nestedPath.split('.').reduce((current, key) => current?.[key], obj);
+  private getNestedValue(obj: any, propertyPath: string): any {
+    if (!obj || typeof obj !== 'object') return undefined;
+
+    return propertyPath.split('.').reduce((current, key) => {
+      if (current === null || current === undefined) return undefined;
+
+      // Handle array notation like 'emails[0]'
+      const arrayMatch = key.match(/^(\w+)\[(\d+)\]$/);
+      if (arrayMatch) {
+        const [, arrayKey, index] = arrayMatch;
+        const array = current[arrayKey];
+        return Array.isArray(array) ? array[parseInt(index, 10)] : undefined;
+      }
+
+      return current[key];
+    }, obj);
   }
 
   /**
@@ -544,11 +719,11 @@ export class NetworkHelper {
     }
 
     // Generate comparison JSON file similar to validateEndpointResponse
-    // eslint-disable-next-line no-underscore-dangle
-    const stepCounterObj = (globalThis as any).__stepCounter;
+    const stepCounterObj = (globalThis as any).stepCounter;
     if (stepCounterObj) {
-      // Increment for JSON file naming (this is correct behavior)
-      const stepNumber = stepCounterObj.increment();
+      // Use the CURRENT step ordinal (do not bump it) so this comparison JSON shares its
+      // step's number; the step wrappers own bumping, once per step.
+      const stepNumber = stepCounterObj.get();
       const currentStepName = stepCounterObj.getCurrentStepName();
 
       // Create comparison data object
@@ -597,6 +772,72 @@ export class NetworkHelper {
       validationFields,
       requiredFields,
     );
+  }
+
+  /**
+   * Reload the current page to trigger API calls again
+   * @param waitUntil - Wait until a specific state before considering reload complete
+   * @param timeout - Maximum time to wait for reload to complete (default 30s)
+   */
+  async reloadPage(
+    waitUntil: 'load' | 'domcontentloaded' | 'networkidle' | 'commit' = 'networkidle',
+    timeout = 30000,
+  ): Promise<void> {
+    console.log('🔄 Reloading page to trigger API calls...');
+    await this.page.reload({ waitUntil, timeout });
+    console.log('✅ Page reloaded successfully');
+  }
+
+  /**
+   * Validates that specific values appear in the correct fields of a captured response
+   * @param capture - The captured network response to validate
+   * @param expectedValues - Object mapping field paths to expected values
+   * Example: { 'patient.fullName': 'John Doe', 'patient.mrn': '123456' }
+   */
+  validateResponseFields(capture: NetworkCapture, expectedValues: Record<string, any>): void {
+    if (!capture || !capture.responseBody) {
+      throw new Error('No response body available for field validation');
+    }
+
+    const { responseBody } = capture;
+    const validationErrors: string[] = [];
+
+    for (const [fieldPath, expectedValue] of Object.entries(expectedValues)) {
+      const actualValue = this.getNestedValue(responseBody, fieldPath);
+
+      if (actualValue === undefined) {
+        validationErrors.push(`Field '${fieldPath}' not found in response`);
+      } else {
+        // Handle different comparison types
+        let isMatch = false;
+
+        if (expectedValue === actualValue) {
+          isMatch = true;
+        } else if (Array.isArray(actualValue)) {
+          // For arrays, check if expected value is contained
+          isMatch = actualValue.some(item =>
+            typeof item === 'object' && item !== null
+              ? Object.values(item).includes(expectedValue)
+              : item === expectedValue,
+          );
+        } else if (typeof actualValue === 'string' && typeof expectedValue === 'string') {
+          // For strings, allow partial matching (useful for emails, names with formatting)
+          isMatch = actualValue.includes(expectedValue) || expectedValue.includes(actualValue);
+        }
+
+        if (!isMatch) {
+          validationErrors.push(
+            `Field '${fieldPath}' mismatch: expected '${expectedValue}', got '${actualValue}'`,
+          );
+        }
+      }
+    }
+
+    if (validationErrors.length > 0) {
+      throw new Error(`Field validation failed:\n${validationErrors.join('\n')}`);
+    }
+
+    console.log(`✅ All ${Object.keys(expectedValues).length} field validations passed`);
   }
 }
 

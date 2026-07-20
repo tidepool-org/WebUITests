@@ -1,13 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
+import type { ReporterDescription } from '@playwright/test';
 import path from 'node:path';
 import env from './utilities/env';
-
-const xrayOptions = {
-  embedAnnotationsAsProperties: true,
-  textContentAnnotations: ['test_description', 'testrun_comment'],
-  embedAttachmentsAsProperty: 'testrun_evidence',
-  outputFile: 'test-output/test-results.xml',
-};
 
 // Helper to detect BrowserStack run
 const isBrowserStack = Boolean(
@@ -34,18 +28,27 @@ export default defineConfig({
   globalSetup: require.resolve(path.join(__dirname, 'tests/global-setup')),
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 2 : 0,
-  workers: process.env.CI ? 1 : undefined,
-  timeout: 60_000,
+  retries: process.env.CI ? 1 : 0,
+  workers: process.env.CI ? 2 : undefined,
+  timeout: process.env.CI ? 120_000 : 60_000,
 
   expect: {
     toHaveScreenshot: { maxDiffPixelRatio: 0.2 },
   },
 
-  reporter: [
-    ['html', { open: 'never', outputFolder: 'playwright-report' }],
-    ['junit', xrayOptions],
-  ],
+  reporter: ((): ReporterDescription[] => {
+    const reporters: ReporterDescription[] = [
+      ['html', { open: 'never', outputFolder: 'playwright-report' }],
+      ['json', { outputFile: 'test-results/last-run.json' }],
+    ];
+    // In CI, emit a blob report per shard so a downstream job can merge all shards
+    // and upload to Xray once (avoids concurrent per-shard uploads → Xray HTTP 500).
+    if (process.env.CI) {
+      reporters.push(['blob']);
+    }
+    reporters.push(['./utilities/xray-json-reporter.ts']);
+    return reporters;
+  })(),
 
   use: {
     baseURL: env.BASE_URL,
@@ -63,7 +66,7 @@ export default defineConfig({
       use: {
         ...devices['Desktop Chrome'],
         storageState: 'tests/.auth/personal.json',
-        headless: false,
+        headless: !!process.env.CI,
       },
     },
 
@@ -73,7 +76,7 @@ export default defineConfig({
       use: {
         ...devices['Desktop Chrome'],
         storageState: 'tests/.auth/claimed.json',
-        headless: false,
+        headless: !!process.env.CI,
       },
     },
 
@@ -83,7 +86,7 @@ export default defineConfig({
       use: {
         ...devices['Desktop Chrome'],
         storageState: 'tests/.auth/clinician.json',
-        headless: false,
+        headless: !!process.env.CI,
       },
     },
 

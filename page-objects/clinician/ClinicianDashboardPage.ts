@@ -14,10 +14,6 @@ class ClinicianDashboardPage {
 
   readonly patientListTable: Locator;
 
-  readonly patientListTable_rows: Locator;
-
-  readonly showAllToggle: Locator;
-
   // Locators for the Add Patient Dialog
   readonly addPatientDialog: Locator;
 
@@ -26,6 +22,10 @@ class ClinicianDashboardPage {
   readonly addPatientDialog_fullNameInput: Locator;
 
   readonly addPatientDialog_birthdateInput: Locator;
+
+  readonly addPatientDialog_mrnInput: Locator;
+
+  readonly addPatientDialog_emailInput: Locator;
 
   readonly addPatientDialog_addButton: Locator;
 
@@ -39,6 +39,8 @@ class ClinicianDashboardPage {
 
   readonly removePatientButton: Locator;
 
+  readonly editPatientDetailsButton: Locator;
+
   readonly removePatientConfirm: Locator;
 
   constructor(page: Page) {
@@ -47,9 +49,7 @@ class ClinicianDashboardPage {
     // Main page locators
     this.addNewPatientButton = page.getByRole('button', { name: 'Add New Patient' });
     this.searchInput = page.getByRole('textbox', { name: 'Search' });
-    this.patientListTable = page.locator('table#peopleTable');
-    this.patientListTable_rows = page.getByRole('row');
-    this.showAllToggle = page.getByLabel('Toggle visibility');
+    this.patientListTable = page.getByRole('table', { name: 'peopletablelabel' });
 
     // Add Patient Dialog locators
     this.addPatientDialog = page.getByRole('dialog');
@@ -61,6 +61,12 @@ class ClinicianDashboardPage {
     });
     this.addPatientDialog_birthdateInput = this.addPatientDialog.getByRole('textbox', {
       name: 'Birthdate',
+    });
+    this.addPatientDialog_mrnInput = this.addPatientDialog.getByRole('textbox', {
+      name: 'MRN (optional)',
+    });
+    this.addPatientDialog_emailInput = this.addPatientDialog.getByRole('textbox', {
+      name: 'Email (optional)',
     });
     this.addPatientDialog_addButton = this.addPatientDialog.getByRole('button', {
       name: 'Add Patient',
@@ -77,6 +83,9 @@ class ClinicianDashboardPage {
       .getByRole('button', { name: /info|\.\.\./i })
       .first();
     this.removePatientButton = this.page.getByRole('button', { name: /remove patient/i }).first();
+    this.editPatientDetailsButton = this.page
+      .getByRole('button', { name: /edit patient details/i })
+      .first();
     this.removePatientConfirm = this.page.getByRole('button', { name: /^Remove$/i });
   }
 
@@ -84,12 +93,21 @@ class ClinicianDashboardPage {
    * Opens the Add Patient dialog and fills in the patient details.
    * @param name - The full name of the patient.
    * @param birthdate - The birthdate of the patient (e.g., MM/DD/YYYY).
+   * @param mrn - The medical record number of the patient.
+   * @param email - The email address of the patient.
    */
-  async openAndFillAddPatientDialog(name: string, birthdate: string): Promise<void> {
+  async openAndFillAddPatientDialog(
+    name: string,
+    birthdate: string,
+    mrn: string,
+    email: string,
+  ): Promise<void> {
     await this.addNewPatientButton.click();
     await this.addPatientDialog.waitFor({ state: 'visible' });
     await this.addPatientDialog_fullNameInput.fill(name);
     await this.addPatientDialog_birthdateInput.fill(birthdate);
+    await this.addPatientDialog_mrnInput.fill(mrn);
+    await this.addPatientDialog_emailInput.fill(email);
   }
 
   /**
@@ -112,14 +130,39 @@ class ClinicianDashboardPage {
 
   /**
    * Searches for a patient in the list.
+   * Uses triple-click to select existing text then pressSequentially to type,
+   * which properly triggers React's onChange handler on each keystroke.
    * @param name - The name of the patient to search for.
    */
   async searchForPatient(name: string): Promise<void> {
-    await this.searchInput.fill(name);
-    // Press Enter to trigger search
+    // Use the "Clear Search" button if visible — it reliably resets the input and React state
+    const clearButton = this.page.getByRole('button', { name: 'Clear Search' });
+    if (await clearButton.isVisible({ timeout: 500 })) {
+      await clearButton.click();
+      await this.page.waitForTimeout(500);
+    }
+
+    if (name.trim() === '') {
+      // Clearing was the goal — wait for the table to reset
+      await this.page.waitForTimeout(1500);
+      return;
+    }
+
+    // Triple-click selects all existing text in the input (reliable cross-browser),
+    // then pressSequentially replaces the selection character-by-character,
+    // firing onChange on each keystroke so React state stays in sync.
+    await this.searchInput.click({ clickCount: 3 });
+    await this.searchInput.pressSequentially(name, { delay: 50 });
+
+    // Verify the text was entered correctly; retry once if not
+    const inputValue = await this.searchInput.inputValue();
+    if (inputValue !== name) {
+      await this.searchInput.click({ clickCount: 3 });
+      await this.searchInput.pressSequentially(name, { delay: 50 });
+    }
+
     await this.searchInput.press('Enter');
-    // Wait longer for search to process and results to load
-    await this.page.waitForTimeout(3000);
+    await this.page.waitForTimeout(2000);
   }
 
   /**
@@ -129,7 +172,7 @@ class ClinicianDashboardPage {
    */
   getPatientCellByName(name: string): Locator {
     // Use exact match to avoid multiple matches with similar names
-    return this.patientListTable.getByRole('cell', { name, exact: true });
+    return this.patientListTable.getByRole('cell', { name, exact: false });
   }
 
   /**
@@ -145,26 +188,21 @@ class ClinicianDashboardPage {
     await this.page.waitForTimeout(500);
   }
 
+  async clickPatientCell(name: string): Promise<void> {
+    const patientCell = this.getPatientCellByName(name);
+    await patientCell.click();
+  }
+
   async clickRemovePatientMenuItem(): Promise<void> {
     await this.removePatientButton.click();
   }
 
-  async confirmRemovePatient(): Promise<void> {
-    await this.removePatientConfirm.click();
+  async clickEditPatientDetailsMenuItem(): Promise<void> {
+    await this.editPatientDetailsButton.click();
   }
 
-  async getPatientNames(): Promise<string[]> {
-    const rows = await this.patientListTable.locator('tbody tr').all();
-    const names: string[] = [];
-    for (const row of rows) {
-      // Patient name is in the first <th> cell with role='cell' and scope='row'
-      const nameCell = row.locator('th[role="cell"][scope="row"]');
-      // Extract only the first span (patient name)
-      const nameSpan = nameCell.locator('span').first();
-      const name = (await nameSpan.textContent())?.trim() || '';
-      if (name) names.push(name);
-    }
-    return names;
+  async confirmRemovePatient(): Promise<void> {
+    await this.removePatientConfirm.click();
   }
 }
 

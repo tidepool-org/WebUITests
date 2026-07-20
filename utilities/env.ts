@@ -14,9 +14,14 @@ const envSchema = z.object({
   SHARED_PASSWORD: z.string(),
   CLINICIAN_USERNAME: z.string(),
   CLINICIAN_PASSWORD: z.string(),
-  TARGET_ENV: z.enum(['qa1', 'qa2', 'qa3', 'qa4', 'qa5', 'production']),
+  TARGET_ENV: z.enum(['qa1', 'qa2', 'qa3', 'qa4', 'qa5', 'production', 'prd', 'int', 'dev1']),
   XRAY_CLIENT_ID: z.string().optional(),
   XRAY_CLIENT_SECRET: z.string().optional(),
+  XRAY_PROJECT_KEY: z.string().default('SAND'),
+  XRAY_BATCH_SIZE_MB: z.coerce.number().default(1),
+  TEST_EXECUTION_KEY: z.string().optional(),
+  JIRA_EMAIL: z.string().optional(),
+  JIRA_API_KEY: z.string().optional(),
 });
 
 const env = envSchema.safeParse(process.env);
@@ -32,6 +37,9 @@ const URL_MAP: Record<typeof env.data.TARGET_ENV, string> = {
   qa4: 'https://qa4.development.tidepool.org',
   qa5: 'https://qa5.development.tidepool.org',
   production: 'https://app.tidepool.org',
+  prd: 'https://app.tidepool.org', // Alias for production
+  int: 'https://external.integration.tidepool.org', // Integration environment
+  dev1: 'https://dev1.dev.tidepool.org/', // Development environment
 };
 
 export default {

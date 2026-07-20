@@ -89,14 +89,12 @@ export default class ClinicianNav {
           .or(page.getByRole('link', { name: 'Profile' }))
           .or(page.getByRole('button', { name: 'Profile' })),
         verifyURL: 'profile',
-        verifyElement: page
-          .getByRole('button', { name: 'Edit' })
-          .or(page.getByRole('button', { name: 'Edit Profile' })),
+        verifyElement: page.getByRole('heading', { name: 'Edit Patient Details' }),
       },
       ProfileEdit: {
         link: page
-          .getByRole('button', { name: 'Edit' })
-          .or(page.getByRole('button', { name: 'Edit Profile' })),
+          .getByRole('button', { name: 'Edit Patient Details' })
+          .or(page.getByRole('button', { name: 'Edit Patient Details' })),
         verifyURL: 'profile',
         verifyElement: page
           .getByRole('button', { name: 'Save changes' })

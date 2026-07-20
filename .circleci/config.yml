@@ -1,15 +1,28 @@
 version: 2.1
 orbs:
-  node: circleci/node@6.1.0
+  node: circleci/node@7.2.0
   browser-tools: circleci/browser-tools@1.5.1
   slack: circleci/slack@4.1
 parameters:
   testEnvironment:
     type: string
-    default: 'qa1'
+    default: 'qa2'
   testExecKey:
     type: string
     default: 'none'
+  # The Jira ticket (Task/Story) that fired the automation. Passed directly by the
+  # webhook ({{triggerIssue.key}}) so CI can link its auto-created Xray execution
+  # straight to this ticket — no throwaway Jira-side execution needed. 'none' on plain
+  # commits and local triggers.
+  triggerIssue:
+    type: string
+    default: 'none'
+  testTags:
+    type: string
+    default: ''
+  xrayProjectKey:
+    type: string
+    default: 'QAE'
 jobs:
   code-quality-check:
     working_directory: ~/tidepool-org/webuitests
@@ -30,18 +43,72 @@ jobs:
       - run:
           name: Run ESLint and TypeScript Check
           command: npm run check
+  create-execution:
+    working_directory: ~/tidepool-org/webuitests
+    docker:
+      - image: cimg/node:lts
+    steps:
+      - checkout
+      - node/install
+      # Pipeline parameters always take precedence over project-level env vars
+      - run:
+          name: Set environment variables
+          command: |
+            echo "export TARGET_ENV=\"<< pipeline.parameters.testEnvironment >>\"" >> $BASH_ENV
+            echo "export TEST_EXECUTION_KEY=\"<< pipeline.parameters.testExecKey >>\"" >> $BASH_ENV
+            echo "export TRIGGER_ISSUE=\"<< pipeline.parameters.triggerIssue >>\"" >> $BASH_ENV
+            echo "export TEST_TAGS=\"<< pipeline.parameters.testTags >>\"" >> $BASH_ENV
+            echo "export XRAY_PROJECT_KEY=\"<< pipeline.parameters.xrayProjectKey >>\"" >> $BASH_ENV
+      - restore_cache:
+          keys:
+            - dependency-cache-{{ checksum "package.json" }}
+            - dependency-cache-
+      - run: npm ci
+      - save_cache:
+          paths:
+            - ./node_modules
+          key: dependency-cache-{{ checksum "package.json" }}
+      # Pre-create (frontload) the Xray execution BEFORE any tests run, so a user who
+      # triggered the automation from a Jira ticket sees the queued tests (status TO DO,
+      # with their existing step definitions) during the run rather than only after it.
+      # Uses `playwright test --list` (no browsers needed) to learn which tests will run
+      # from the tag filter. Non-fatal by design: the script never exits non-zero, so a
+      # frontload hiccup won't block the test job — the post-run upload auto-creates a
+      # fresh execution as a fallback. The new execution's key is written to
+      # test-results/created-exec-key.txt and handed to merge-and-upload-xray.
+      - run:
+          name: Pre-create (frontload) Xray execution
+          command: npm run create-execution
+      # Guarantee the dir exists even when the frontload is skipped (e.g. testExecKey=none
+      # on a plain commit), so persisting the workspace never fails on a missing path.
+      - run:
+          name: Ensure test-results dir exists
+          command: mkdir -p test-results
+      - persist_to_workspace:
+          root: .
+          paths:
+            - test-results
   test:
     working_directory: ~/tidepool-org/webuitests
     docker:
-      - image: mcr.microsoft.com/playwright:v1.54.1-noble
+      - image: mcr.microsoft.com/playwright:v1.57.0-noble
     parallelism: 4
-    environment:
-      TEST_EXECUTION_KEY: << pipeline.parameters.testExecKey >>
-      TARGET_ENV: << pipeline.parameters.testEnvironment >>
     steps:
       - checkout
       - node/install
       - run: node --version
+      # Pipeline parameters always take precedence over project-level env vars
+      - run:
+          name: Set environment variables
+          command: |
+            echo "export TARGET_ENV=\"<< pipeline.parameters.testEnvironment >>\"" >> $BASH_ENV
+            echo "export TEST_EXECUTION_KEY=\"<< pipeline.parameters.testExecKey >>\"" >> $BASH_ENV
+            echo "export TEST_TAGS=\"<< pipeline.parameters.testTags >>\"" >> $BASH_ENV
+            echo "export XRAY_PROJECT_KEY=\"<< pipeline.parameters.xrayProjectKey >>\"" >> $BASH_ENV
+            # Shards must NOT upload to Xray individually — they would hit the same
+            # execution concurrently and trigger HTTP 500. The merge-and-upload-xray
+            # job uploads the merged results once instead.
+            echo "export XRAY_DEFER_UPLOAD=\"true\"" >> $BASH_ENV
       - restore_cache:
           keys:
             - dependency-cache-{{ checksum "package.json" }}
@@ -57,67 +124,53 @@ jobs:
           name: Install Playwright Dependencies
           command: npx playwright install --with-deps
 
-      # Run tests with parallel execution
+      # Run tests with parallel execution and optional tag filtering.
+      # NOTE: this step intentionally does NOT fail on test failures. If it did, the
+      # job would fail and the downstream merge-and-upload-xray job (requires: test)
+      # would be skipped — so results would never reach Xray exactly when tests fail.
+      # The real pass/fail verdict is decided in merge-and-upload-xray from the merged
+      # results. (This also guarantees blob reports persist even on failing runs.)
       - run:
           name: Run Playwright Tests
-          command: npm run test --shard=$CIRCLE_NODE_INDEX/$CIRCLE_NODE_TOTAL
+          command: |
+            SHARD_ARG="--shard=$((CIRCLE_NODE_INDEX + 1))/$CIRCLE_NODE_TOTAL"
+            if [ -n "$TEST_TAGS" ]; then
+              TAG=$(echo "$TEST_TAGS" | tr '[:upper:]' '[:lower:]')
+              [[ "$TAG" != @* ]] && TAG="@${TAG}"
+              npm test -- $SHARD_ARG --grep "$TAG" --grep-invert "@wip" || echo "⚠️ Playwright reported failures — continuing so results merge & upload; verdict decided in merge-and-upload-xray."
+            else
+              npm test -- $SHARD_ARG --grep "@" --grep-invert "@wip" || echo "⚠️ Playwright reported failures — continuing so results merge & upload; verdict decided in merge-and-upload-xray."
+            fi
 
       # Store test results and artifacts
       - store_artifacts:
           path: playwright-report
       - store_artifacts:
           path: test-results
-      - store_test_results:
-          path: test-output/test-results.xml
-      # Commit workflow notifications - basic templates for all branches
-      - slack/notify:
-          event: fail
-          mentions: '<@UG56AQFK2>'
-          template: basic_fail_1
-      - slack/notify:
-          event: pass
-          branch_pattern: main
-          template: basic_success_1
-      - slack/notify:
-          event: pass
-          branch_pattern: /^(?!main$).*/
-          template: basic_success_1
-      - unless:
-          condition:
-            and:
-              - equal: ['testParallel', << pipeline.parameters.testEnvironment >>]
-          steps:
-            - run:
-                name: Gather Test Evidence
-                command: node utilities/browserstackEvidenceDownload.js
-                when: always
-            - run:
-                name: Get API token
-                command: |
-                  echo export token=$(curl -H "Content-Type: application/json" -X POST --data "{ \"client_id\": \"$CLIENT_ID\",\"client_secret\": \"$CLIENT_SECRET\" }" https://xray.cloud.getxray.app/api/v1/authenticate| tr -d '"') >> $BASH_ENV
-                  source $BASH_ENV
-                when: always
-            - run:
-                name: Send Results to XRAY
-                command: 'curl -H "Content-Type: text/xml" -H "Authorization: Bearer $token" --data @test-output/test-results.xml  "https://xray.cloud.getxray.app/api/v1/import/execution/junit?testExecKey=<< pipeline.parameters.testExecKey >>"'
-                when: always
-            - run:
-                name: Add Test Evidence to JIRA
-                command: node utilities/sendTestEvidenceToJira.js
-                when: always
+
+      # Hand each shard's blob report to the merge-and-upload job. Playwright names
+      # blob files per shard (report-1.zip, report-2.zip, …) so they don't collide.
+      - persist_to_workspace:
+          root: .
+          paths:
+            - blob-report
 
   scheduled-test:
     working_directory: ~/tidepool-org/webuitests
     docker:
-      - image: mcr.microsoft.com/playwright:v1.54.1-noble
+      - image: mcr.microsoft.com/playwright:v1.57.0-noble
     parallelism: 4
-    environment:
-      TEST_EXECUTION_KEY: << pipeline.parameters.testExecKey >>
-      TARGET_ENV: << pipeline.parameters.testEnvironment >>
     steps:
       - checkout
       - node/install
       - run: node --version
+      # Pipeline parameters always take precedence over project-level env vars
+      - run:
+          name: Set environment variables
+          command: |
+            echo "export TARGET_ENV=\"<< pipeline.parameters.testEnvironment >>\"" >> $BASH_ENV
+            echo "export TEST_EXECUTION_KEY=\"<< pipeline.parameters.testExecKey >>\"" >> $BASH_ENV
+            echo "export TEST_TAGS=\"<< pipeline.parameters.testTags >>\"" >> $BASH_ENV
       - restore_cache:
           keys:
             - dependency-cache-{{ checksum "package.json" }}
@@ -133,43 +186,125 @@ jobs:
           name: Install Playwright Dependencies
           command: npx playwright install --with-deps
 
-      # Run tests with parallel execution
+      # Run tests with parallel execution and optional tag filtering
       - run:
           name: Run Playwright Tests
-          command: npm run test --shard=$CIRCLE_NODE_INDEX/$CIRCLE_NODE_TOTAL
+          command: |
+            SHARD_ARG="--shard=$((CIRCLE_NODE_INDEX + 1))/$CIRCLE_NODE_TOTAL"
+            if [ -n "$TEST_TAGS" ]; then
+              TAG=$(echo "$TEST_TAGS" | tr '[:upper:]' '[:lower:]')
+              [[ "$TAG" != @* ]] && TAG="@${TAG}"
+              npm test -- $SHARD_ARG --grep "$TAG" --grep-invert "@wip"
+            else
+              npm test -- $SHARD_ARG --grep "@" --grep-invert "@wip"
+            fi
 
       # Store test results and artifacts
       - store_artifacts:
           path: playwright-report
       - store_artifacts:
           path: test-results
-      - store_test_results:
-          path: test-output/test-results.xml
 
-      - run:
-          name: Install xmllint
-          command: apt-get update && apt-get install -y libxml2-utils
-          when: always
+      # Only send notifications from the first node to avoid duplicates
+      - when:
+          condition:
+            equal: ["0", "${CIRCLE_NODE_INDEX}"]
+          steps:
+            - slack/notify:
+                event: fail
+                mentions: '<@UG56AQFK2>'
+                custom: |
+                  {
+                    "blocks": [
+                      {
+                        "type": "section",
+                        "text": {
+                          "type": "mrkdwn",
+                          "text": "*:x: Scheduled Tidepool Web UI Tests Failed* :sad_tapani: \n\n :pencil:*Summary* \n\n *$PASSED_TESTS/$TOTAL_TESTS* tests passed \n *$FAILURES* tests failed \n Total time: *$TIME* seconds"
+                        }
+                      },
+                      {
+                        "type": "divider"
+                      },
+                      {
+                        "type": "section",
+                        "text": {
+                          "type": "mrkdwn",
+                          "text": ":link: *<${CIRCLE_BUILD_URL}|View CircleCI Build Details>*"
+                        }
+                      }
+                    ]
+                  }
+            - slack/notify:
+                event: pass
+                custom: |
+                  {
+                    "blocks": [
+                      {
+                        "type": "section",
+                        "text": {
+                          "type": "mrkdwn",
+                          "text": "*:white_check_mark: Scheduled Tidepool Web UI Tests Passed!* :catjam:  \n\n :pencil:*Summary:* \n *$PASSED_TESTS/$TOTAL_TESTS* tests passed \n Total time: *$TIME* seconds \n\n :link: *<${CIRCLE_BUILD_URL}|View CircleCI Build Details>*"
+                        }
+                      }
+                    ]
+                  }
 
-      # Parse test results for detailed Slack notification
+  merge-and-upload-xray:
+    working_directory: ~/tidepool-org/webuitests
+    docker:
+      - image: mcr.microsoft.com/playwright:v1.57.0-noble
+    steps:
+      - checkout
+      - node/install
       - run:
-          name: Parse Test Results
+          name: Set environment variables
           command: |
-            TOTAL_TESTS=$(xmllint --xpath "string(/testsuites/@tests)" test-output/test-results.xml)
-            FAILURES=$(xmllint --xpath "string(/testsuites/@failures)" test-output/test-results.xml)
-            ERRORS=$(xmllint --xpath "string(/testsuites/@errors)" test-output/test-results.xml)
-            PASSED_TESTS=$((TOTAL_TESTS - FAILURES - ERRORS))
-            TIME=$(xmllint --xpath "string(/testsuites/@time)" test-output/test-results.xml)
-            echo "export TOTAL_TESTS=$TOTAL_TESTS" >> $BASH_ENV
-            echo "export PASSED_TESTS=$PASSED_TESTS" >> $BASH_ENV
-            echo "export FAILURES=$FAILURES" >> $BASH_ENV
-            echo "export ERRORS=$ERRORS" >> $BASH_ENV
-            echo "export TIME=$TIME" >> $BASH_ENV
-          when: always
-
-      # Detailed Slack notifications for scheduled runs
+            echo "export TARGET_ENV=\"<< pipeline.parameters.testEnvironment >>\"" >> $BASH_ENV
+            echo "export TEST_EXECUTION_KEY=\"<< pipeline.parameters.testExecKey >>\"" >> $BASH_ENV
+            echo "export TRIGGER_ISSUE=\"<< pipeline.parameters.triggerIssue >>\"" >> $BASH_ENV
+            echo "export XRAY_PROJECT_KEY=\"<< pipeline.parameters.xrayProjectKey >>\"" >> $BASH_ENV
+            # TEST_TAGS is needed here too: the post-run description records the tag filter
+            # ("Test tag: ..."), and without it the upload would overwrite the frontload
+            # description with "ALL".
+            echo "export TEST_TAGS=\"<< pipeline.parameters.testTags >>\"" >> $BASH_ENV
+      - restore_cache:
+          keys:
+            - dependency-cache-{{ checksum "package.json" }}
+            - dependency-cache-
+      - run: npm ci
+      # Pull every shard's blob report (report-1.zip … report-4.zip) into blob-report/
+      - attach_workspace:
+          at: .
+      - run:
+          name: Merge shard blob reports into one JSON
+          command: npm run merge-reports
+      # Don't fail this step directly: a failed step skips everything after it,
+      # including store_artifacts — exactly when the xray-execution.json and failed
+      # request/response debug files in test-results/ are needed. Record the failure
+      # and fail the job AFTER artifacts are stored.
+      - run:
+          name: Upload merged results to Xray (single upload)
+          command: npm run upload-to-xray || touch .xray-upload-failed
+      - store_artifacts:
+          path: test-results
+      - run:
+          name: Fail job if Xray upload failed
+          command: |
+            if [ -f .xray-upload-failed ]; then
+              echo "❌ Xray upload failed — see the test-results artifacts (xray-execution.json, xray-failed-request/response files) for the exact payload and Xray's response."
+              exit 1
+            fi
+      # Decide the run's verdict here (the test job always succeeds so the upload can
+      # run). Fail the job — and the pipeline — if any test failed unexpectedly.
+      - run:
+          name: Report test verdict
+          command: npm run test-verdict
+      # Slack notifications live here because this job's status reflects the real
+      # pass/fail verdict. event: fail/pass map to on_fail/on_success internally.
       - slack/notify:
           event: fail
+          branch_pattern: main
           mentions: '<@UG56AQFK2>'
           custom: |
             {
@@ -178,23 +313,14 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "*:x: Scheduled Tidepool Web UI Tests Failed* :sad_tapani: \n\n :pencil:*Summary* \n\n *$PASSED_TESTS/$TOTAL_TESTS* tests passed \n *$FAILURES* tests failed \n Total time: *$TIME* seconds"
-                  }
-                },
-                {
-                  "type": "divider"
-                },
-                {
-                  "type": "section",
-                  "text": {
-                    "type": "mrkdwn",
-                    "text": ":link: *<${CIRCLE_BUILD_URL}|View CircleCI Build Details>*"
+                    "text": ":x: *Tidepool Web UI Tests Failed on Main Branch* \n\n:link: <${CIRCLE_BUILD_URL}|View Build Details>"
                   }
                 }
               ]
             }
       - slack/notify:
           event: pass
+          branch_pattern: main
           custom: |
             {
               "blocks": [
@@ -202,40 +328,56 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "*:white_check_mark: Scheduled Tidepool Web UI Tests Passed!* :catjam:  \n\n :pencil:*Summary:* \n *$PASSED_TESTS/$TOTAL_TESTS* tests passed \n Total time: *$TIME* seconds \n\n :link: *<${CIRCLE_BUILD_URL}|View CircleCI Build Details>*"
+                    "text": ":white_check_mark: *Tidepool Web UI Tests Passed on Main Branch* \n\n:link: <${CIRCLE_BUILD_URL}|View Build Details>"
                   }
                 }
               ]
             }
-
-      - unless:
-          condition:
-            and:
-              - equal: ['testParallel', << pipeline.parameters.testEnvironment >>]
-          steps:
-            - run:
-                name: Gather Test Evidence
-                command: node utilities/browserstackEvidenceDownload.js
-                when: always
-            - run:
-                name: Get API token
-                command: |
-                  echo export token=$(curl -H "Content-Type: application/json" -X POST --data "{ \"client_id\": \"$CLIENT_ID\",\"client_secret\": \"$CLIENT_SECRET\" }" https://xray.cloud.getxray.app/api/v1/authenticate| tr -d '"') >> $BASH_ENV
-                  source $BASH_ENV
-                when: always
-            - run:
-                name: Send Results to XRAY
-                command: 'curl -H "Content-Type: text/xml" -H "Authorization: Bearer $token" --data @test-output/test-results.xml  "https://xray.cloud.getxray.app/api/v1/import/execution/junit?testExecKey=<< pipeline.parameters.testExecKey >>"'
-                when: always
-            - run:
-                name: Add Test Evidence to JIRA
-                command: node utilities/sendTestEvidenceToJira.js
-                when: always
+      - slack/notify:
+          event: fail
+          branch_pattern: develop
+          mentions: '<@UG56AQFK2>'
+          custom: |
+            {
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": ":x: *Tidepool Web UI Tests Failed on Develop Branch* \n\n:link: <${CIRCLE_BUILD_URL}|View Build Details>"
+                  }
+                }
+              ]
+            }
+      - slack/notify:
+          event: pass
+          branch_pattern: develop
+          custom: |
+            {
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": ":white_check_mark: *Tidepool Web UI Tests Passed on Develop Branch* \n\n:link: <${CIRCLE_BUILD_URL}|View Build Details>"
+                  }
+                }
+              ]
+            }
 
 workflows:
   commit-workflow:
     jobs:
       - code-quality-check
+      # Frontload the Xray execution before the shards run, so the triggering Jira
+      # ticket shows the queued tests during the run (see the create-execution job).
+      - create-execution
       - test:
           requires:
-            - eslint-check
+            - create-execution
+      # merge-and-upload-xray attaches the workspace, which (via the create-execution
+      # → test → merge ancestry) includes test-results/created-exec-key.txt — so the
+      # single upload imports results INTO the frontload execution.
+      - merge-and-upload-xray:
+          requires:
+            - test

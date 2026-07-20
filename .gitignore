@@ -5,6 +5,8 @@ tests_output
 .vscode
 vrt/diff
 vrt/latest
+build/
+dist/
 # ui
 screens
 test_evidence
