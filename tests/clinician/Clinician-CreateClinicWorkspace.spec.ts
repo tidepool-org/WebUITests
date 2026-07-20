@@ -2,6 +2,8 @@ import WorkspacesPage from '@pom/clinician/WorkspacesPage';
 import ClinicCreationPage from '@pom/clinician/ClinicCreationPage';
 import { expect } from '../fixtures/base';
 import { test } from '../fixtures/clinic-helpers';
+import { createNetworkHelper } from '../fixtures/network-helpers';
+import env from '../../utilities/env';
 
 import { TEST_TAGS, createValidatedTags } from '../fixtures/test-tags';
 
@@ -15,6 +17,12 @@ test.describe('Clinic Account may create a new workspace', () => {
       tag: createValidatedTags([TEST_TAGS.CLINICIAN, TEST_TAGS.UI, TEST_TAGS.HIGH]),
     },
     async ({ page }) => {
+      // Start capturing the clinic-creation API call up front (before the form is submitted) so
+      // the workspace it creates can be deleted afterwards. See the "When the workspace is
+      // deleted" step below.
+      const api = createNetworkHelper(page);
+      api.captureClinicCreation();
+
       // Step 1: Login as clinician
       await test.step(
         'Given a clinician with multiple workspaces is logged in',
@@ -44,7 +52,7 @@ test.describe('Clinic Account may create a new workspace', () => {
 
       // Step 3: Confirm create page exists and is rached.
       await test.step(
-        'Then the user navigates to the create patient page',
+        'Then the user navigates to the create clinic page',
         async () => {
           await expect(page).toHaveURL(/clinic-details\/new/);
           await expect(clinicCreationPage.pageHeader).toBeVisible();
@@ -136,6 +144,58 @@ test.describe('Clinic Account may create a new workspace', () => {
         },
         { detail: 'Confirm a card for the newly created clinic appears on the workspaces screen.' },
       );
+
+      // Steps 11-12: delete the workspace this test created and confirm it's gone. These run as
+      // cleanup steps so they ALWAYS execute — even if an assertion above failed — keeping the
+      // account free of "Test Clinic ..." bloat on re-runs, while still rendering as normal
+      // When/Then steps in Xray. Deletion is done via the clinic API; the UI check in the "Then"
+      // step is the source of truth — if it can't confirm the workspace is gone, the test fails
+      // (see the assertion after the steps).
+      let workspaceConfirmedDeleted = false;
+
+      await test.cleanupStep(
+        'When the workspace is deleted',
+        async () => {
+          await api.deleteCreatedClinic(env.BASE_URL);
+        },
+        {
+          detail:
+            'Delete the workspace created earlier in this test. Automated run: send an ' +
+            'authenticated DELETE to /v1/clinics/{clinicId}, reusing the same ' +
+            'x-tidepool-session-token the app sent when it created the clinic. While executing ' +
+            'the test manually, utilize ORCA to delete the workspace.',
+        },
+      );
+
+      await test.cleanupStep(
+        'Then the workspace no longer displays within the workspaces page',
+        async () => {
+          // Reload the workspaces page and wait for it to fully render (load-state based, not a
+          // fixed delay) so the step's evidence screenshot shows the loaded page minus the
+          // deleted workspace. Then confirm the clinic card is gone — the authoritative
+          // confirmation of deletion.
+          await workspacesPage.goto();
+          await workspacesPage.waitUntilLoaded();
+
+          await expect(workspacesPage.getClinicCard(clinicName)).not.toBeVisible();
+          workspaceConfirmedDeleted = true;
+        },
+        {
+          detail:
+            'Reload the Clinic Workspaces page and confirm the card for the deleted clinic no ' +
+            'longer appears in the workspaces list.',
+        },
+      );
+
+      // Fail the test if the UI could not confirm the workspace was deleted. The "Then" cleanup
+      // step above is already recorded as FAILED for Xray on its own, but cleanupStep swallows
+      // the error so sibling cleanups can still run; this assertion propagates that failure to
+      // the overall test result.
+      expect(
+        workspaceConfirmedDeleted,
+        'Workspace still appears in the workspaces list after deletion — the UI could not ' +
+          'confirm the workspace was deleted.',
+      ).toBe(true);
     },
   );
 });

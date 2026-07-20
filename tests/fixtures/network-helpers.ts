@@ -16,6 +16,14 @@ export interface NetworkCapture {
   timestamp: number;
 }
 
+export interface ClinicCreationCapture {
+  // The id the clinic service assigns to the newly created workspace.
+  clinicId?: string;
+  // The headers the app sent on the create call (incl. x-tidepool-session-token), replayed on
+  // the DELETE so cleanup authenticates exactly as the app does.
+  authHeaders: Record<string, string>;
+}
+
 const ENDPOINTS = {
   profile: /\/data\/[^\/]+$/, // GET requests for patient data
   profileUpdate: /\/data\/[^\/]+$/, // PUT requests for patient data updates
@@ -33,8 +41,95 @@ export class NetworkHelper {
 
   private isCapturing = false;
 
+  private clinicCreation: ClinicCreationCapture = { authHeaders: {} };
+
   constructor(page: Page) {
     this.page = page;
+  }
+
+  /**
+   * Start listening for the clinic-creation POST (/v1/clinics) so the workspace it creates can
+   * later be deleted via {@link deleteCreatedClinic}. Call this BEFORE submitting the
+   * create-clinic form. Captures the new clinic's id from the response and the auth headers the
+   * app sent (incl. x-tidepool-session-token). Passive by design — it never throws or fails the
+   * test; if the create call is never seen, deleteCreatedClinic() reports the missing data.
+   */
+  captureClinicCreation(): void {
+    // If we've already captured the created clinic, don't register another listener.
+    if (this.clinicCreation.clinicId) return;
+
+    const handler = async (response: Response) => {
+      try {
+        const request = response.request();
+        if (request.method() === 'POST' && /\/v1\/clinics(\?.*)?$/.test(response.url())) {
+          this.clinicCreation.authHeaders = await request.allHeaders();
+          const body = await response.json().catch(() => undefined);
+          this.clinicCreation.clinicId =
+            body?.id ?? body?.clinicId ?? body?.clinic?.id ?? this.clinicCreation.clinicId;
+          console.log(
+            `🏥 Captured clinic create: id=${this.clinicCreation.clinicId ?? 'UNKNOWN'} ` +
+              `(POST ${response.url()} -> ${response.status()})`,
+          );
+
+          // Stop listening once we've seen the create response.
+          this.page.off('response', handler);
+        }
+      } catch {
+        // Never let capture break the test; deleteCreatedClinic() reports missing data instead.
+      }
+    };
+
+    this.page.on('response', handler);
+  }
+
+  /** The clinic id captured by {@link captureClinicCreation}, if the create call was seen. */
+  getCreatedClinicId(): string | undefined {
+    return this.clinicCreation.clinicId;
+  }
+
+  /**
+   * Delete the clinic workspace captured by {@link captureClinicCreation} via the clinic API,
+   * reusing the auth header the app sent on the create call. Throws with a clear message if the
+   * clinic id or an auth header was never captured, or if the API responds with a non-2xx status.
+   * @param baseUrl - The environment host (e.g. env.BASE_URL); DELETE hits {baseUrl}/v1/clinics/{id}.
+   * @returns The HTTP status code of the DELETE response.
+   */
+  async deleteCreatedClinic(baseUrl: string): Promise<number> {
+    const { clinicId, authHeaders } = this.clinicCreation;
+    if (!clinicId) {
+      throw new Error(
+        'No clinic id was captured from the create-clinic response; cannot delete the workspace. ' +
+          'Call captureClinicCreation() before submitting the form, and check that creating a ' +
+          'clinic still POSTs to /v1/clinics.',
+      );
+    }
+
+    const sessionToken = authHeaders['x-tidepool-session-token'];
+    const { authorization } = authHeaders;
+    if (!sessionToken && !authorization) {
+      throw new Error(
+        'No auth header (x-tidepool-session-token / authorization) was captured from the create ' +
+          'request; cannot authenticate the delete.',
+      );
+    }
+
+    const deleteHeaders: Record<string, string> = {};
+    if (sessionToken) deleteHeaders['x-tidepool-session-token'] = sessionToken;
+    if (authorization) deleteHeaders.authorization = authorization;
+
+    // baseUrl is the real environment host (e.g. https://qa2.development.tidepool.org); the
+    // clinic service lives on that same host at /v1/clinics/{clinicId}.
+    const deleteUrl = `${baseUrl.replace(/\/$/, '')}/v1/clinics/${clinicId}`;
+    const response = await this.page.request.delete(deleteUrl, { headers: deleteHeaders });
+
+    console.log(`🗑️  DELETE ${deleteUrl} -> ${response.status()}`);
+    if (!response.ok()) {
+      const bodyText = await response.text().catch(() => '');
+      throw new Error(
+        `Expected clinic deletion to succeed but got HTTP ${response.status()}: ${bodyText}`,
+      );
+    }
+    return response.status();
   }
 
   async startCapture(): Promise<void> {
