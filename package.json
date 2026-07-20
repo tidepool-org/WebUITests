@@ -1,6 +1,6 @@
 {
   "name": "webuitests",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "Tidepool UI Testing with playwright",
   "main": "index.js",
   "scripts": {
