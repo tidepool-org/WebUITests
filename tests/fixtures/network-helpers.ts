@@ -55,7 +55,10 @@ export class NetworkHelper {
    * test; if the create call is never seen, deleteCreatedClinic() reports the missing data.
    */
   captureClinicCreation(): void {
-    this.page.on('response', async (response: Response) => {
+    // If we've already captured the created clinic, don't register another listener.
+    if (this.clinicCreation.clinicId) return;
+
+    const handler = async (response: Response) => {
       try {
         const request = response.request();
         if (request.method() === 'POST' && /\/v1\/clinics(\?.*)?$/.test(response.url())) {
@@ -67,11 +70,16 @@ export class NetworkHelper {
             `🏥 Captured clinic create: id=${this.clinicCreation.clinicId ?? 'UNKNOWN'} ` +
               `(POST ${response.url()} -> ${response.status()})`,
           );
+
+          // Stop listening once we've seen the create response.
+          this.page.off('response', handler);
         }
       } catch {
         // Never let capture break the test; deleteCreatedClinic() reports missing data instead.
       }
-    });
+    };
+
+    this.page.on('response', handler);
   }
 
   /** The clinic id captured by {@link captureClinicCreation}, if the create call was seen. */
