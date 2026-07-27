@@ -60,8 +60,8 @@ export default class ClinicCreationPage {
     this.websiteInput = page.getByLabel('Website (optional)');
 
     // Blood glucose units radio buttons
-    this.mgdlRadio = page.locator('label').filter({ hasText: 'mg/dL' });
-    this.mmolRadio = page.locator('label').filter({ hasText: 'mmol/L' });
+    this.mgdlRadio = page.getByRole('radio', { name: 'mg/dL' });
+    this.mmolRadio = page.getByRole('radio', { name: 'mmol/L' });
 
     // Acknowledgement checkbox
     this.adminAcknowledgeCheckbox = page.getByRole('checkbox', { name: 'admin' });
