@@ -115,8 +115,8 @@ test.describe('Personal Accounts allow access and modification of profile detail
       await (test as any).stepNoScreenshot(
         'Then profile endpoint responds with GET request consistent with schema and saved values',
         async () => {
-          await api.reloadPage('load');
           const clickTimestamp = Date.now();
+          await api.reloadPage('load');
           producerGetCapture = await api.waitForCaptureMatching(
             getProfileMetadataSchema.method,
             getProfileMetadataSchema.url as RegExp,
