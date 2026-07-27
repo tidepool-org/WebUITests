@@ -109,10 +109,10 @@ export default class ClinicCreationPage {
     await this.clinicNameInput.fill(clinicName);
 
     // Select clinic type
-    await this.clinicTypeDropdown.selectOption(clinicType);
+    await this.clinicTypeDropdown.selectOption({ label: clinicType });
 
     // Select state (US is selected by default)
-    await this.stateDropdown.selectOption(state);
+    await this.stateDropdown.selectOption({ label: state });
 
     // Fill in address details
     await this.addressInput.fill(address);
