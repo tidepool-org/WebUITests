@@ -15,7 +15,7 @@ export class ProfilePage {
       birthDate: this.page.getByRole('textbox', { name: 'Birthdate' }),
       dateOfBirth: this.page.getByRole('textbox', { name: 'Date of Birth' }), // for claimed profile version
       mrn: this.page.getByRole('textbox', { name: 'MRN' }),
-      // diagnosisDate: this.page.getByRole('textbox', { name: 'Date of diagnosis' }),
+      diagnosisDate: this.page.getByRole('textbox', { name: 'Date of diagnosis' }),
       clinicalNotes: this.page.getByRole('textbox', { name: 'Anything you would like to share' }),
       email: this.page.getByRole('textbox', { name: /email/i }),
     };
