@@ -5,6 +5,23 @@ tests_output
 .vscode
 vrt/diff
 vrt/latest
+build/
+dist/
 # ui
 screens
 test_evidence
+
+# Playwright
+/test-results/
+/test-output/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+tests/.auth/
+
+playwright-browserstack-sdk*
+log/
+playwright/.auth/
+
+.obs*/
+local.log
