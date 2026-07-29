@@ -120,12 +120,22 @@ class ClinicianDashboardPage {
   }
 
   /**
-   * Closes the Bring Data into Tidepool dialog by clicking Done.
+   * Dismiss the "Bring Data into Tidepool" dialog if it appears after adding a
+   * patient. This modal is incidental to the add/edit/delete flow, and not every
+   * app build shows it (or shows it on the same timing), so the wait is bounded
+   * and best-effort: if the dialog isn't shown within a few seconds we simply
+   * move on. The previous unbounded `waitFor({ state: 'visible' })` hung until the
+   * whole test timed out whenever the dialog didn't appear.
    */
   async closeBringDataDialog(): Promise<void> {
-    await this.bringDataDialog.waitFor({ state: 'visible' });
+    const appeared = await this.bringDataDialog
+      .waitFor({ state: 'visible', timeout: 7000 })
+      .then(() => true)
+      .catch(() => false);
+    if (!appeared) return;
+
     await this.bringDataDialog_doneButton.click();
-    await this.bringDataDialog.waitFor({ state: 'hidden' });
+    await this.bringDataDialog.waitFor({ state: 'hidden', timeout: 10000 }).catch(() => {});
   }
 
   /**

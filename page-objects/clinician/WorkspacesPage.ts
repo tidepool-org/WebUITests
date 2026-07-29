@@ -39,7 +39,10 @@ export default class WorkspacesPage {
     await this.page.getByRole('button', { name: 'Go To Workspace' }).first().waitFor({
       state: 'visible',
     });
-    await this.page.waitForLoadState('networkidle');
+    // NB: deliberately NOT waiting for 'networkidle'. The app keeps background
+    // activity (polling/analytics/loading spinners) that can prevent networkidle
+    // from ever firing, which hangs this method until the test times out. The two
+    // visibility waits above already confirm the workspaces list has rendered.
   }
 
   async visitFirstClinic(): Promise<void> {
