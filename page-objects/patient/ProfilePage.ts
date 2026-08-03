@@ -8,6 +8,11 @@ export class ProfilePage {
 
   private saveButton: Locator;
 
+  // Inline validation message shown for the diagnosis-date block (e.g. when the
+  // diagnosis date is earlier than the birth date). Anchored on the .PatientInfo-blocks
+  // container; the diagnosis date is the 3rd block. Update if the profile form changes.
+  readonly diagnosisDateError: Locator;
+
   constructor(page: Page) {
     this.page = page;
     this.fieldLocators = {
@@ -21,6 +26,10 @@ export class ProfilePage {
     };
 
     this.saveButton = this.page.getByRole('button', { name: 'Save Changes' });
+
+    this.diagnosisDateError = this.page.locator(
+      '.PatientInfo-blocks > div:nth-child(3) > div > div',
+    );
   }
 
   // Generic fill method for text fields
@@ -95,6 +104,27 @@ export class ProfilePage {
     // has either closed (dialog) or navigated away (full-page route). Both indicate
     // the save completed and the UI has fully transitioned out of edit mode.
     await this.saveButton.waitFor({ state: 'hidden', timeout: 10000 });
+  }
+
+  /**
+   * Wait for the core profile edit fields to be visible — confirms the form is in
+   * edit mode and rendered (used for a visual check after clicking Edit).
+   */
+  async waitForEditFields(): Promise<void> {
+    await this.fieldLocators.fullName.waitFor({ state: 'visible' });
+    await this.fieldLocators.dateOfBirth.waitFor({ state: 'visible' });
+    await this.fieldLocators.diagnosisDate.waitFor({ state: 'visible' });
+    await this.saveButton.waitFor({ state: 'visible' });
+  }
+
+  /**
+   * Click "Save Changes" WITHOUT waiting for the form to close. Use this to trigger
+   * the form's on-submit validation when the data is expected to be invalid (the
+   * form stays open and surfaces inline errors, so `saveProfile()`'s wait-for-hidden
+   * would hang).
+   */
+  async clickSave(): Promise<void> {
+    await this.saveButton.click();
   }
 
   /**
