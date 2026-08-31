@@ -16,6 +16,8 @@ import { Locator, Page } from '@playwright/test';
  * @property {Locator} usernameInput  Keycloak email field (page 1)
  * @property {Locator} passwordInput  Keycloak password field (page 2)
  * @property {Locator} submitButton   Keycloak submit ("Next"), both pages
+ * @property {Locator} usernameError  Inline error under the email field
+ * @property {Locator} passwordError  Inline error under the password field
  */
 export default class LoginPage {
   page: Page;
@@ -26,6 +28,10 @@ export default class LoginPage {
 
   submitButton: Locator;
 
+  usernameError: Locator;
+
+  passwordError: Locator;
+
   /**
    * @param {Page} page
    */
@@ -34,6 +40,9 @@ export default class LoginPage {
     this.usernameInput = page.locator('#username');
     this.passwordInput = page.locator('#password');
     this.submitButton = page.locator('#kc-login');
+    // Keycloak renders field-level validation errors below each input.
+    this.usernameError = page.locator('#input-error-username');
+    this.passwordError = page.locator('#input-error-password');
   }
 
   /**
