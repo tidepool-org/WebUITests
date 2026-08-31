@@ -11,14 +11,13 @@ test.use({ storageState: { cookies: [], origins: [] } });
 // Possible testcases: https://tidepool.atlassian.net/jira/software/c/projects/WEB/issues/?jql=project%20%3D%20%22WEB%22%20AND%20type%20%3D%20Test%20AND%20textfields%20~%20%22login%22%20ORDER%20BY%20created%20DESC
 test.describe('Login into application', () => {
   test(
-    'Login - Valid credentials',
+    'Clinician - Login - Valid credentials',
     {
       tag: createValidatedTags([
         TEST_TAGS.CLINICIAN,
         TEST_TAGS.UI,
         TEST_TAGS.SMOKE,
         TEST_TAGS.CRITICAL,
-        TEST_TAGS.WIP,
       ]),
     },
     async ({ page }) => {
@@ -53,14 +52,13 @@ test.describe('Login into application', () => {
   );
 
   test(
-    'Login - Invalid credentials',
+    'Clinician - Login - Invalid credentials',
     {
       tag: createValidatedTags([
         TEST_TAGS.CLINICIAN,
         TEST_TAGS.UI,
         TEST_TAGS.SMOKE,
         TEST_TAGS.HIGH,
-        TEST_TAGS.WIP,
       ]),
     },
     async ({ page }) => {
@@ -99,14 +97,13 @@ test.describe('Login into application', () => {
   );
 
   test(
-    'Login - Validate email format',
+    'Clinician - Login - Validate email format',
     {
       tag: createValidatedTags([
         TEST_TAGS.CLINICIAN,
         TEST_TAGS.UI,
         TEST_TAGS.REGRESSION,
         TEST_TAGS.MEDIUM,
-        TEST_TAGS.WIP,
       ]),
     },
     async ({ page }) => {
@@ -145,14 +142,13 @@ test.describe('Login into application', () => {
   );
 
   test(
-    'Login - Invalid password message displays',
+    'Clinician - Login - Invalid password message displays',
     {
       tag: createValidatedTags([
         TEST_TAGS.CLINICIAN,
         TEST_TAGS.UI,
         TEST_TAGS.SMOKE,
         TEST_TAGS.HIGH,
-        TEST_TAGS.WIP,
       ]),
     },
     async ({ page }) => {
