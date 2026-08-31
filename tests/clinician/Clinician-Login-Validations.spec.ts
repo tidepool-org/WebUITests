@@ -23,20 +23,32 @@ test.describe('Login into application', () => {
     async ({ page }) => {
       const loginPage = new LoginPage(page);
 
+      // Step 1: Open the login page
       await test.step(
-        'When user is logged into application',
+        'Given the user is on the login page',
         async () => {
           await loginPage.goto();
+        },
+        {
+          detail: 'Open the Tidepool Web login page (redirects to the hosted login screen).',
+        },
+      );
+
+      // Step 2: Sign in with valid credentials
+      await test.step(
+        'When the user signs in with valid clinician credentials',
+        async () => {
           await loginPage.login(env.CLINICIAN_USERNAME, env.CLINICIAN_PASSWORD);
         },
         {
           detail:
-            'Open the Tidepool Web login page and sign in using the automated clinician account credentials stored in 1Password as "UI Auto Clinician".',
+            'Enter the automated clinician account credentials stored in 1Password as "UI Auto Clinician" and submit the login form.',
         },
       );
 
+      // Step 3: Confirm redirect to the workspaces page
       await test.step(
-        'Then the user is redirected to workspaces page',
+        'Then the user is redirected to the workspaces page',
         async () => {
           const workspacesPage = new WorkspacesPage(page);
           await page.waitForURL(workspacesPage.url);
@@ -64,25 +76,33 @@ test.describe('Login into application', () => {
     async ({ page }) => {
       const loginPage = new LoginPage(page);
 
+      // Step 1: Open the login page
       await test.step(
-        'When user attempts to login with invalid username',
+        'Given the user is on the login page',
         async () => {
           await loginPage.goto();
+        },
+        {
+          detail: 'Open the Tidepool Web login page (redirects to the hosted login screen).',
+        },
+      );
 
-          // Enter email
+      // Step 2: Submit an email that has no account
+      await test.step(
+        'When the user submits an email that has no account',
+        async () => {
           await loginPage.usernameInput.fill('invalid@email.com');
           await loginPage.submitButton.click();
         },
         {
-          detail:
-            'Open the login page, enter an email address that has no account, and submit the login form.',
+          detail: 'Enter an email address that has no account and submit the login form.',
         },
       );
 
+      // Step 3: Confirm the no-account error
       await test.step(
-        'Then error message should be displayed',
+        'Then an error states the email does not belong to an account',
         async () => {
-          // Wait for the error message to appear
           await expect(loginPage.usernameError).toBeVisible();
           await expect(loginPage.usernameError).toContainText(
             "This email doesn't belong to an account yet.",
@@ -90,7 +110,7 @@ test.describe('Login into application', () => {
         },
         {
           detail:
-            'Confirm an error appears under the username field stating that the email does not belong to an account yet.',
+            'Confirm an error appears under the email field reading "This email doesn\'t belong to an account yet.".',
         },
       );
     },
@@ -109,25 +129,34 @@ test.describe('Login into application', () => {
     async ({ page }) => {
       const loginPage = new LoginPage(page);
 
+      // Step 1: Open the login page
       await test.step(
-        'When user attempts to login with unrecognized email',
+        'Given the user is on the login page',
         async () => {
           await loginPage.goto();
+        },
+        {
+          detail: 'Open the Tidepool Web login page (redirects to the hosted login screen).',
+        },
+      );
 
-          // Enter unrecognized email
+      // Step 2: Submit a value that is not a valid email
+      await test.step(
+        'When the user submits a value that is not a valid email',
+        async () => {
           await loginPage.usernameInput.fill('invalidemail');
           await loginPage.submitButton.click();
         },
         {
           detail:
-            'Open the login page, type a value that is not a valid email format into the username field, and submit the login form.',
+            'Type a value that is not a valid email format into the email field and submit the login form.',
         },
       );
 
+      // Step 3: Confirm the no-account error
       await test.step(
-        'Then email validation error should be displayed',
+        'Then an error states the email does not belong to an account',
         async () => {
-          // Check for email validation error message
           await expect(loginPage.usernameError).toBeVisible();
           await expect(loginPage.usernameError).toContainText(
             "This email doesn't belong to an account yet.",
@@ -135,7 +164,7 @@ test.describe('Login into application', () => {
         },
         {
           detail:
-            'Confirm a validation error is shown under the username field indicating the email is not recognized.',
+            'Confirm an error appears under the email field reading "This email doesn\'t belong to an account yet.".',
         },
       );
     },
@@ -154,27 +183,39 @@ test.describe('Login into application', () => {
     async ({ page }) => {
       const loginPage = new LoginPage(page);
 
+      // Step 1: Open the login page
       await test.step(
-        'When user is logged into application',
+        'Given the user is on the login page',
         async () => {
           await loginPage.goto();
+        },
+        {
+          detail: 'Open the Tidepool Web login page (redirects to the hosted login screen).',
+        },
+      );
+
+      // Step 2: Sign in with a valid username but an invalid password
+      await test.step(
+        'When the user signs in with an invalid password',
+        async () => {
           await loginPage.login(env.CLINICIAN_USERNAME, `${env.CLINICIAN_PASSWORD}1`);
         },
         {
           detail:
-            'Open the login page and sign in using the automated clinician account username from 1Password ("UI Auto Clinician") together with an incorrect password.',
+            'Enter the automated clinician account username from 1Password ("UI Auto Clinician") with an incorrect password and submit the login form.',
         },
       );
 
+      // Step 3: Confirm the invalid-credentials error below the password field
       await test.step(
-        'Then error message should be displayed',
+        'Then an "Invalid username or password." error is shown below the password field',
         async () => {
           await expect(loginPage.passwordError).toBeVisible();
           await expect(loginPage.passwordError).toContainText('Invalid username or password.');
         },
         {
           detail:
-            'Confirm an error message reading "Invalid username or password." is displayed below the password field.',
+            'Confirm an error reading "Invalid username or password." is displayed below the password field.',
         },
       );
     },
