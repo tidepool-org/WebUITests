@@ -70,8 +70,8 @@ test.describe('Login into application', () => {
           await loginPage.goto();
 
           // Enter email
-          await page.fill('#username', 'invalid@email.com');
-          await page.click('#kc-login');
+          await loginPage.usernameInput.fill('invalid@email.com');
+          await loginPage.submitButton.click();
         },
         {
           detail:
@@ -83,8 +83,8 @@ test.describe('Login into application', () => {
         'Then error message should be displayed',
         async () => {
           // Wait for the error message to appear
-          await expect(page.locator('#input-error-username')).toBeVisible();
-          await expect(page.locator('#input-error-username')).toContainText(
+          await expect(loginPage.usernameError).toBeVisible();
+          await expect(loginPage.usernameError).toContainText(
             "This email doesn't belong to an account yet.",
           );
         },
@@ -115,8 +115,8 @@ test.describe('Login into application', () => {
           await loginPage.goto();
 
           // Enter unrecognized email
-          await page.fill('#username', 'invalidemail');
-          await page.click('#kc-login');
+          await loginPage.usernameInput.fill('invalidemail');
+          await loginPage.submitButton.click();
         },
         {
           detail:
@@ -128,8 +128,8 @@ test.describe('Login into application', () => {
         'Then email validation error should be displayed',
         async () => {
           // Check for email validation error message
-          await expect(page.locator('#input-error-username')).toBeVisible();
-          await expect(page.locator('#input-error-username')).toContainText(
+          await expect(loginPage.usernameError).toBeVisible();
+          await expect(loginPage.usernameError).toContainText(
             "This email doesn't belong to an account yet.",
           );
         },
@@ -169,12 +169,12 @@ test.describe('Login into application', () => {
       await test.step(
         'Then error message should be displayed',
         async () => {
-          await expect(page.locator('#input-error')).toBeVisible();
-          await expect(page.locator('#input-error')).toContainText('Invalid password.');
+          await expect(loginPage.passwordError).toBeVisible();
+          await expect(loginPage.passwordError).toContainText('Invalid username or password.');
         },
         {
           detail:
-            'Confirm an error message reading "Invalid password." is displayed on the login form.',
+            'Confirm an error message reading "Invalid username or password." is displayed below the password field.',
         },
       );
     },
