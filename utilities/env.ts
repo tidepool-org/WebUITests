@@ -14,6 +14,10 @@ const envSchema = z.object({
   SHARED_PASSWORD: z.string(),
   CLINICIAN_USERNAME: z.string(),
   CLINICIAN_PASSWORD: z.string(),
+  // Root mailbox for freshly-created test accounts (qa+alias@… all deliver here). Read via
+  // IMAP with a Google App Password to fetch Keycloak verification emails.
+  NEW_ACCOUNT_USERNAME: z.string().optional(),
+  NEW_ACCOUNT_APP_PASSWORD: z.string().optional(),
   TARGET_ENV: z.enum(['qa1', 'qa2', 'qa3', 'qa4', 'qa5', 'production', 'prd', 'int', 'dev1']),
   XRAY_CLIENT_ID: z.string().optional(),
   XRAY_CLIENT_SECRET: z.string().optional(),
