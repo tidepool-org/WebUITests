@@ -1,153 +1,96 @@
 import { test } from '../../fixtures/base';
 import { test as patientTest } from '../../fixtures/patient-helpers';
-import { test as accountTest } from '../../fixtures/account-helpers';
-import { createNetworkHelper } from '../../fixtures/network-helpers';
 import { TEST_TAGS, createValidatedTags } from '../../fixtures/test-tags';
-import { AccountSettingsPage } from '../../../page-objects/account/AccountSettingsPage';
+import LoginPage from '../../../page-objects/LoginPage';
+import { getLatestKeycloakVerificationLink } from '../../../utilities/mail';
+import env from '../../../utilities/env';
+
+/**
+ * Account Settings - Claimed - Edit Email
+ *
+ * Email editing moved OUT of the app into Keycloak. The old in-app flow (fill the email
+ * field → Save → PUT /profile) no longer exists, so this test drives the new flow:
+ *   profile → Update Email → Keycloak re-auth → enter new email → Keycloak SENDS a
+ *   verification email to the new address.
+ *
+ * FIRST INCREMENT (validating the IMAP mail reader): we stop once the verification email
+ * is received and its action-token link is extracted — we do NOT click the link, so the
+ * account's email (its login identity) is left unchanged and no revert is needed. Once the
+ * reader is confirmed, a follow-up will click the link, assert the change, and revert.
+ *
+ * Flow (confirmed against qa2 on 2026-09-14):
+ *   /profile → "Edit Personal Details" (opens dialog) → "Update Email" → Keycloak
+ *   update-email form at auth.qa.tidepool.org/.../required-action?execution=UPDATE_EMAIL
+ *   (no re-auth prompt while the session is valid) → fill #email → submit #kc-submit →
+ *   Keycloak sends a verification email to the new address.
+ */
+
+const NEW_EMAIL = 'qa+ClaimedEmailEdit@tidepool.org'; // a plus-alias that delivers to the QA mailbox
 
 test.describe('Account Settings - Claimed - Edit Email', () => {
-  // API Test cases require this to capture network activity
-  let api: ReturnType<typeof createNetworkHelper>;
-
   test(
     'Account Settings - Claimed - Edit Email',
     {
       tag: createValidatedTags([
         TEST_TAGS.PATIENT,
         TEST_TAGS.CLAIMED,
-        TEST_TAGS.API,
         TEST_TAGS.UI,
         TEST_TAGS.HIGH,
         TEST_TAGS.API_PROFILE,
       ]),
     },
     async ({ page }) => {
-      // Step 1: Log in to claimed account and setup network capture
-      await test.step(
-        'Given claimed account has been logged in',
-        async () => {
-          api = createNetworkHelper(page);
-          await api.startCapture();
-          await page.goto('/data');
-          await patientTest.patient.setup(page);
-        },
-        {
-          detail:
-            'Log in to Tidepool Web using the automated claimed patient account credentials stored in 1Password as "UI Auto Claimed Patient".',
-        },
-      );
+      // The mail reader polls the inbox for up to ~90s while Keycloak's verification email
+      // is delivered, so this test needs more than the 60s default.
+      test.setTimeout(150_000);
+      const login = new LoginPage(page);
 
-      // Step 2: Navigate to account settings
-      await test.step(
-        'When user navigates to account settings',
-        async () => {
-          await accountTest.account.navigateTo('AccountSettings', page);
-        },
-        { detail: 'Open the Account Settings page from the navigation menu.' },
-      );
+      await test.step('Given the claimed account is logged in', async () => {
+        await page.goto('/data');
+        await patientTest.patient.setup(page);
+      });
 
-      // Step 3: Validate profile GET response
-      await (test as any).stepNoScreenshot(
-        'Then profile endpoint responds with GET request consistent with schema ',
-        async () => {
-          await api.validateEndpointResponse('profile-metadata-get');
-        },
-        {
-          detail:
-            'Confirm the profile metadata GET endpoint responds and the payload matches the expected schema.',
-        },
-      );
+      await test.step('When the user starts an email change from the profile', async () => {
+        await page.goto('/profile');
+        // Email changes live inside the Edit Personal Details dialog; "Update Email" hands
+        // off to Keycloak (execution=UPDATE_EMAIL).
+        await page.getByRole('button', { name: 'Edit Personal Details' }).click();
+        await page.getByRole('button', { name: 'Update Email' }).click();
+      });
 
-      // Setup for Account Settings page and previous email for reset
-      const accountSettingsPage = new AccountSettingsPage(page);
-      let originalEmail = '';
+      await test.step('And re-authenticates in Keycloak (identity-first)', async () => {
+        // AIA UPDATE_EMAIL re-prompts for credentials. Handle either a username-first page
+        // or a password-only page, reusing the same #kc-login submit as normal login.
+        if (await login.usernameInput.isVisible({ timeout: 15000 }).catch(() => false)) {
+          await login.usernameInput.fill(env.CLAIMED_USERNAME);
+          await login.submitButton.click();
+        }
+        if (await login.passwordInput.isVisible({ timeout: 15000 }).catch(() => false)) {
+          await login.passwordInput.fill(env.CLAIMED_PASSWORD);
+          await login.submitButton.click();
+        }
+      });
 
-      // Step 4: Read and change email field to temporary value
-      await test.step(
-        'When user updates the email field',
-        async () => {
-          originalEmail = await accountSettingsPage.emailInput.inputValue();
-          await accountSettingsPage.emailInput.fill('qa+TempEdit@tidepool.org');
-        },
-        {
-          detail:
-            'Enter a new temporary address into the email field, replacing the current value.',
-        },
-      );
+      await test.step('And submits the new email address', async () => {
+        // Keycloak update-email form: #email input + #kc-submit ("Update Email").
+        const kcEmail = page.locator('#email');
+        await kcEmail.waitFor({ state: 'visible', timeout: 15000 });
+        await kcEmail.fill(NEW_EMAIL);
+        await page.locator('#kc-submit').click();
+      });
 
-      // Step 5: Tap the save button
-      await test.step(
-        'And user taps the save button',
-        async () => {
-          await accountSettingsPage.saveButton.click();
-        },
-        { detail: 'Click Save to submit the email change.' },
-      );
-
-      // Step 6: Confirm save changes message displays
-      await test.step(
-        'Then the save changes message displays',
-        async () => {
-          await accountSettingsPage.saveConfirm.waitFor({ state: 'visible', timeout: 5000 });
-        },
-        { detail: 'Confirm the save confirmation message appears on screen.' },
-      );
-
-      // Step 7: Validate the PUT request and the new email value. If this fails, the fixture
-      // records it FAILED; the cleanup steps below still run to revert the email.
-      await (test as any).stepNoScreenshot(
-        'And PUT request is validated and email is set to new value',
-        async () => {
-          await api.validateEndpointResponse('profile-metadata-put');
-          const putCapture = api
-            .getCaptures()
-            .find((req: any) => req.method === 'PUT' && req.url.includes('/profile'));
-          if (!putCapture) throw new Error('No PUT /profile request captured');
-          if (
-            !putCapture.requestBody ||
-            !putCapture.requestBody.email ||
-            putCapture.requestBody.email !== 'qa+TempEdit@tidepool.org'
-          ) {
-            throw new Error('PUT request did not set email to qa+TempEdit@tidepool.org');
-          }
-        },
-        {
-          detail:
-            'Confirm the profile PUT endpoint responds and the request payload sets the email to the new value.',
-        },
-      );
-
-      // Steps 8-10: revert the email to its original value. These are CLEANUP steps, so they
-      // run even if step 7 (or any earlier step) failed — otherwise a failed run would leave
-      // the account on the temporary email and break later runs. Guarded on originalEmail so
-      // we only revert when step 4 actually captured/changed it.
-      if (originalEmail) {
-        await (test as any).cleanupStep(
-          'When user sets the email field to the previous value',
-          async () => {
-            await accountSettingsPage.emailInput.fill(originalEmail);
-          },
-          { detail: 'Enter the original email address back into the email field.' },
-        );
-
-        await (test as any).cleanupStep(
-          'And user taps the save button',
-          async () => {
-            await accountSettingsPage.saveButton.click();
-          },
-          { detail: 'Click Save to revert the email change.' },
-        );
-
-        await (test as any).cleanupStep(
-          'Then the save changes message displays',
-          async () => {
-            await accountSettingsPage.saveConfirm.waitFor({ state: 'visible', timeout: 5000 });
-          },
-          { detail: 'Confirm the save confirmation message appears on screen.' },
-        );
-      }
-
-      await api.stopCapture();
+      await test.step('Then a Keycloak verification email is received and its link is extracted', async () => {
+        const link = await getLatestKeycloakVerificationLink(NEW_EMAIL, {
+          sinceMinutes: 10,
+          timeoutMs: 90_000, // Keycloak mail can take a little while
+        });
+        // eslint-disable-next-line no-console
+        console.log(`✅ Verification link for ${NEW_EMAIL}:\n   ${link}`);
+        if (!/^https?:\/\//.test(link)) {
+          throw new Error(`Expected an http(s) verification link, got: ${link}`);
+        }
+        // Intentionally NOT navigating to the link — leaves the account email unchanged.
+      });
     },
   );
 });
