@@ -32,6 +32,8 @@ export default class LoginPage {
 
   passwordError: Locator;
 
+  signUpLink: Locator;
+
   /**
    * @param {Page} page
    */
@@ -43,6 +45,8 @@ export default class LoginPage {
     // Keycloak renders field-level validation errors below each input.
     this.usernameError = page.locator('#input-error-username');
     this.passwordError = page.locator('#input-error-password');
+    // "Sign Up" link on the login screen — entry point to the registration flow.
+    this.signUpLink = page.getByRole('link', { name: /sign ?up/i });
   }
 
   /**
@@ -51,6 +55,14 @@ export default class LoginPage {
    */
   async goto(): Promise<void> {
     await this.page.goto(`/`);
+  }
+
+  /**
+   * From the login screen, open the sign-up (registration) flow.
+   * @returns {Promise<void>}
+   */
+  async openSignUp(): Promise<void> {
+    await this.signUpLink.click();
   }
 
   /**
