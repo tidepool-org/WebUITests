@@ -140,6 +140,20 @@ export default defineConfig({
       },
     },
 
+    {
+      // Tests that operate on a freshly-created claimed account. Depends on create-claimed,
+      // so calling out any test here runs the clinician → claimed producer chain first and
+      // loads the claimed account it produced.
+      name: 'chromium-claimed-lifecycle',
+      testMatch: '**/claimed-lifecycle/**/*.spec.ts',
+      dependencies: ['chromium-create-claimed'],
+      use: {
+        ...devices['Desktop Chrome'],
+        storageState: 'tests/.auth/created-claimed.json',
+        headless: !!process.env.CI,
+      },
+    },
+
     ...(isBrowserStack
       ? [
           {
