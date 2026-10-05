@@ -1,4 +1,4 @@
-import { test } from '../../fixtures/base';
+import { expect, test } from '../../fixtures/base';
 import { test as patientTest } from '../../fixtures/patient-helpers';
 import { test as clinicTest } from '../../fixtures/clinic-helpers';
 import { test as accountTest } from '../../fixtures/account-helpers';
@@ -79,21 +79,41 @@ test.describe('Comprehensive Profile Access Test: Edit as Claimed, View as Share
       // Initialize ProfilePage for steps 4 and 5
       const profilePage = new ProfilePage(page);
 
-      // Step 5: Change profile fields (confirmed user access)
+      // Date values are computed once here so both the update step and the invalid-date
+      // check below share them. The diagnosis date is always birthYear + 20, so the
+      // "valid" data can never come out randomly earlier than the birth date. The
+      // invalid date is deliberately one year BEFORE birth for the negative check.
+      const testRunId = Math.floor(Math.random() * 10000);
+      const updatedName = `Claimed User Updated ${testRunId}`;
+      const birthYear = 1985 + (testRunId % 10);
+      const birthDate = `01/15/${birthYear}`;
+      const validDiagnosisDate = `01/15/${birthYear + 20}`;
+      const invalidDiagnosisDate = `01/15/${birthYear - 1}`;
+
+      // Generate random 15-letter string for clinical notes
+      const randomString = Array.from({ length: 15 }, () =>
+        String.fromCharCode(65 + Math.floor(Math.random() * 26)),
+      ).join('');
+
+      // Step 5: Visual check that the edit form is displayed after clicking Edit.
       await test.step(
-        'And user updates profile fields',
+        'Then the profile edit fields are displayed',
         async () => {
-          const testRunId = Math.floor(Math.random() * 10000);
-          const updatedName = `Claimed User Updated ${testRunId}`;
-          const birthYear = 1985 + (testRunId % 10);
-          const diagnosisYear = birthYear + 20;
-          const birthDate = `01/15/${birthYear}`;
+          await profilePage.waitForEditFields();
+        },
+        {
+          detail:
+            'Confirm the editable profile fields (name, date of birth, diagnosis date, etc.) ' +
+            'are shown after entering edit mode.',
+        },
+      );
 
-          // Generate random 15-letter string for clinical notes
-          const randomString = Array.from({ length: 15 }, () =>
-            String.fromCharCode(65 + Math.floor(Math.random() * 26)),
-          ).join('');
-
+      // Step 6: Fill the fields with an INVALID diagnosis date (before birth) and submit. The
+      // validation error only appears on submit, so click Save without waiting for the form to
+      // close — it won't, because the data is invalid.
+      await test.step(
+        'When user fills the profile fields with a diagnosis date earlier than the birth date',
+        async () => {
           // Get current diagnosis index and calculate next one (1-7, wrapping)
           const currentDiagnosisIndex = await profilePage.getCurrentDiagnosisIndex();
           let nextDiagnosisIndex = currentDiagnosisIndex + 1;
@@ -101,28 +121,60 @@ test.describe('Comprehensive Profile Access Test: Edit as Claimed, View as Share
             nextDiagnosisIndex = 1;
           }
 
-          // Update fields using ProfilePage methods
+          // Birth date is set before the diagnosis date so the form can validate one against
+          // the other; the diagnosis date here is deliberately earlier than the birth date.
           await profilePage.fillFullName(updatedName);
           await profilePage.fillDateOfBirth(birthDate);
+          await profilePage.fillDiagnosisDate(invalidDiagnosisDate);
           await profilePage.selectDiagnosisType(nextDiagnosisIndex);
           await profilePage.fillClinicalNotes(randomString);
         },
         {
           detail:
-            'Enter updated values for name, date of birth, diagnosis type, and clinical notes.',
+            'Enter updated name, date of birth, a diagnosis date earlier than the birth date, ' +
+            'diagnosis type, and clinical notes.',
         },
       );
 
-      // Step 6: Save profile edit
       await test.step(
-        'And user saves profile changes',
+        'And user clicks Save Changes',
         async () => {
+          await profilePage.clickSave();
+        },
+        {
+          detail:
+            'Click Save Changes to submit the profile with an invalid diagnosis date (earlier than birth date).',
+        },
+      );
+
+      // Step 7: Confirm the website rejects the invalid diagnosis date.
+      await test.step(
+        'Then an inline validation error is shown for the diagnosis date',
+        async () => {
+          await expect(profilePage.diagnosisDateError).toHaveText(/\S/);
+        },
+        {
+          detail:
+            'Confirm the form shows an inline validation error because the diagnosis date is ' +
+            'earlier than the birth date.',
+        },
+      );
+
+      // Step 8: Correct the diagnosis date to a valid value (after birth) and save.
+      await test.step(
+        'When user corrects the diagnosis date to a valid value and saves profile changes',
+        async () => {
+          await profilePage.fillDiagnosisDate(validDiagnosisDate);
           await profilePage.saveProfile();
         },
-        { detail: 'Click Save to submit the profile changes.' },
+        {
+          detail:
+            'Replace the invalid diagnosis date with a valid one (after the birth date) and ' +
+            'click Save Changes to submit the profile.',
+        },
       );
 
-      // Step 7: GET response is validated and saved for comparison
+      // Step 9: GET response is validated and saved for comparison
       await (test as any).stepNoScreenshot(
         'Then profile endpoint responds with GET request consistent with schema',
         async () => {
