@@ -113,6 +113,20 @@ export default defineConfig({
     },
 
     {
+      // Claimed-account producer: opens logged in as the freshly-created clinician (project
+      // storageState) to add the custodial patient, then performs the claim itself in a separate
+      // logged-out context inside the test. Depends on create-clinician so the clinic exists.
+      name: 'chromium-create-claimed',
+      testMatch: '**/create-account/CreateAccount-Claimed.spec.ts',
+      dependencies: ['chromium-create-clinician'],
+      use: {
+        ...devices['Desktop Chrome'],
+        storageState: 'tests/.auth/created-clinician.json',
+        headless: !!process.env.CI,
+      },
+    },
+
+    {
       // Tests that operate on a freshly-created personal account. Depends on create-personal,
       // so calling out ANY test here (even by tag) runs create-personal first — transitively —
       // and loads the account it produced.

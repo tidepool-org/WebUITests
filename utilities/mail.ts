@@ -158,5 +158,38 @@ export async function getLatestKeycloakVerificationLink(
   return (await getLatestKeycloakEmail(alias, opts)).link;
 }
 
+export interface ClaimEmail {
+  /** The email's HTML body (best-effort) — render it and click the invitation button. */
+  html: string | null;
+  /** Best-effort invitation URL, as a fallback when clicking the rendered anchor isn't viable. */
+  link: string | null;
+}
+
+/**
+ * Fetch the latest clinic custodial-invitation email ("Share Diabetes data with your clinic")
+ * sent to `alias`. Unlike the Keycloak verification email this is an app invitation, so there's
+ * no action-token link to key on — prefer rendering `html` and clicking the invitation anchor by
+ * its visible text; `link` is only a best-effort fallback.
+ *
+ * ⚠️ WIP: the invitation URL pattern (and the email's subject/sender) are unverified. Confirm on
+ * a live env and tighten the `link` match / add subject/from filters once known.
+ */
+export async function getLatestClaimEmail(
+  alias: string,
+  opts: FindMailOptions = {},
+): Promise<ClaimEmail> {
+  const raw = await findLatestRaw({ to: alias, ...opts });
+  if (!raw) {
+    throw new Error(
+      `No clinic invitation email for ${alias} within ${(opts.timeoutMs ?? 60_000) / 1000}s.`,
+    );
+  }
+  // The custodial-claim button links to /login?signupEmail=…&signupKey=…&restrictedTokenId=…
+  // Extract from the RAW message (urlsIn) — the HTML body's href is quoted-printable-decoded and
+  // mangles the '=' signs, so never click the rendered anchor; navigate this clean link instead.
+  const link = urlsIn(raw).find((u) => /[?&]signupKey=/.test(u)) ?? null;
+  return { html: htmlPart(raw), link };
+}
+
 /** Low-level access for other flows (invitations, claim links, etc.). */
 export const _mailInternals = { findLatestRaw, urlsIn, unwrapRaw, htmlPart, decodeQuotedPrintable };
