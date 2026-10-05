@@ -90,6 +90,70 @@ export default defineConfig({
       },
     },
 
+    // Account-creation producers run logged-OUT. One project PER role so each is an
+    // independent prerequisite — a role's lifecycle tests depend only on their own producer.
+    {
+      name: 'chromium-create-personal',
+      testMatch: '**/create-account/CreateAccount-Personal.spec.ts',
+      use: {
+        ...devices['Desktop Chrome'],
+        storageState: { cookies: [], origins: [] },
+        headless: !!process.env.CI,
+      },
+    },
+
+    {
+      name: 'chromium-create-clinician',
+      testMatch: '**/create-account/CreateAccount-Clinician.spec.ts',
+      use: {
+        ...devices['Desktop Chrome'],
+        storageState: { cookies: [], origins: [] },
+        headless: !!process.env.CI,
+      },
+    },
+
+    {
+      // Claimed-account producer: opens logged in as the freshly-created clinician (project
+      // storageState) to add the custodial patient, then performs the claim itself in a separate
+      // logged-out context inside the test. Depends on create-clinician so the clinic exists.
+      name: 'chromium-create-claimed',
+      testMatch: '**/create-account/CreateAccount-Claimed.spec.ts',
+      dependencies: ['chromium-create-clinician'],
+      use: {
+        ...devices['Desktop Chrome'],
+        storageState: 'tests/.auth/created-clinician.json',
+        headless: !!process.env.CI,
+      },
+    },
+
+    {
+      // Tests that operate on a freshly-created personal account. Depends on create-personal,
+      // so calling out ANY test here (even by tag) runs create-personal first — transitively —
+      // and loads the account it produced.
+      name: 'chromium-personal-lifecycle',
+      testMatch: '**/personal-lifecycle/**/*.spec.ts',
+      dependencies: ['chromium-create-personal'],
+      use: {
+        ...devices['Desktop Chrome'],
+        storageState: 'tests/.auth/created-personal.json',
+        headless: !!process.env.CI,
+      },
+    },
+
+    {
+      // Tests that operate on a freshly-created claimed account. Depends on create-claimed,
+      // so calling out any test here runs the clinician → claimed producer chain first and
+      // loads the claimed account it produced.
+      name: 'chromium-claimed-lifecycle',
+      testMatch: '**/claimed-lifecycle/**/*.spec.ts',
+      dependencies: ['chromium-create-claimed'],
+      use: {
+        ...devices['Desktop Chrome'],
+        storageState: 'tests/.auth/created-claimed.json',
+        headless: !!process.env.CI,
+      },
+    },
+
     ...(isBrowserStack
       ? [
           {
